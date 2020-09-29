@@ -1,9 +1,9 @@
 import { Modifier } from './Modifier';
 import { Constructor, isConstructor } from '../../utils/src/utils';
-import { VersionableObject } from './Memory/VersionableObject';
+import { EventMixin } from '../../utils/src/EventMixin';
 import { VersionableArray } from './Memory/VersionableArray';
 
-export class Modifiers extends VersionableObject {
+export class Modifiers extends EventMixin {
     private _contents: Modifier[];
     constructor(...modifiers: Array<Modifier | Constructor<Modifier>>) {
         super();
@@ -55,11 +55,12 @@ export class Modifiers extends VersionableObject {
             this._contents = new VersionableArray();
         }
         for (const modifier of modifiers) {
-            if (modifier instanceof Modifier) {
-                this._contents.push(modifier);
-            } else {
-                this._contents.push(new modifier());
-            }
+            const newModifier = modifier instanceof Modifier ? modifier : new modifier();
+            newModifier.on('update', () => this.trigger('update'));
+            this._contents.push(newModifier);
+        }
+        if (modifiers.length) {
+            this.trigger('update');
         }
     }
     /**
@@ -73,11 +74,12 @@ export class Modifiers extends VersionableObject {
             this._contents = new VersionableArray();
         }
         for (const modifier of [...modifiers].reverse()) {
-            if (modifier instanceof Modifier) {
-                this._contents.unshift(modifier);
-            } else {
-                this._contents.unshift(new modifier());
-            }
+            const newModifier = modifier instanceof Modifier ? modifier : new modifier();
+            newModifier.on('update', () => this.trigger('update'));
+            this._contents.unshift(newModifier);
+        }
+        if (modifiers.length) {
+            this.trigger('update');
         }
     }
     /**
@@ -177,7 +179,9 @@ export class Modifiers extends VersionableObject {
         if (modifierIndex === -1) {
             return false;
         } else {
+            this._contents[modifierIndex].off('update');
             this._contents.splice(modifierIndex, 1);
+            this.trigger('update');
             return true;
         }
     }
@@ -210,7 +214,10 @@ export class Modifiers extends VersionableObject {
             return false;
         } else {
             const modifier = newModifier instanceof Modifier ? newModifier : new newModifier();
+            modifier.on('update', () => this.trigger('update'));
+            this._contents[oldModifierIndex].off('update');
             this._contents[oldModifierIndex] = modifier;
+            this.trigger('update');
             return true;
         }
     }
@@ -265,7 +272,11 @@ export class Modifiers extends VersionableObject {
      */
     empty(): void {
         if (this._contents) {
+            for (const modifier of this._contents) {
+                modifier.off('update');
+            }
             this._contents.length = 0;
+            this.trigger('update');
         }
     }
     /**
@@ -294,5 +305,16 @@ export class Modifiers extends VersionableObject {
      */
     map<T>(callbackfn: (value: Modifier, index: number, array: Modifier[]) => T): T[] {
         return this._contents?.map(callbackfn) || [];
+    }
+    /**
+     * @override
+     */
+    off(eventName: string, callback?: Function): void {
+        super.off(eventName, callback);
+        if (this._contents) {
+            for (const modifier of this._contents) {
+                modifier.off(eventName, callback);
+            }
+        }
     }
 }

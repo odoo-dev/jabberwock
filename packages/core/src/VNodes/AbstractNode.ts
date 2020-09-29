@@ -49,8 +49,8 @@ export abstract class AbstractNode extends EventMixin {
      */
     breakable = true;
     parent: ContainerNode;
-    modifiers = new Modifiers();
     childVNodes: VNode[];
+    _modifiers: Modifiers;
     /**
      * Return whether the given predicate is a constructor of a VNode class.
      *
@@ -65,6 +65,7 @@ export abstract class AbstractNode extends EventMixin {
     constructor(params?: AbstractNodeParams) {
         super();
         id++;
+        this.modifiers = new Modifiers();
         if (params?.modifiers) {
             if (params.modifiers instanceof Modifiers) {
                 this.modifiers = params.modifiers;
@@ -73,6 +74,17 @@ export abstract class AbstractNode extends EventMixin {
             }
         }
         markAsDiffRoot(this);
+    }
+
+    get modifiers(): Modifiers {
+        return this._modifiers;
+    }
+    set modifiers(modifiers: Modifiers) {
+        if (this._modifiers) {
+            this._modifiers.off('update');
+        }
+        this._modifiers = modifiers;
+        this._modifiers.on('update', () => this.trigger('modifierUpdate'));
     }
 
     get name(): string {

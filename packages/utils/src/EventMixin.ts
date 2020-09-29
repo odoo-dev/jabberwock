@@ -25,6 +25,29 @@ export class EventMixin extends VersionableObject {
         }
         this._eventCallbacks[eventName].push(callback);
     }
+    /**
+     * Unsubscribe to an event (with a callback).
+     *
+     * @param eventName
+     * @param callback
+     */
+    off(eventName: string, callback?: Function): void {
+        const callbacks = this._eventCallbacks?.[eventName];
+        if (callback) {
+            const index = callbacks?.findIndex(eventCallback => eventCallback === callback);
+            if (callbacks && index !== -1) {
+                this._eventCallbacks[eventName].splice(index, 1);
+                if (!this._eventCallbacks.length) {
+                    delete this._eventCallbacks[eventName];
+                }
+            }
+        } else if (this._eventCallbacks) {
+            delete this._eventCallbacks[eventName];
+        }
+        if (this._eventCallbacks && !Object.keys(this._eventCallbacks).length) {
+            delete this._eventCallbacks;
+        }
+    }
 
     /**
      * Fire an event for of this object and all ancestors.

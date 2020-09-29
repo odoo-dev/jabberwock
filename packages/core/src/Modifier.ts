@@ -1,6 +1,6 @@
 import { Constructor } from '../../utils/src/utils';
 import { VNode } from './VNodes/VNode';
-import { VersionableObject } from './Memory/VersionableObject';
+import { EventMixin } from '../../utils/src/EventMixin';
 
 export enum ModifierLevel {
     LOW,
@@ -18,7 +18,7 @@ interface ModifierConstructor {
 export interface Modifier {
     constructor: ModifierConstructor & this;
 }
-export class Modifier extends VersionableObject {
+export class Modifier extends EventMixin {
     preserveAfterNode = true; // True to preserve modifier after the node that holds it.
     preserveAfterParagraphBreak = true; // True to preserve modifier after a paragraph break.
     preserveAfterLineBreak = true; // True to preserve modifier after a line break.

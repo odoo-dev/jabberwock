@@ -13,6 +13,8 @@ export class Attributes extends Modifier {
     classList = new ClassList();
     constructor(attributes?: Attributes | NamedNodeMap | Record<string, string>) {
         super();
+        this.style.on('update', this._triggerUpdate.bind(this));
+        this.classList.on('update', this._triggerUpdate.bind(this));
         if (attributes instanceof Attributes) {
             for (const key of attributes.keys()) {
                 this.set(key, attributes.get(key));
@@ -148,6 +150,7 @@ export class Attributes extends Modifier {
                 this.style.reset(value);
             } else {
                 this.style = new CssStyle();
+                this.style.on('update', this._triggerUpdate.bind(this));
             }
             // Use `get` for its value but record its position in the record.
             this._record.style = null;
@@ -158,6 +161,7 @@ export class Attributes extends Modifier {
         } else {
             this._record[name] = value;
         }
+        this.trigger('update');
     }
     /**
      * Remove the records with the given names.
@@ -175,11 +179,15 @@ export class Attributes extends Modifier {
                 delete this._record[name];
             }
         }
+        if (names.length) {
+            this.trigger('update');
+        }
     }
     clear(): void {
         delete this._record;
         this.style.clear();
         this.classList.clear();
+        this.trigger('update');
     }
     /**
      * Return true if the given attributes are the same as the ones in this
@@ -198,5 +206,21 @@ export class Attributes extends Modifier {
         } else {
             return !this.length;
         }
+    }
+    /**
+     * @override
+     */
+    off(eventName: string, callback?: Function): void {
+        super.off(eventName, callback);
+        this.classList.off(eventName, callback);
+        this.style.off(eventName, callback);
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    _triggerUpdate(): void {
+        this.trigger('update');
     }
 }

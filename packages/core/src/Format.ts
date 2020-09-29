@@ -4,15 +4,26 @@ import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class Format extends Modifier {
     htmlTag: string; // TODO: remove this reference to DOM.
-    modifiers = new Modifiers();
+    _modifiers: Modifiers;
     constructor(htmlTag?: string) {
         super();
+        this.modifiers = new Modifiers();
         if (htmlTag) {
             this.htmlTag = htmlTag;
         }
     }
     get name(): string {
         return this.htmlTag.toLowerCase();
+    }
+    get modifiers(): Modifiers {
+        return this._modifiers;
+    }
+    set modifiers(modifiers: Modifiers) {
+        if (this._modifiers) {
+            this._modifiers.off('update');
+        }
+        this._modifiers = modifiers;
+        this._modifiers.on('update', () => this.trigger('modifierUpdate'));
     }
     toString(): string {
         const nonEmptyAttributes = this.modifiers.filter(
