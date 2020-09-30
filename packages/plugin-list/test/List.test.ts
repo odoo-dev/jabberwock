@@ -6100,8 +6100,12 @@ describePlugin(List, testEditor => {
                                 stepFunction: async (editor: JWEditor): Promise<void> => {
                                     const ol = document.querySelector('ol');
                                     const li = document.createElement('li');
-                                    li.append(document.createElement('br'));
+                                    const br = document.createElement('br');
+                                    li.append(br);
                                     ol.insertBefore(li, ol.lastElementChild);
+                                    const layout = editor.plugins.get(Layout);
+                                    const domLayoutEngine = layout.engines.dom as DomLayoutEngine;
+                                    domLayoutEngine.markForRedraw(new Set([ol, li, br]));
                                     await editor.execCommand<Core>('insertParagraphBreak'); // new line
                                 },
                                 contentAfter: unformat(`

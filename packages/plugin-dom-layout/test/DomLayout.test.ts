@@ -55,6 +55,8 @@ import { ParagraphNode } from '../../plugin-paragraph/src/ParagraphNode';
 import { FontAwesomeNode } from '../../plugin-fontawesome/src/FontAwesomeNode';
 import { VersionableArray } from '../../core/src/Memory/VersionableArray';
 import { FontAwesome } from '../../plugin-fontawesome/src/FontAwesome';
+import { Divider } from '../../plugin-divider/src/Divider';
+import { Heading } from '../../plugin-heading/src/Heading';
 
 const container = document.createElement('div');
 container.classList.add('container');
@@ -2538,6 +2540,69 @@ describe('DomLayout', () => {
                 expect([...pDom.childNodes]).to.deep.equal([text], 'Use the same text');
 
                 expect(mutationNumber).to.equal(1, '"" => ac');
+
+                await editor.stop();
+            });
+            it('should update container with new childVNode and an altered DOM from animation', async () => {
+                const Component: ComponentDefinition = {
+                    id: 'test',
+                    render(editor: JWEditor): Promise<VNode[]> {
+                        return editor.plugins
+                            .get(Parser)
+                            .parse(
+                                'text/html',
+                                '<div class="o_snippet">' +
+                                    '<h1>title</h1>' +
+                                    '<section>content</section>' +
+                                    '</div>',
+                            );
+                    },
+                };
+                class Plugin<T extends JWPluginConfig> extends JWPlugin<T> {
+                    loadables: Loadables<Layout> = {
+                        components: [Component],
+                        componentZones: [['test', ['main']]],
+                    };
+                }
+                const editor = new JWEditor();
+                editor.load(Html);
+                editor.load(Char);
+                editor.load(Divider);
+                editor.load(Heading);
+                editor.configure(DomLayout, { location: [target, 'replace'] });
+                editor.load(Plugin);
+                await editor.start();
+
+                // An animation (element added for the laayout but not in our VDoc) altere the dom.
+                const snippetDom = container.querySelector('.o_snippet');
+                const divDom = document.createElement('div');
+                divDom.classList.add('animation');
+                divDom.innerHTML = 'a';
+                snippetDom.prepend(divDom);
+                await nextTick();
+
+                mutationNumber = 0;
+                await editor.execCommand(() => {
+                    const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                    const [snippet] = engine.getNodes(snippetDom);
+                    const div = new DividerNode();
+                    div.modifiers.get(Attributes).classList.add('new_div');
+                    div.append(new CharNode({ char: 'b' }));
+                    snippet.firstChild().after(div);
+                });
+
+                expect(container.innerHTML).to.equal(
+                    '<jw-editor>' +
+                        '<div class="o_snippet">' +
+                        '<div class="animation">a</div>' +
+                        '<h1>title</h1>' +
+                        '<div class="new_div">b</div>' +
+                        '<section>content</section>' +
+                        '</div>' +
+                        '</jw-editor>',
+                );
+
+                expect(mutationNumber).to.equal(1, 'insert div');
 
                 await editor.stop();
             });
