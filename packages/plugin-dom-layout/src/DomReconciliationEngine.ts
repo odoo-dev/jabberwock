@@ -71,6 +71,7 @@ export class DomReconciliationEngine {
     private readonly _rendererTreated = new Set<GenericDomObject>();
     private readonly _releasedItems = new Set<VNode | Modifier>();
     private readonly _domUpdated = new Set<DomObjectID>();
+    private _domNodesToRedraw = new Set<Node>();
 
     update(
         updatedNodes: VNode[],
@@ -87,6 +88,7 @@ export class DomReconciliationEngine {
             }
         }
         const rendered = [...renderedSet];
+        this._domNodesToRedraw = new Set(domNodesToRedraw);
 
         // Found the potential old values (they could become children of the current node).
         // In old values the renderer are may be merge some object, we want to found the
@@ -228,6 +230,7 @@ export class DomReconciliationEngine {
                 for (const domNode of old.dom) {
                     if (this._fromDom.get(domNode) === id) {
                         this._fromDom.delete(domNode);
+                        this._domNodesToRedraw.add(domNode);
                         if (isInstanceOf(domNode, Element)) {
                             domNode.remove();
                         } else {
@@ -374,6 +377,7 @@ export class DomReconciliationEngine {
         }
         this._domUpdated.clear();
         this._releasedItems.clear();
+        this._domNodesToRedraw.clear();
     }
 
     /**
@@ -1505,6 +1509,7 @@ export class DomReconciliationEngine {
             // Remove protected mapping.
             for (const domNode of object.domNodes) {
                 this._fromDom.delete(domNode);
+                this._domNodesToRedraw.add(domNode);
             }
             for (const domNode of object.dom) {
                 this._fromDom.set(domNode, id);
@@ -1529,6 +1534,7 @@ export class DomReconciliationEngine {
         for (const domNode of diff.dom) {
             if (this._fromDom.get(domNode) === id && !object.dom.includes(domNode)) {
                 this._fromDom.delete(domNode);
+                this._domNodesToRedraw.add(domNode);
             }
         }
         for (const domNode of object.dom) {
@@ -1728,6 +1734,15 @@ export class DomReconciliationEngine {
      * Insert missing domNodes in this element.
      */
     private _insertDomChildren(domNodes: Node[], parentNode: Node, insertBefore: Node): void {
+        // Keep the order of unknown nodes.
+        while (
+            insertBefore &&
+            !this._domNodesToRedraw.has(insertBefore) &&
+            !this._fromDom.get(insertBefore)
+        ) {
+            insertBefore = insertBefore.nextSibling;
+        }
+        // Insert the node.
         for (const domNode of domNodes) {
             if (insertBefore) {
                 if (insertBefore === domNode) {
@@ -1811,11 +1826,13 @@ export class DomReconciliationEngine {
     private isAvailableNode(id: DomObjectID, domNode: Node): boolean {
         const linkedId = this._fromDom.get(domNode);
         if (!linkedId) {
-            // The browser can separate an item and keep all attributes on the
-            // clone. In the event of a new element to be associated, a
-            // complete redrawing is requested.
-            this._diff[id].askCompleteRedrawing = true;
-            return true;
+            if (domNode.nodeType === Node.TEXT_NODE || this._domNodesToRedraw.has(domNode)) {
+                // The browser can separate an item and keep all attributes on the
+                // clone. In the event of a new element to be associated, a
+                // complete redrawing is requested.
+                this._diff[id].askCompleteRedrawing = true;
+                return true;
+            }
         }
         if (linkedId === id) {
             return true;
