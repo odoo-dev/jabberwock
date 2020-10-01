@@ -12,5 +12,4 @@ Thumbs.db
 data/
 build/
 !src/build/
-package-lock.json
 coverage/
