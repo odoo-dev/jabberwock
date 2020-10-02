@@ -33,6 +33,9 @@ export interface DomLayoutConfig extends JWPluginConfig {
     componentZones?: [ComponentId, ZoneIdentifier[]][];
     pressedActionablesClassName?: string;
 }
+export interface ProcessKeydownParams extends CommandParams {
+    event: KeyboardEvent;
+}
 
 export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPlugin<T> {
     static dependencies = [DomObjectRenderer, Parser, Renderer, Layout, Keymap];
@@ -129,6 +132,9 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         event: KeyboardEvent,
         processingContext: ExecutionContext = this.editor,
     ): Promise<CommandIdentifier> {
+        await this.editor.dispatcher.dispatchHooks('@layout-keydown', {
+            event: event,
+        } as ProcessKeydownParams);
         if (
             this.focusedNode &&
             ['INPUT', 'SELECT', 'TEXTAREA'].includes(nodeName(this.focusedNode))

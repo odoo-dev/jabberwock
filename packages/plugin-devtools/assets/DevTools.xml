@@ -494,7 +494,10 @@
             <devtools-button t-on-click="openTab('modes')" t-att-class="{
                 selected: state.currentTab == 'modes',
             }">Modes</devtools-button>
-            <devtools-button t-on-click="inspectDom()">&#128269;</devtools-button>
+            <devtools-button t-on-click="inspectDom()" title="Inspect document">&#128269;</devtools-button>
+            <devtools-button t-on-click="toggleKeystrokes()" t-att-class="{
+                selected: state.displayKeystrokes,
+            }" title="Log keystrokes">🅺</devtools-button>
         </devtools-navbar>
         <t t-if="!state.closed">
             <InspectorComponent isOpen="state.currentTab == 'inspector'" t-ref="inspector"/>

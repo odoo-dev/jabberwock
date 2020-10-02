@@ -359,3 +359,25 @@ devtools-info devtools-about devtools-id {
     color: #76526c;
     font-size: smaller;
 }
+
+/* Keystrokes display */
+#keys_log {
+    opacity: 0;
+    padding: 5px;
+    z-index: 100000;
+    margin: 25px;
+    position: fixed;
+    top: 0px;
+    background-color: #875A7B;
+    color: white;
+    font-size: 25px;
+    border: 1px solid #68465f;
+    border-radius: 10px;
+    -webkit-box-shadow: 2px 2px 5px 0px rgba(0,0,0,0.42);
+    -moz-box-shadow: 2px 2px 5px 0px rgba(0,0,0,0.42);
+    box-shadow: 2px 2px 5px 0px rgba(0,0,0,0.42);
+}
+#keys_log.has-key {
+    transition: opacity .5s;
+    opacity: 1;
+}
