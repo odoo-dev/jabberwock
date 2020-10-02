@@ -29,7 +29,7 @@ export class History<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
                         name: 'undo',
                         label: 'History undo',
                         commandId: 'undo',
-                        enabled: (): boolean => this._memoryStep > 0,
+                        enabled: this.canUndo.bind(this),
                         modifiers: [new Attributes({ class: 'fa fa-undo fa-fw' })],
                     });
                     return [button];
@@ -42,7 +42,7 @@ export class History<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
                         name: 'redo',
                         label: 'History redo',
                         commandId: 'redo',
-                        enabled: (): boolean => this._memoryKeys.length - 1 > this._memoryStep,
+                        enabled: this.canRedo.bind(this),
                         modifiers: [new Attributes({ class: 'fa fa-redo fa-fw' })],
                     });
                     return [button];
@@ -89,6 +89,12 @@ export class History<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
             this._memoryStep = max;
         }
         this.editor.memory.switchTo(this._memoryKeys[this._memoryStep]);
+    }
+    canUndo(): boolean {
+        return this._memoryStep > 0;
+    }
+    canRedo(): boolean {
+        return this._memoryKeys.length - 1 > this._memoryStep;
     }
     private _registerMemoryKey(commitParams: CommitParams): void {
         const sliceKey = this.editor.memory.sliceKey;

@@ -65,6 +65,7 @@ import { ZoneNode } from '../plugin-layout/src/ZoneNode';
 import { DividerNode } from '../plugin-divider/src/DividerNode';
 import { Attributes } from '../plugin-xml/src/Attributes';
 import { Strikethrough } from '../plugin-strikethrough/src/Strikethrough';
+import { ActionableNode } from '../plugin-layout/src/ActionableNode';
 
 interface OdooWebsiteEditorOptions {
     source: HTMLElement;
@@ -259,11 +260,43 @@ export class OdooWebsiteEditor extends JWEditor {
                         }
                     },
                 },
+                {
+                    id: 'historyButtons',
+                    render: async (editor: JWEditor): Promise<VNode[]> => {
+                        const history = editor.plugins.get(History);
+                        const undo = new ActionableNode({
+                            name: 'undo',
+                            label: 'Undo',
+                            commandId: 'undo',
+                            enabled: history.canUndo.bind(history),
+                            modifiers: [new Attributes({
+                                class: 'btn btn-secondary fa fa-undo',
+                                'data-action': 'undo',
+                            })],
+                            htmlTag: 'BUTTON',
+                        });
+                        const redo = new ActionableNode({
+                            name: 'redo',
+                            label: 'Redo',
+                            commandId: 'redo',
+                            enabled: history.canRedo.bind(history),
+                            modifiers: [new Attributes({
+                                class: 'btn btn-secondary fa fa-repeat',
+                                'data-action': 'redo',
+                            })],
+                            htmlTag: 'BUTTON',
+                        });
+                        return [undo, redo];
+                    },
+                },
             ],
             componentZones: [
                 ['main_template', ['root']],
                 ['snippet_menu', ['main_sidebar']],
                 ['snippetManipulators', ['snippetManipulators']],
+            ],
+            locations: [
+                ['historyButtons', [document.body, 'append']],
             ],
             location: options.location,
             pressedActionablesClassName: 'active',
