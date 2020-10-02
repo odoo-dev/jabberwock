@@ -12,6 +12,7 @@ interface ActionableNodeParams extends AbstractNodeParams {
     selected?: (editor: JWEditor) => boolean;
     enabled?: (editor: JWEditor) => boolean;
     visible?: (editor: JWEditor) => boolean;
+    htmlTag?: string;
 }
 
 export class ActionableNode extends AtomicNode {
@@ -19,6 +20,7 @@ export class ActionableNode extends AtomicNode {
     label: string;
     commandId?: string;
     commandArgs?: CommandParams;
+    htmlTag?: string;
 
     constructor(params: ActionableNodeParams) {
         super(params);
@@ -34,6 +36,9 @@ export class ActionableNode extends AtomicNode {
         }
         if (params.visible) {
             this.visible = params.visible;
+        }
+        if (params.htmlTag) {
+            this.htmlTag = params.htmlTag;
         }
     }
 
