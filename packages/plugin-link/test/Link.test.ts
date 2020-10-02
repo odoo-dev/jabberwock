@@ -84,7 +84,7 @@ describePlugin(Link, testEditor => {
                     contentAfter: '<p>a<a href="url">label</a>b</p><p>c[]d</p>',
                 });
             });
-            it.skip('should insert a link and write a character at the end of the link then insert a <br>', async () => {
+            it('should insert a link and write a character at the end of the link then insert a <br>', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>a[]c</p>',
                     stepFunction: async editor => {
@@ -92,10 +92,11 @@ describePlugin(Link, testEditor => {
                         await insertText(editor, 'b');
                         await insertLineBreak(editor);
                     },
-                    contentAfter: '<p>a<a href="url">labelb<br>[]</a>c</p>',
+                    // Writing at the end of a link writes outside the link.
+                    contentAfter: '<p>a<a href="url">label</a>b<br>[]c</p>',
                 });
             });
-            it.skip('should insert a link and write a character insert a <br> and another character', async () => {
+            it('should insert a link and write a character insert a <br> and another character', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>a[]d</p>',
                     stepFunction: async editor => {
@@ -104,7 +105,8 @@ describePlugin(Link, testEditor => {
                         await insertLineBreak(editor);
                         await insertText(editor, 'c');
                     },
-                    contentAfter: '<p>a<a href="url">labelb<br>c[]</a>d</p>',
+                    // Writing at the end of a link writes outside the link.
+                    contentAfter: '<p>a<a href="url">label</a>b<br>c[]d</p>',
                 });
             });
         });
