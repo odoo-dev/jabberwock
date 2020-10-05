@@ -316,69 +316,75 @@ describePlugin(LineBreak, testEditor => {
                         await testEditor(BasicEditor, {
                             contentBefore: '<p><b>abc</b>[]def</p>',
                             stepFunction: insertLineBreak,
-                            contentAfter: '<p><b>abc</b><br>[]def</p>',
+                            // Visually, the caret does show _after_ the line
+                            // break.
+                            contentAfter: '<p><b>abc[]<br></b>def</p>',
                         });
                         await testEditor(BasicEditor, {
                             // That selection is equivalent to </b>[]
                             contentBefore: '<p><b>abc[]</b>def</p>',
                             stepFunction: insertLineBreak,
-                            contentAfter: '<p><b>abc</b><br>[]def</p>',
+                            // Visually, the caret does show _after_ the line
+                            // break.
+                            contentAfter: '<p><b>abc[]<br></b>def</p>',
                         });
                         await testEditor(BasicEditor, {
                             contentBefore: '<p><b>abc[]</b> def</p>',
                             stepFunction: insertLineBreak,
-                            // The space is converted to a non-breaking
-                            // space so it is visible (because it's after a
-                            // <br>).
-                            contentAfter: '<p><b>abc</b><br>[]&nbsp;def</p>',
+                            // The space is converted to a non-breaking space so
+                            // it is visible (because it's after a <br>).
+                            // Visually, the caret does show _after_ the line
+                            // break.
+                            contentAfter: '<p><b>abc[]<br></b>&nbsp;def</p>',
                         });
                         await testEditor(BasicEditor, {
                             contentBefore: '<p><b>abc []</b>def</p>',
                             stepFunction: insertLineBreak,
-                            // The space is converted to a non-breaking
-                            // space so it is visible (because it's before a
-                            // <br>).
-                            contentAfter: '<p><b>abc&nbsp;</b><br>[]def</p>',
+                            // The space is converted to a non-breaking space so
+                            // it is visible (because it's before a <br>).
+                            // Visually, the caret does show _after_ the line
+                            // break.
+                            contentAfter: '<p><b>abc&nbsp;[]<br></b>def</p>',
                         });
                     });
                     it('should insert a <br> at the beginning of a format node', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore: '<p>[]<b>abc</b></p>',
                             stepFunction: insertLineBreak,
-                            contentAfter: '<p><br><b>[]abc</b></p>',
+                            contentAfter: '<p><b><br>[]abc</b></p>',
                         });
                         await testEditor(BasicEditor, {
                             // That selection is equivalent to []<b>
                             contentBefore: '<p><b>[]abc</b></p>',
                             stepFunction: insertLineBreak,
-                            contentAfter: '<p><br><b>[]abc</b></p>',
+                            contentAfter: '<p><b><br>[]abc</b></p>',
                         });
                         await testEditor(BasicEditor, {
                             contentBefore: '<p><b>[] abc</b></p>',
                             stepFunction: insertLineBreak,
                             // The space should have been parsed away.
-                            contentAfter: '<p><br><b>[]abc</b></p>',
+                            contentAfter: '<p><b><br>[]abc</b></p>',
                         });
                     });
                     it('should insert a <br> within a format node', async () => {
                         await testEditor(BasicEditor, {
                             contentBefore: '<p><b>ab[]cd</b></p>',
                             stepFunction: insertLineBreak,
-                            contentAfter: '<p><b>ab</b><br><b>[]cd</b></p>',
+                            contentAfter: '<p><b>ab<br>[]cd</b></p>',
                         });
                         await testEditor(BasicEditor, {
                             contentBefore: '<p><b>ab []cd</b></p>',
                             stepFunction: insertLineBreak,
                             // The space is converted to a non-breaking
                             // space so it is visible.
-                            contentAfter: '<p><b>ab&nbsp;</b><br><b>[]cd</b></p>',
+                            contentAfter: '<p><b>ab&nbsp;<br>[]cd</b></p>',
                         });
                         await testEditor(BasicEditor, {
                             contentBefore: '<p><b>ab[] cd</b></p>',
                             stepFunction: insertLineBreak,
                             // The space is converted to a non-breaking
                             // space so it is visible.
-                            contentAfter: '<p><b>ab</b><br><b>[]&nbsp;cd</b></p>',
+                            contentAfter: '<p><b>ab<br>[]&nbsp;cd</b></p>',
                         });
                     });
                     it('should insert a line break (2 <br>) at the end of a format node', async () => {
@@ -387,7 +393,7 @@ describePlugin(LineBreak, testEditor => {
                             stepFunction: insertLineBreak,
                             // The second <br> is needed to make the first
                             // one visible.
-                            contentAfter: '<p><b>abc</b><br>[]<br></p>',
+                            contentAfter: '<p><b>abc<br>[]<br></b></p>',
                         });
                         await testEditor(BasicEditor, {
                             // That selection is equivalent to </b>[]
@@ -395,7 +401,7 @@ describePlugin(LineBreak, testEditor => {
                             stepFunction: insertLineBreak,
                             // The second <br> is needed to make the first
                             // one visible.
-                            contentAfter: '<p><b>abc</b><br>[]<br></p>',
+                            contentAfter: '<p><b>abc<br>[]<br></b></p>',
                         });
                         await testEditor(BasicEditor, {
                             contentBefore: '<p><b>abc[] </b></p>',
@@ -403,7 +409,7 @@ describePlugin(LineBreak, testEditor => {
                             // The space should have been parsed away.
                             // The second <br> is needed to make the first
                             // one visible.
-                            contentAfter: '<p><b>abc</b><br>[]<br></p>',
+                            contentAfter: '<p><b>abc<br>[]<br></b></p>',
                         });
                     });
                 });
@@ -414,7 +420,7 @@ describePlugin(LineBreak, testEditor => {
                                 '<p><span class="a">dom to</span></p><p><span class="b">[]edit</span></p>',
                             stepFunction: insertLineBreak,
                             contentAfter:
-                                '<p><span class="a">dom to</span></p><p><br><span class="b">[]edit</span></p>',
+                                '<p><span class="a">dom to</span></p><p><span class="b"><br>[]edit</span></p>',
                         });
                     });
                     it('should insert a line break within a span with a bold', async () => {
@@ -422,7 +428,7 @@ describePlugin(LineBreak, testEditor => {
                             contentBefore: '<p><span><b>ab[]cd</b></span></p>',
                             stepFunction: insertLineBreak,
                             contentAfter:
-                                '<p><span><b>ab</b></span><br><span><b>[]cd</b></span></p>',
+                                '<p><span><b>ab<br>[]cd</b></span></p>',
                         });
                     });
                 });

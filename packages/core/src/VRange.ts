@@ -525,9 +525,8 @@ export class VRange {
     private _updateModifiers(): void {
         let nodeToCopyModifiers: VNode;
         if (this.isCollapsed()) {
-            // TODO: SeparatorNode should have the formats as well.
             nodeToCopyModifiers =
-                this.start.previousSibling(node => !(node instanceof SeparatorNode)) ||
+                this.start.previousSibling() ||
                 this.start.nextSibling();
         } else {
             nodeToCopyModifiers = this.start.nextSibling();
