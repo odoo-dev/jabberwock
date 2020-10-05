@@ -5,6 +5,7 @@ import { ModifierLevel } from '../../core/src/Modifier';
 export class LinkFormat extends Format {
     preserveAfterNode = false;
     preserveAfterParagraphBreak = false;
+    preserveAfterLineBreak = true;
     level = ModifierLevel.HIGH;
 
     constructor(url = '#', target = '') {
