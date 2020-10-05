@@ -109,6 +109,15 @@ describePlugin(Link, testEditor => {
                     contentAfter: '<p>a<a href="url">label</a>b<br>c[]d</p>',
                 });
             });
+            it('should insert a <br> inside a link', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<p><a href="url">a[]b</a></p>',
+                    stepFunction: async editor => {
+                        await insertLineBreak(editor);
+                    },
+                    contentAfter: '<p><a href="url">a<br>[]b</a></p>',
+                });
+            });
         });
         describe('range not collapsed', () => {
             it('should set the link on two existing characters and loose range', async () => {
