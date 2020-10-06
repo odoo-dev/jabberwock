@@ -2,6 +2,7 @@ import { Modifier } from './Modifier';
 import { Constructor, isConstructor } from '../../utils/src/utils';
 import { EventMixin } from '../../utils/src/EventMixin';
 import { VersionableArray } from './Memory/VersionableArray';
+import { makeVersionable } from './Memory/Versionable';
 
 export class Modifiers extends EventMixin {
     private _contents: Modifier[];
@@ -11,6 +12,7 @@ export class Modifiers extends EventMixin {
             return mod instanceof Modifier ? mod.clone() : mod;
         });
         this.append(...clonedModifiers);
+        return makeVersionable(this);
     }
 
     //--------------------------------------------------------------------------

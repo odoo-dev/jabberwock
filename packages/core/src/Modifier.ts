@@ -1,6 +1,7 @@
 import { Constructor } from '../../utils/src/utils';
 import { VNode } from './VNodes/VNode';
 import { EventMixin } from '../../utils/src/EventMixin';
+import { makeVersionable } from './Memory/Versionable';
 
 export enum ModifierLevel {
     LOW,
@@ -23,6 +24,11 @@ export class Modifier extends EventMixin {
     preserveAfterParagraphBreak = true; // True to preserve modifier after a paragraph break.
     preserveAfterLineBreak = true; // True to preserve modifier after a line break.
     level = ModifierLevel.MEDIUM;
+
+    constructor() {
+        super();
+        return makeVersionable(this);
+    }
 
     get name(): string {
         return '';

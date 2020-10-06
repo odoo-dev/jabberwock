@@ -4,7 +4,7 @@ import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { OdooFieldDomObjectRenderer } from './OdooFieldDomObjectRenderer';
 import { OdooFieldXmlDomParser } from './OdooFieldXmlDomParser';
-import { ReactiveValue } from '../../utils/src/ReactiveValue';
+import { ReactiveValueVersionable } from '../../utils/src/ReactiveValueVersionable';
 import { OdooFieldMap } from './OdooFieldMap';
 import { OdooMonetaryFieldXmlDomParser } from './OdooMonetaryFieldXmlDomParser';
 import { OdooMonetaryFieldDomObjectRenderer } from './OdooMonetaryFieldDomObjectRenderer';
@@ -18,8 +18,8 @@ export interface OdooFieldDefinition {
 
 export interface OdooFieldInfo extends OdooFieldDefinition {
     readonly originalValue: string;
-    value: ReactiveValue<string>;
-    isValid: ReactiveValue<boolean>;
+    value: ReactiveValueVersionable<string>;
+    isValid: ReactiveValueVersionable<boolean>;
 }
 
 /**
@@ -53,8 +53,8 @@ export class OdooField<T extends JWPluginConfig = JWPluginConfig> extends JWPlug
     register(field: OdooFieldDefinition, type: string, value: string): OdooFieldInfo {
         if (!this._registry.get(field)) {
             // TODO: Retrieve the field from Odoo through RPC.
-            const reactiveValue = new ReactiveValue<string>();
-            const isValid = new ReactiveValue(true);
+            const reactiveValue = new ReactiveValueVersionable<string>();
+            const isValid = new ReactiveValueVersionable<boolean>(true);
             if (Object.keys(fieldValidators).includes(type)) {
                 reactiveValue.on('set', (newValue: string): void => {
                     isValid.set(!!newValue.match(fieldValidators[type]));
