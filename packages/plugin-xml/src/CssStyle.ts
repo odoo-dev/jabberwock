@@ -8,6 +8,7 @@ export class CssStyle extends EventMixin {
         if (style) {
             this.reset(style);
         }
+        return makeVersionable(this);
     }
 
     //--------------------------------------------------------------------------

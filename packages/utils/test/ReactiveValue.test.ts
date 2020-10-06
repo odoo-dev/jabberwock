@@ -1,6 +1,6 @@
-import { ReactiveValue } from '../src/ReactiveValue';
 import { fake } from 'sinon';
 import { expect } from 'chai';
+import { ReactiveValue } from '../src/ReactiveValue';
 describe('utils', () => {
     describe('ReactiveValue', () => {
         it('should set/get a value and fire', () => {

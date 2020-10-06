@@ -1,5 +1,6 @@
 import { VersionableObject } from '../../core/src/Memory/VersionableObject';
 import { EventMixin } from '../../utils/src/EventMixin';
+import { makeVersionable } from '../../core/src/Memory/Versionable';
 
 export class ClassList extends EventMixin {
     private _classList: Record<string, boolean>;
@@ -8,6 +9,7 @@ export class ClassList extends EventMixin {
         for (const className of classList) {
             this.add(className);
         }
+        return makeVersionable(this);
     }
 
     //--------------------------------------------------------------------------
