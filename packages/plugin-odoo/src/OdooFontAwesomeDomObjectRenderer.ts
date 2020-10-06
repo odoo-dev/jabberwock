@@ -12,7 +12,7 @@ export class OdooFontAwesomeDomObjectRenderer extends FontAwesomeDomObjectRender
     ): Promise<DomObject> {
         const domObject: DomObject = await super.render(node, worker);
         if (domObject && 'children' in domObject) {
-            const fa = domObject.children[1];
+            const fa = domObject.children[1] || domObject.children[0];
 
             if ('tag' in fa) {
                 const dbclickCallback = (): void => {

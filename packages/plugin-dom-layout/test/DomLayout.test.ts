@@ -880,11 +880,7 @@ describe('DomLayout', () => {
 
             const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
             const domFa = container.querySelector('i');
-            expect(engine.getDomNodes(fa)).to.deep.equal([
-                domFa.previousSibling,
-                domFa,
-                domFa.nextSibling,
-            ]);
+            expect(engine.getDomNodes(fa)).to.deep.equal([domFa]);
             await editor.stop();
         });
     });
