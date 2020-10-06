@@ -8,6 +8,8 @@ import {
     DomObjectElement,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
+import { RuleProperty } from '../../core/src/Mode';
+import { CharNode } from '../../plugin-char/src/CharNode';
 
 const zeroWidthSpace = '\u200b';
 
@@ -43,38 +45,71 @@ export class FontAwesomeDomObjectRenderer extends NodeRenderer<DomObject> {
                 el.removeEventListener('mouseup', select, true);
             },
         };
-        // Surround the fontawesome with two invisible characters so the
-        // selection can navigate around it.
-        const domObject: DomObjectFragment = {
-            children: [
-                // We are targetting the invisible character BEFORE the
-                // fontawesome node.
-                // If offset 1:
-                // Moving from before the fontawesome node to after it.
-                // (DOM is `<invisible/>[]<fontawesome/><invisible/>` but
-                // should be `<invisible/><fontawesome/><invisible/>[]`).
-                // else:
-                // Stay before the fontawesome node.
-                { text: zeroWidthSpace },
-                // If we are targetting the fontawesome directyle then stay
-                // before the fontawesome node.
-                fontawesome,
-                // We are targetting the invisible character AFTER the
-                // fontawesome node.
-                // If offset 0:
-                // Moving from after the fontawesome node to before it.
-                // (DOM is `<invisible/><fontawesome/>[]<invisible/>` but
-                // should be `[]<invisible/><fontawesome/><invisible/>`).
-                // else:
-                // Stay after the fontawesome node.
-                { text: zeroWidthSpace },
-            ],
-        };
 
-        worker.locate([node], domObject.children[0] as DomObjectText);
+        let domObject: DomObjectFragment;
+        if (this.shouldAddNavigationHelpers(node)) {
+            // Surround the fontawesome with two invisible characters so the
+            // selection can navigate around it.
+            domObject = {
+                children: [
+                    // We are targetting the invisible character BEFORE the
+                    // fontawesome node.
+                    // If offset 1:
+                    // Moving from before the fontawesome node to after it.
+                    // (DOM is `<invisible/>[]<fontawesome/><invisible/>` but
+                    // should be `<invisible/><fontawesome/><invisible/>[]`).
+                    // else:
+                    // Stay before the fontawesome node.
+                    { text: zeroWidthSpace },
+                    // If we are targetting the fontawesome directyle then stay
+                    // before the fontawesome node.
+                    fontawesome,
+                    // We are targetting the invisible character AFTER the
+                    // fontawesome node.
+                    // If offset 0:
+                    // Moving from after the fontawesome node to before it.
+                    // (DOM is `<invisible/><fontawesome/>[]<invisible/>` but
+                    // should be `[]<invisible/><fontawesome/><invisible/>`).
+                    // else:
+                    // Stay after the fontawesome node.
+                    { text: zeroWidthSpace },
+                ],
+            };
+
+            worker.locate([node], domObject.children[0] as DomObjectText);
+            worker.locate([node], domObject.children[2] as DomObjectText);
+        } else {
+            domObject = { children: [fontawesome] };
+        }
         worker.locate([node], fontawesome);
-        worker.locate([node], domObject.children[2] as DomObjectText);
 
         return domObject;
+    }
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * Return true if the current context justifies putting a mechanism in place
+     * to permit navigation around the rendered font awesome node.
+     *
+     * @param node
+     */
+    shouldAddNavigationHelpers(node: FontAwesomeNode): boolean {
+        const range = this.engine.editor.selection.range;
+        // Is parent editable.
+        if (node.parent && !range.mode.is(node.parent, RuleProperty.EDITABLE)) {
+            return false;
+        }
+        // Is node next to range.
+        if (range.start.nextSibling() === node ||
+            range.start.previousSibling() === node ||
+            range.end.nextSibling() === node ||
+            range.end.previousSibling() === node) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
