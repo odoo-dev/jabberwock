@@ -24,6 +24,7 @@ import { FontAwesomeNode } from '../plugin-fontawesome/src/FontAwesomeNode';
 import { SeparatorNode } from '../core/src/VNodes/SeparatorNode';
 import { Format } from '../core/src/Format';
 import { OdooVideoNode } from '../plugin-odoo-video/src/OdooVideoNode';
+import { ReactiveEditorInfo } from '../plugin-reactive-info/src/ReactiveEditorInfo';
 
 export {
     OdooWebsiteEditor,
@@ -52,4 +53,5 @@ export {
     OdooVideoNode,
     SeparatorNode,
     Format,
+    ReactiveEditorInfo,
 };
