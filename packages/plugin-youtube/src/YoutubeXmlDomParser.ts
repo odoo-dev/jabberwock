@@ -11,6 +11,7 @@ export class YoutubeXmlDomParser extends AbstractParser<Node> {
         const isYoutubeVideo =
             item instanceof Element &&
             nodeName(item) === 'IFRAME' &&
+            item.getAttribute('src') &&
             item.getAttribute('src').includes('youtu');
         return isYoutubeVideo;
     };

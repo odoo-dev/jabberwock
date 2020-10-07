@@ -1,7 +1,7 @@
 import { VNode } from '../../core/src/VNodes/VNode';
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
-import { IframeNode } from './IframeNode';
+import { IframeContainerNode } from './IframeContainerNode';
 import { nodeName } from '../../utils/src/utils';
 
 export class IframeXmlDomParser extends AbstractParser<Node> {
@@ -19,7 +19,7 @@ export class IframeXmlDomParser extends AbstractParser<Node> {
      */
     async parse(item: Element): Promise<VNode[]> {
         const attributes = this.engine.parseAttributes(item);
-        const shadow = new IframeNode({ src: attributes.get('src') });
+        const shadow = new IframeContainerNode({ src: attributes.get('src') });
         attributes.remove('src');
         if (attributes.length) {
             shadow.modifiers.append(attributes);

@@ -4,12 +4,12 @@ import { Parser } from '../../plugin-parser/src/Parser';
 import { Renderer } from '../../plugin-renderer/src/Renderer';
 import { IframeHtmlDomParser } from './IframeHtmlDomParser';
 import { IframeXmlDomParser } from './IframeXmlDomParser';
-import { IframeDomObjectRenderer } from './IframeDomObjectRenderer';
+import { IframeContainerDomObjectRenderer } from './IframeContainerDomObjectRenderer';
 
 export class Iframe<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Parser, Renderer];
     readonly loadables: Loadables<Parser & Renderer> = {
         parsers: [IframeXmlDomParser, IframeHtmlDomParser],
-        renderers: [IframeDomObjectRenderer],
+        renderers: [IframeContainerDomObjectRenderer],
     };
 }

@@ -1,17 +1,6 @@
-import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
+import { AtomicNode } from '../../core/src/VNodes/AtomicNode';
 
-export interface IframeNodeParams {
-    src?: string;
-}
-
-export class IframeNode extends ContainerNode {
+export class IframeNode extends AtomicNode {
     editable = false;
     breakable = false;
-    src?: string;
-    constructor(params?: IframeNodeParams) {
-        super();
-        if (params?.src) {
-            this.src = params.src;
-        }
-    }
 }
