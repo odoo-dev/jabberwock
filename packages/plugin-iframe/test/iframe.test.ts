@@ -10,7 +10,7 @@ import { Iframe } from '../src/Iframe';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { Parser } from '../../plugin-parser/src/Parser';
 import { TagNode } from '../../core/src/VNodes/TagNode';
-import { IframeNode } from '../src/IframeNode';
+import { IframeContainerNode } from '../src/IframeContainerNode';
 import { CharNode } from '../../plugin-char/src/CharNode';
 import { Html } from '../../plugin-html/src/Html';
 import { MetadataNode } from '../../plugin-metadata/src/MetadataNode';
@@ -71,7 +71,7 @@ describe('Iframe', async () => {
 
                 expect(node instanceof TagNode && node.htmlTag).to.equal('DIV');
                 const iframe = node.firstChild();
-                expect(iframe instanceof IframeNode).to.equal(true);
+                expect(iframe instanceof IframeContainerNode).to.equal(true);
                 expect(iframe.firstChild()).to.equal(undefined);
             });
             it('should parse a template with <t-iframe> which have content', async () => {
@@ -110,7 +110,7 @@ describe('Iframe', async () => {
 
                 await editor.stop();
 
-                const iframe = node.firstChild() as IframeNode;
+                const iframe = node.firstChild() as IframeContainerNode;
                 const style = iframe.childVNodes[0];
                 expect(style instanceof MetadataNode && style.htmlTag).to.equal('STYLE');
                 expect(style instanceof MetadataNode && style.contents).to.equal(
@@ -140,7 +140,7 @@ describe('Iframe', async () => {
 
                 await editor.stop();
 
-                const iframe = node.firstChild() as IframeNode;
+                const iframe = node.firstChild() as IframeContainerNode;
                 const link = iframe.childVNodes[0];
                 expect(link instanceof MetadataNode && link.htmlTag).to.equal('LINK');
 
@@ -181,7 +181,7 @@ describe('Iframe', async () => {
 
                 await editor.stop();
 
-                const iframe = node.firstChild() as IframeNode;
+                const iframe = node.firstChild() as IframeContainerNode;
                 const link = iframe.childVNodes[0];
                 expect(link instanceof MetadataNode && link.htmlTag).to.equal('LINK');
                 expect(link.modifiers.find(Attributes).name).to.equal(
@@ -211,6 +211,7 @@ describe('Iframe', async () => {
 
                 const domDiv = document.createElement('div');
                 const domIframe = document.createElement('iframe');
+                domIframe.setAttribute('name', 'jw-iframe');
                 domDiv.appendChild(domIframe);
 
                 const nodes = await editor.plugins.get(Parser).parse('dom/html', domDiv);
@@ -220,7 +221,7 @@ describe('Iframe', async () => {
 
                 expect(node instanceof TagNode && node.htmlTag).to.equal('DIV');
                 const iframe = node.firstChild();
-                expect(iframe instanceof IframeNode).to.equal(true);
+                expect(iframe instanceof IframeContainerNode).to.equal(true);
                 expect(iframe.firstChild()).to.equal(undefined);
             });
             it('should parse a HtmlDocument with iframe container', async () => {
@@ -232,6 +233,7 @@ describe('Iframe', async () => {
 
                 const domDiv = document.createElement('div');
                 const domIframe = document.createElement('iframe');
+                domIframe.setAttribute('name', 'jw-iframe');
                 domDiv.appendChild(domIframe);
                 container.appendChild(domDiv);
                 await new Promise(r => setTimeout(r, 15));
@@ -243,7 +245,7 @@ describe('Iframe', async () => {
 
                 expect(node instanceof TagNode && node.htmlTag).to.equal('DIV');
                 const iframe = node.firstChild();
-                expect(iframe instanceof IframeNode).to.equal(true);
+                expect(iframe instanceof IframeContainerNode).to.equal(true);
                 expect(iframe.firstChild()).to.equal(undefined);
             });
             it('should parse a HtmlDocument with iframe which have content', async () => {
@@ -255,6 +257,7 @@ describe('Iframe', async () => {
 
                 const domDiv = document.createElement('div');
                 const domIframe = document.createElement('iframe');
+                domIframe.setAttribute('name', 'jw-iframe');
                 domDiv.appendChild(domIframe);
                 container.appendChild(domDiv);
                 await new Promise(r => setTimeout(r, 15));
@@ -270,7 +273,7 @@ describe('Iframe', async () => {
                 await editor.stop();
 
                 const iframe = node.firstChild();
-                expect(iframe instanceof IframeNode).to.equal(true);
+                expect(iframe instanceof IframeContainerNode).to.equal(true);
                 const section = iframe.firstChild();
                 expect(section instanceof TagNode && section.htmlTag).to.equal('SECTION');
                 expect(section.firstChild() instanceof CharNode).to.equal(true);
@@ -285,6 +288,7 @@ describe('Iframe', async () => {
 
                 const domDiv = document.createElement('div');
                 const domIframe = document.createElement('iframe');
+                domIframe.setAttribute('name', 'jw-iframe');
                 domDiv.appendChild(domIframe);
                 container.appendChild(domDiv);
                 await new Promise(r => setTimeout(r, 15));
@@ -301,7 +305,7 @@ describe('Iframe', async () => {
 
                 await editor.stop();
 
-                const iframe = node.firstChild() as IframeNode;
+                const iframe = node.firstChild() as IframeContainerNode;
                 const style = iframe.childVNodes[0];
                 expect(style instanceof MetadataNode && style.htmlTag).to.equal('STYLE');
                 expect(style instanceof MetadataNode && style.contents).to.equal(
@@ -320,6 +324,7 @@ describe('Iframe', async () => {
 
                 const domDiv = document.createElement('div');
                 const domIframe = document.createElement('iframe');
+                domIframe.setAttribute('name', 'jw-iframe');
                 domDiv.appendChild(domIframe);
                 container.appendChild(domDiv);
                 await new Promise(r => setTimeout(r, 15));
@@ -345,7 +350,7 @@ describe('Iframe', async () => {
 
                 await editor.stop();
 
-                const iframe = node.firstChild() as IframeNode;
+                const iframe = node.firstChild() as IframeContainerNode;
                 const link = iframe.childVNodes[0];
                 expect(link instanceof MetadataNode && link.htmlTag).to.equal('LINK');
                 expect(link.modifiers.find(Attributes).name).to.equal(
@@ -374,6 +379,7 @@ describe('Iframe', async () => {
 
                 const domDiv = document.createElement('div');
                 const domIframe = document.createElement('iframe');
+                domIframe.setAttribute('name', 'jw-iframe');
                 domDiv.appendChild(domIframe);
                 container.appendChild(domDiv);
                 await new Promise(r => setTimeout(r, 15));
@@ -398,7 +404,7 @@ describe('Iframe', async () => {
 
                 await editor.stop();
 
-                const iframe = node.firstChild() as IframeNode;
+                const iframe = node.firstChild() as IframeContainerNode;
                 const link = iframe.childVNodes[0];
                 expect(link instanceof MetadataNode && link.htmlTag).to.equal('LINK');
                 expect(link.modifiers.find(Attributes).name).to.equal(
@@ -435,7 +441,7 @@ describe('Iframe', async () => {
                         id: 'editable',
                         render: async (editor: JWEditor): Promise<VNode[]> => {
                             const nodes = await parseEditable(editor, section);
-                            const iframe = new IframeNode();
+                            const iframe = new IframeContainerNode();
                             iframe.append(...nodes);
                             return [iframe];
                         },
@@ -463,7 +469,7 @@ describe('Iframe', async () => {
                         id: 'editable',
                         render: async (editor: JWEditor): Promise<VNode[]> => {
                             const nodes = await parseEditable(editor, section);
-                            const iframe = new IframeNode();
+                            const iframe = new IframeContainerNode();
                             iframe.append(...nodes);
                             return [iframe];
                         },
@@ -498,7 +504,7 @@ describe('Iframe', async () => {
                         id: 'editable',
                         render: async (editor: JWEditor): Promise<VNode[]> => {
                             const nodes = await parseEditable(editor, section);
-                            const iframe = new IframeNode();
+                            const iframe = new IframeContainerNode();
                             iframe.append(...nodes);
                             return [iframe];
                         },
