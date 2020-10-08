@@ -1,6 +1,7 @@
 import { AbstractNode } from '../../core/src/VNodes/AbstractNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import JWEditor from '../../core/src/JWEditor';
+import { Modifier } from '../../core/src/Modifier';
 
 export type Constructor<T> = new (...args) => T;
 
@@ -14,23 +15,28 @@ export function isConstructor<T extends Function>(constructor, superClass: T): c
     return constructor.prototype instanceof superClass || constructor === superClass;
 }
 /**
- * Return true if the node has the `contentEditable` attribute.
+ * Return true if the node or modifier has a modifier with the `contentEditable`
+ * attribute.
  *
- * @param node
+ * @param nodeOrModifier
  */
-export function hasContentEditable(node: AbstractNode): boolean {
-    return node.modifiers.find(Attributes)?.has('contentEditable') || false;
+export function hasContentEditable(nodeOrModifier: AbstractNode | Modifier): boolean {
+    if ('modifiers' in nodeOrModifier) {
+        return nodeOrModifier.modifiers.find(Attributes)?.has('contentEditable') || false;
+    }
 }
 /**
- * Return true if the node has the `contentEditable` attribute set to true. This
- * implies that its children are editable but it is not necessarily itself
- * editable.
+ * Return true if the node or modifier has a modifier with the `contentEditable`
+ * attribute set to true. This implies that its children are editable but it is
+ * not necessarily itself editable.
  *
  * TODO: unbind from `Attributes`.
  */
-export function isContentEditable(node: AbstractNode): boolean {
-    const editable = node.modifiers.find(Attributes)?.get('contentEditable');
-    return editable === '' || editable?.toLowerCase() === 'true' || false;
+export function isContentEditable(nodeOrModifier: AbstractNode | Modifier): boolean {
+    if ('modifiers' in nodeOrModifier) {
+        const editable = nodeOrModifier.modifiers.find(Attributes)?.get('contentEditable');
+        return editable === '' || editable?.toLowerCase() === 'true' || false;
+    }
 }
 /**
  * Return true if object a is deep equal to object b, false otherwise.

@@ -28,6 +28,13 @@ export abstract class AbstractNode extends EventMixin {
      */
     get editable(): boolean {
         if (this._editable === false) return false;
+        const modifiers = this.modifiers.filter(mod => 'modifiers' in mod);
+        const lastModifierWithContentEditable = modifiers.reverse().find(modifier => {
+            return hasContentEditable(modifier);
+        });
+        if (lastModifierWithContentEditable) {
+            return isContentEditable(lastModifierWithContentEditable);
+        }
         return (
             !this.parent ||
             (hasContentEditable(this.parent)
