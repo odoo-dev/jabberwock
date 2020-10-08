@@ -11,12 +11,39 @@ import { elementFromPoint } from '../../utils/src/polyfill';
 import { VRange } from '../../core/src/VRange';
 import { InsertTextParams, Char } from '../../plugin-char/src/Char';
 import { Context } from '../../core/src/ContextManager';
+import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
+import { Constructor } from '../../utils/src/utils';
+import { HtmlDomParsingEngine } from '../../plugin-html/src/HtmlDomParsingEngine';
+import {
+    TableRowXmlDomParser,
+    TableSectionAttributes,
+} from '../../plugin-table/src/TableRowXmlDomParser';
+import {
+    ListItemXmlDomParser,
+    ListItemAttributes,
+} from '../../plugin-list/src/ListItemXmlDomParser';
 
 export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
+    static dependencies = [Parser];
+    private _specializedAttributes: Map<AbstractParser<Node>, Constructor<Attributes>> = new Map();
+
+    async start(): Promise<void> {
+        await super.start();
+        const engine = this.editor.plugins.get(Parser).engines[
+            HtmlDomParsingEngine.id
+        ] as HtmlDomParsingEngine;
+        for (const parser of engine.parsers) {
+            if (parser.constructor === TableRowXmlDomParser) {
+                this._specializedAttributes.set(parser, TableSectionAttributes);
+            } else if (parser.constructor === ListItemXmlDomParser) {
+                this._specializedAttributes.set(parser, ListItemAttributes);
+            }
+        }
+    }
+
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
-
     /**
      * Add a class or a list of classes to a DOM node or a list of DOM nodes.
      *
@@ -24,13 +51,17 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      */
     async addClass(
         context: ExecutionContext,
-        domNode: Node | Node[],
+        originalDomNode: Node | Node[],
         className: string | string[],
     ): Promise<ExecCommandResult> {
         const domHelpersAddClass = async (): Promise<void> => {
-            const classes = Array.isArray(className) ? className : [className];
-            for (const node of this.getNodes(domNode)) {
-                node.modifiers.get(Attributes).classList.add(...classes);
+            const domNodes = Array.isArray(originalDomNode) ? originalDomNode : [originalDomNode];
+            for (const domNode of domNodes) {
+                const Attributes = this._getAttributesConstructor(domNode);
+                const classes = Array.isArray(className) ? className : [className];
+                for (const node of this.getNodes(domNode)) {
+                    node.modifiers.get(Attributes).classList.add(...classes);
+                }
             }
         };
         return context.execCommand(domHelpersAddClass);
@@ -42,15 +73,19 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      */
     async removeClass(
         context: ExecutionContext,
-        domNode: Node | Node[],
+        originalDomNode: Node | Node[],
         className: string | string[],
     ): Promise<ExecCommandResult> {
         const domHelpersRemoveClass = async (): Promise<void> => {
             const classes = Array.isArray(className) ? className : [className];
-            for (const node of this.getNodes(domNode)) {
-                node.modifiers.find(Attributes)?.classList.remove(...classes);
-                for (const modifier of node.modifiers.filter(Format)) {
-                    modifier.modifiers.find(Attributes)?.classList.remove(...classes);
+            const domNodes = Array.isArray(originalDomNode) ? originalDomNode : [originalDomNode];
+            for (const domNode of domNodes) {
+                const Attributes = this._getAttributesConstructor(domNode);
+                for (const node of this.getNodes(domNode)) {
+                    node.modifiers.find(Attributes)?.classList.remove(...classes);
+                    for (const modifier of node.modifiers.filter(Format)) {
+                        modifier.modifiers.find(Attributes)?.classList.remove(...classes);
+                    }
                 }
             }
         };
@@ -64,13 +99,17 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      */
     async toggleClass(
         context: ExecutionContext,
-        domNode: Node | Node[],
+        originalDomNode: Node | Node[],
         className: string,
     ): Promise<ExecCommandResult> {
         const domHelpersToggleClass = async (): Promise<void> => {
             const classes = Array.isArray(className) ? className : [className];
-            for (const node of this.getNodes(domNode)) {
-                node.modifiers.get(Attributes).classList.toggle(...classes);
+            const domNodes = Array.isArray(originalDomNode) ? originalDomNode : [originalDomNode];
+            for (const domNode of domNodes) {
+                const Attributes = this._getAttributesConstructor(domNode);
+                for (const node of this.getNodes(domNode)) {
+                    node.modifiers.get(Attributes).classList.toggle(...classes);
+                }
             }
         };
         return context.execCommand(domHelpersToggleClass);
@@ -82,13 +121,17 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      */
     async setAttribute(
         context: ExecutionContext,
-        domNode: Node | Node[],
+        originalDomNode: Node | Node[],
         name: string,
         value: string,
     ): Promise<ExecCommandResult> {
         const domHelpersSetAttribute = async (): Promise<void> => {
-            for (const node of this.getNodes(domNode)) {
-                node.modifiers.get(Attributes).set(name, value);
+            const domNodes = Array.isArray(originalDomNode) ? originalDomNode : [originalDomNode];
+            for (const domNode of domNodes) {
+                const Attributes = this._getAttributesConstructor(domNode);
+                for (const node of this.getNodes(domNode)) {
+                    node.modifiers.get(Attributes).set(name, value);
+                }
             }
         };
         return context.execCommand(domHelpersSetAttribute);
@@ -100,14 +143,18 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      */
     async updateAttributes(
         context: ExecutionContext,
-        domNode: Node | Node[],
+        originalDomNode: Node | Node[],
         attributes: { [key: string]: string },
     ): Promise<ExecCommandResult> {
         const domHelpersUpdateAttribute = async (): Promise<void> => {
-            for (const node of this.getNodes(domNode)) {
-                node.modifiers.get(Attributes).clear();
-                for (const [name, value] of Object.entries(attributes)) {
-                    node.modifiers.get(Attributes).set(name, value);
+            const domNodes = Array.isArray(originalDomNode) ? originalDomNode : [originalDomNode];
+            for (const domNode of domNodes) {
+                const Attributes = this._getAttributesConstructor(domNode);
+                for (const node of this.getNodes(domNode)) {
+                    node.modifiers.get(Attributes).clear();
+                    for (const [name, value] of Object.entries(attributes)) {
+                        node.modifiers.get(Attributes).set(name, value);
+                    }
                 }
             }
         };
@@ -120,15 +167,19 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
      */
     async setStyle(
         context: ExecutionContext,
-        domNode: Node | Node[],
+        originalDomNode: Node | Node[],
         name: string,
         value: string,
         important?: boolean,
     ): Promise<ExecCommandResult> {
         const domHelpersSetStyle = async (): Promise<void> => {
-            for (const node of this.getNodes(domNode)) {
-                value = important ? value + ' !important' : value;
-                node.modifiers.get(Attributes).style.set(name, value);
+            const domNodes = Array.isArray(originalDomNode) ? originalDomNode : [originalDomNode];
+            for (const domNode of domNodes) {
+                const Attributes = this._getAttributesConstructor(domNode);
+                for (const node of this.getNodes(domNode)) {
+                    value = important ? value + ' !important' : value;
+                    node.modifiers.get(Attributes).style.set(name, value);
+                }
             }
         };
         return context.execCommand(domHelpersSetStyle);
@@ -418,5 +469,13 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         const div = document.createElement('div');
         div.innerHTML = html;
         return parser.parse('dom/html', ...div.childNodes);
+    }
+    private _getAttributesConstructor(node: Node): Constructor<Attributes> {
+        for (const [parser, Attributes] of this._specializedAttributes) {
+            if (parser.predicate(node)) {
+                return Attributes;
+            }
+        }
+        return Attributes;
     }
 }
