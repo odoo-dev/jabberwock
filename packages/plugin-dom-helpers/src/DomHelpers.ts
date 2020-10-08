@@ -13,7 +13,7 @@ import { InsertTextParams, Char } from '../../plugin-char/src/Char';
 import { Context } from '../../core/src/ContextManager';
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { Constructor } from '../../utils/src/utils';
-import { HtmlDomParsingEngine } from '../../plugin-html/src/HtmlDomParsingEngine';
+import { HtmlDomParsingEngine, HtmlNode } from '../../plugin-html/src/HtmlDomParsingEngine';
 import {
     TableRowXmlDomParser,
     TableSectionAttributes,
@@ -25,7 +25,10 @@ import {
 
 export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Parser];
-    private _specializedAttributes: Map<AbstractParser<Node>, Constructor<Attributes>> = new Map();
+    private _specializedAttributes: Map<
+        AbstractParser<HtmlNode>,
+        Constructor<Attributes>
+    > = new Map();
 
     async start(): Promise<void> {
         await super.start();
