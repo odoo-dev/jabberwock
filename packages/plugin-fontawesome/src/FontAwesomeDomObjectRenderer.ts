@@ -8,8 +8,6 @@ import {
     DomObjectElement,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
-import { RuleProperty } from '../../core/src/Mode';
-import { CharNode } from '../../plugin-char/src/CharNode';
 
 const zeroWidthSpace = '\u200b';
 
@@ -98,8 +96,8 @@ export class FontAwesomeDomObjectRenderer extends NodeRenderer<DomObject> {
      */
     shouldAddNavigationHelpers(node: FontAwesomeNode): boolean {
         const range = this.engine.editor.selection.range;
-        // Is parent editable.
-        if (node.parent && !range.mode.is(node.parent, RuleProperty.EDITABLE)) {
+
+        if (!this.engine.editor.isInEditable(node)) {
             return false;
         }
         // Is node next to range.

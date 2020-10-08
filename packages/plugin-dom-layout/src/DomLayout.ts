@@ -15,7 +15,7 @@ import { ZoneXmlDomParser } from './ZoneXmlDomParser';
 import { LayoutContainerDomObjectRenderer } from './LayoutContainerDomObjectRenderer';
 import { ZoneIdentifier, ZoneNode } from '../../plugin-layout/src/ZoneNode';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
-import { CommandIdentifier, CommandParams } from '../../core/src/Dispatcher';
+import { CommandIdentifier } from '../../core/src/Dispatcher';
 import { ActionableDomObjectRenderer } from './ActionableDomObjectRenderer';
 import { ActionableGroupDomObjectRenderer } from './ActionableGroupDomObjectRenderer';
 import { ActionableGroupSelectItemDomObjectRenderer } from './ActionableGroupSelectItemDomObjectRenderer';
@@ -23,6 +23,7 @@ import { LabelDomObjectRenderer } from './LabelDomObjectRenderer';
 import { SeparatorDomObjectRenderer } from './SeparatorDomObjectRenderer';
 import { RuleProperty } from '../../core/src/Mode';
 import { isContentEditable, nodeName, isInstanceOf } from '../../utils/src/utils';
+import { VNode } from '../../core/src/VNodes/VNode';
 
 const FocusAndBlurEvents = ['selectionchange', 'blur', 'focus', 'mousedown', 'touchstart'];
 
@@ -163,9 +164,10 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
     }
 
     /**
-     * Return true if the target node is inside Jabberwock's main editable Zone.
+     * Return true if the target node is inside Jabberwock's main editable Zone
+     * and within an editable context.
      *
-     * @param target: Node
+     * @param target
      */
     isInEditable(target: Node): boolean {
         const layout = this.dependencies.get(Layout);
@@ -186,7 +188,7 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         // the editable part of Jabberwock.
         return (
             node &&
-            (isContentEditable(node) || this.editor.mode.is(node, RuleProperty.EDITABLE)) &&
+            this.editor.isInEditable(node) &&
             !!node.ancestor(node => node instanceof ZoneNode && node.managedZones.includes('main'))
         );
     }

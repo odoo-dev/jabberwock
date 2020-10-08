@@ -4,17 +4,17 @@ import { Core } from './Core';
 import { ContextManager, Context } from './ContextManager';
 import { VSelection } from './VSelection';
 import { VRange } from './VRange';
-import { isConstructor } from '../../utils/src/utils';
+import { isConstructor, isContentEditable } from '../../utils/src/utils';
 import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { StageError } from '../../utils/src/errors';
 import { ContainerNode } from './VNodes/ContainerNode';
 import { AtomicNode } from './VNodes/AtomicNode';
 import { SeparatorNode } from './VNodes/SeparatorNode';
-import { ModeIdentifier, ModeDefinition, Mode } from './Mode';
+import { ModeIdentifier, ModeDefinition, Mode, RuleProperty } from './Mode';
 import { Memory, ChangesLocations } from './Memory/Memory';
 import { makeVersionable } from './Memory/Versionable';
 import { VersionableArray } from './Memory/VersionableArray';
-import { Point } from './VNodes/VNode';
+import { Point, VNode } from './VNodes/VNode';
 
 export enum EditorStage {
     CONFIGURATION = 'configuration',
@@ -179,6 +179,14 @@ export class JWEditor {
     // Public
     //--------------------------------------------------------------------------
 
+    /**
+     * Return true if the target node is within an editable context.
+     *
+     * @param target
+     */
+    isInEditable(node: VNode): boolean {
+        return isContentEditable(node) || this.mode.is(node, RuleProperty.EDITABLE);
+    }
     /**
      * Load the given plugin with given configuration.
      *
