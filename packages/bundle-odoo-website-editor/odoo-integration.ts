@@ -23,6 +23,7 @@ import { Parser } from '../plugin-parser/src/Parser';
 import { FontAwesomeNode } from '../plugin-fontawesome/src/FontAwesomeNode';
 import { SeparatorNode } from '../core/src/VNodes/SeparatorNode';
 import { Format } from '../core/src/Format';
+import { OdooVideoNode } from '../plugin-odoo-video/src/OdooVideoNode';
 
 export {
     OdooWebsiteEditor,
@@ -48,6 +49,7 @@ export {
     DomHelpers,
     Parser,
     FontAwesomeNode,
+    OdooVideoNode,
     SeparatorNode,
     Format,
 };
