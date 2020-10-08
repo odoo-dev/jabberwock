@@ -65,7 +65,30 @@ jw-toolbar option.label {
     font-weight: bold;
 }
 
+jw-toolbar jw-select > jw-group jw-button {
+    margin: 0;
+    display: block;
+    width: auto !important;
+    height: auto !important;
+    text-align: left;
+    border-bottom-width: 0;
+}
+jw-toolbar jw-select > jw-group jw-button:last-child {
+    border-bottom-width: 1px;
+}
+jw-toolbar jw-select > jw-group {
+    z-index: 1;
+    display: none;
+    position: absolute;
+    margin-left: 0px;
+    margin-top: 8px;
+}
+jw-toolbar jw-select[aria-pressed="true"] > jw-group {
+    display: block;
+}
+
 jw-toolbar jw-button {
+    user-select: none;
     background-color: white;
     color: black;
     border: 1px solid #68465f;

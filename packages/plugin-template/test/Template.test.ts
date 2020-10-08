@@ -308,14 +308,18 @@ describe('Template', () => {
                 '<jw-editor>',
                     '<jw-toolbar>',
                         '<jw-group>',
-                            '<select>',
-                                '<option></option>',
-                                '<option value="template-template1">Good 1</option>',
-                            '</select>',
-                            '<select>',
-                                '<option></option>',
-                                '<option value="template-template2">Good 2</option>',
-                            '</select>',
+                            '<jw-select>',
+                                '<jw-button>&nbsp;</jw-button>',
+                                '<jw-group>',
+                                    '<jw-button name="template-template1" aria-pressed="false">Good 1</jw-button>',
+                                '</jw-group>',
+                            '</jw-select>',
+                            '<jw-select>',
+                                '<jw-button>&nbsp;</jw-button>',
+                                '<jw-group>',
+                                    '<jw-button name="template-template2" aria-pressed="false">Good 2</jw-button>',
+                                '</jw-group>',
+                                '</jw-select>',
                         '</jw-group>',
                     '</jw-toolbar>',
                     '<article><br></article>',
@@ -383,28 +387,48 @@ describe('Template', () => {
         editor.configure(Toolbar, { layout: [['TemplateSelector']] });
         await editor.start();
 
+        /* eslint-disable prettier/prettier */
         expect(container.innerHTML).to.equal(
             [
                 '<jw-editor>',
-                '<jw-toolbar><jw-group><select><option></option><option value="template-template1">Good 1</option><option value="template-template2">Good 2</option></select></jw-group></jw-toolbar>',
-                '<article><br></article>',
+                    '<jw-toolbar>'+
+                        '<jw-group>'+
+                            '<jw-select>'+
+                                '<jw-button>&nbsp;</jw-button>'+
+                                    '<jw-group>',
+                                        '<jw-button name="template-template1" aria-pressed="false">Good 1</jw-button>'+
+                                        '<jw-button name="template-template2" aria-pressed="false">Good 2</jw-button>'+
+                                    '</jw-group>'+
+                            '</jw-select>'+
+                        '</jw-group>'+
+                    '</jw-toolbar>',
+                    '<article><br></article>',
                 '</jw-editor>',
             ].join(''),
         );
+        /* eslint-enable prettier/prettier */
 
-        const select = container.querySelector('select');
-        select.value = 'template-template1';
-        const dom = select.querySelector('option[value="template-template1"]');
-        dom.setAttribute('selected', 'selected');
-        select.dispatchEvent(new CustomEvent('change'));
-        await nextTickFrame();
+        await click(container.querySelector('jw-button[name="template-template1"]'));
+
+        /* eslint-disable prettier/prettier */
         expect(container.innerHTML).to.equal(
             [
                 '<jw-editor>',
-                '<jw-toolbar><jw-group><select><option></option><option value="template-template1">Good 1</option><option value="template-template2">Good 2</option></select></jw-group></jw-toolbar>',
-                '<div class="row"><div class="col">text default</div></div>',
+                    '<jw-toolbar>'+
+                        '<jw-group>'+
+                            '<jw-select>'+
+                                '<jw-button>&nbsp;</jw-button>'+
+                                    '<jw-group>',
+                                        '<jw-button name="template-template1" aria-pressed="false">Good 1</jw-button>'+
+                                        '<jw-button name="template-template2" aria-pressed="false">Good 2</jw-button>'+
+                                    '</jw-group>'+
+                            '</jw-select>'+
+                        '</jw-group>'+
+                    '</jw-toolbar>',
+                    '<div class="row"><div class="col">text default</div></div>',
                 '</jw-editor>',
             ].join(''),
         );
+        /* eslint-enable prettier/prettier */
     });
 });

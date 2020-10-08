@@ -5,11 +5,12 @@ import {
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { ActionableGroupNode } from '../../plugin-layout/src/ActionableGroupNode';
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
+import { Predicate } from '../../core/src/VNodes/VNode';
 
 export class ActionableGroupDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
-    predicate = ActionableGroupNode;
+    predicate: Predicate = ActionableGroupNode;
 
     actionableGroupNodes = new Map<ActionableGroupNode, HTMLElement>();
 
@@ -28,19 +29,41 @@ export class ActionableGroupDomObjectRenderer extends NodeRenderer<DomObject> {
         ) {
             return { children: [] };
         } else if (group.ancestor(ActionableGroupNode)) {
-            return this._renderSelect(group);
+            return this._renderBlockSelect(group);
         } else {
             return this._renderGroup(group);
         }
     }
-    private _renderSelect(group: ActionableGroupNode): DomObject {
+    private _renderBlockSelect(group: ActionableGroupNode): DomObject {
+        const mousedownHandler = (ev: MouseEvent): void => ev.preventDefault();
+
+        let clickHandler: (ev: MouseEvent) => void;
+        let open = false;
         const objectSelect: DomObject = {
-            tag: 'SELECT',
-            children: [{ tag: 'OPTION' }, ...group.children()],
-            attach: (el: HTMLSelectElement): void => {
+            tag: 'JW-SELECT',
+            children: [
+                { tag: 'JW-BUTTON', children: [{ text: '\u00A0' }] },
+                { tag: 'JW-GROUP', children: group.children() },
+            ],
+            attach: (el: HTMLElement): void => {
+                clickHandler = (ev: MouseEvent): void => {
+                    const inSelect =
+                        (ev.target as Node).nodeType === Node.ELEMENT_NODE &&
+                        (ev.target as Element).closest('jw-select') === el;
+                    if ((!inSelect && open) || ev.currentTarget !== document) {
+                        open = !open;
+                        el.setAttribute('aria-pressed', open.toString());
+                    }
+                };
+                el.addEventListener('mousedown', mousedownHandler);
+                el.addEventListener('click', clickHandler);
+                document.addEventListener('click', clickHandler);
                 this.actionableGroupNodes.set(group, el);
             },
-            detach: (): void => {
+            detach: (el: HTMLElement): void => {
+                el.removeEventListener('mousedown', mousedownHandler);
+                el.removeEventListener('click', clickHandler);
+                document.removeEventListener('click', clickHandler);
                 this.actionableGroupNodes.delete(group);
             },
         };
@@ -72,7 +95,7 @@ export class ActionableGroupDomObjectRenderer extends NodeRenderer<DomObject> {
                 if (invisible) {
                     element.style.display = 'none';
                 } else {
-                    element.style.display = 'inline-block';
+                    element.style.display = '';
                 }
             }
         }

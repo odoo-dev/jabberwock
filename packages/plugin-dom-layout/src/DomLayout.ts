@@ -18,7 +18,6 @@ import { Keymap } from '../../plugin-keymap/src/Keymap';
 import { CommandIdentifier } from '../../core/src/Dispatcher';
 import { ActionableDomObjectRenderer } from './ActionableDomObjectRenderer';
 import { ActionableGroupDomObjectRenderer } from './ActionableGroupDomObjectRenderer';
-import { ActionableGroupSelectItemDomObjectRenderer } from './ActionableGroupSelectItemDomObjectRenderer';
 import { LabelDomObjectRenderer } from './LabelDomObjectRenderer';
 import { SeparatorDomObjectRenderer } from './SeparatorDomObjectRenderer';
 import { RuleProperty } from '../../core/src/Mode';
@@ -41,7 +40,6 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         renderers: [
             ZoneDomObjectRenderer,
             LayoutContainerDomObjectRenderer,
-            ActionableGroupSelectItemDomObjectRenderer,
             ActionableGroupDomObjectRenderer,
             ActionableDomObjectRenderer,
             LabelDomObjectRenderer,

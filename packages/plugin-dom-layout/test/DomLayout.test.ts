@@ -2674,7 +2674,7 @@ describe('DomLayout', () => {
                         await editor.execCommand('deleteForward');
                         expect(document.querySelector('jw-test').innerHTML).to.equal('<p>abc</p>');
                         expect(mutationNumber).to.equal(
-                            3,
+                            4,
                             'remove <p>, remove <br>, update toolbar history button',
                         );
                     },
@@ -2691,14 +2691,14 @@ describe('DomLayout', () => {
                             '<p>a<span style="background-color: red;">bc</span>d</p>',
                         );
                         expect(mutationNumber).to.equal(
-                            6,
+                            7,
                             'update text, add <span>, add text, add text, 2 update toolbar',
                         );
                         mutationNumber = 0;
                         await editor.execCommand('uncolorBackground');
                         expect(document.querySelector('jw-test').innerHTML).to.equal('<p>abcd</p>');
                         expect(mutationNumber).to.equal(
-                            3,
+                            4,
                             'remove <span>, add text, update toolbar',
                         );
                     },
@@ -2717,7 +2717,7 @@ describe('DomLayout', () => {
                             '<p>a<span>b</span>c<span style="color: green;">d</span>e</p>',
                         );
                         expect(mutationNumber).to.equal(
-                            6,
+                            7,
                             'remove 3 formats + remove 2 empty styles, update toolbar',
                         );
                     },
@@ -2888,8 +2888,8 @@ describe('DomLayout', () => {
                         triggerEvent(domEditable, 'mousedown', {
                             button: 2,
                             detail: 1,
-                            clientX: 30,
-                            clientY: 65,
+                            clientX: 65,
+                            clientY: 30,
                         });
                         const text = domEditable.lastChild as Text;
                         setDomSelection(
@@ -2898,6 +2898,7 @@ describe('DomLayout', () => {
                             text,
                             text.textContent.length - 2,
                         );
+                        await nextTick();
                         setDomSelection(
                             text,
                             text.textContent.length - 2,
@@ -2908,7 +2909,7 @@ describe('DomLayout', () => {
                         triggerEvent(domEditable, 'click', {
                             button: 2,
                             detail: 0,
-                            clientX: 65,
+                            clientX: 80,
                             clientY: 30,
                         });
                         triggerEvent(domEditable, 'mouseup', {
@@ -2925,6 +2926,11 @@ describe('DomLayout', () => {
 
                         await nextTick();
                         await nextTick();
+
+                        expect(domEditable.childNodes.length).to.equal(
+                            2,
+                            'at least keep the first text node',
+                        );
                     },
                     contentAfter: 'aaabbbc[cc]',
                 });

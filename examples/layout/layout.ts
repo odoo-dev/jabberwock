@@ -27,6 +27,7 @@ import { ParagraphNode } from '../../packages/plugin-paragraph/src/ParagraphNode
 import { ThemeNode } from '../../packages/plugin-theme/src/ThemeNode';
 import { Iframe } from '../../packages/plugin-iframe/src/Iframe';
 import { Table } from '../../packages/plugin-table/src/Table';
+import { NativeSelect } from '../../packages/plugin-native-select/src/NativeSelect';
 
 const target = document.getElementById('contentToEdit');
 jabberwocky.init(target);
@@ -169,6 +170,7 @@ editor.configure(DomLayout, {
 editor.configure(Table, {
     inlineUI: true,
 });
+editor.load(NativeSelect);
 
 const toolbarConfig = editor.configuration.plugins.find(
     config => config[0] === Toolbar,

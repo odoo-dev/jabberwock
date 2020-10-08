@@ -10,15 +10,16 @@ import { SeparatorNode } from '../../core/src/VNodes/SeparatorNode';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { LabelNode } from '../../plugin-layout/src/LabelNode';
 import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
-import { DomObjectActionable } from './ActionableDomObjectRenderer';
+import { DomObjectActionable } from '../../plugin-dom-layout/src/ActionableDomObjectRenderer';
 import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
 
-export class ActionableGroupSelectItemDomObjectRenderer extends NodeRenderer<DomObject> {
+export class NativeSelectVNodeDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = (node: VNode): boolean => node.ancestors(ActionableGroupNode).length >= 2;
 
     actionableGroupSelectItemNodes = new Map<ActionableNode, HTMLElement>();
+    useBlockIsteadOfSelect: boolean;
 
     constructor(engine: DomObjectRenderingEngine) {
         super(engine);
@@ -126,7 +127,10 @@ export class ActionableGroupSelectItemDomObjectRenderer extends NodeRenderer<Dom
             if (select.toString() !== attrSelected) {
                 if (select) {
                     element.setAttribute('selected', 'true');
-                    element.closest('select').value = element.getAttribute('value');
+                    const domSelect = element.closest('select');
+                    if (domSelect) {
+                        domSelect.value = element.getAttribute('value');
+                    }
                 } else {
                     element.removeAttribute('selected');
                 }

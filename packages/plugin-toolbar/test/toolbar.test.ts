@@ -15,6 +15,7 @@ import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { Pre } from '../../plugin-pre/src/Pre';
 import { Html } from '../../plugin-html/src/Html';
+import { NativeSelect } from '../../plugin-native-select/src/NativeSelect';
 
 const container = document.createElement('div');
 container.classList.add('container');
@@ -75,6 +76,7 @@ describe('Toolbar', async () => {
                 componentZones: [['template', ['root']]],
                 location: [section, 'replace'],
             });
+            editor.load(NativeSelect);
         });
         afterEach(async () => {
             await editor.stop();
