@@ -114,9 +114,16 @@ export class ActionableDomObjectRenderer extends NodeRenderer<DomObject> {
             const domVisible = element.style.display !== 'none';
             if (visible !== domVisible) {
                 if (visible) {
-                    element.style.display = 'inline-block';
+                    element.style.display = '';
                 } else {
                     element.style.display = 'none';
+                }
+            }
+
+            if (select) {
+                const domSelect = element.closest('jw-select');
+                if (domSelect) {
+                    domSelect.querySelector('jw-button').innerHTML = element.innerHTML;
                 }
             }
         }
