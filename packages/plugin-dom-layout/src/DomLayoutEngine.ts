@@ -16,7 +16,7 @@ import {
     DomObjectRenderingEngine,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { TagNode } from '../../core/src/VNodes/TagNode';
-import { flat, isContentEditable } from '../../utils/src/utils';
+import { flat, isContentEditable, nodeName } from '../../utils/src/utils';
 import { Modifier } from '../../core/src/Modifier';
 import { RenderingEngineCache } from '../../plugin-renderer/src/RenderingEngineCache';
 import { ChangesLocations } from '../../core/src/Memory/Memory';
@@ -608,6 +608,14 @@ export class DomLayoutEngine extends LayoutEngine {
     private _renderSelection(): void {
         const selection = this.editor.selection;
         const range = selection.range;
+
+        const activeNodeName = document.activeElement && nodeName(document.activeElement);
+        if (activeNodeName === 'INPUT' || activeNodeName === 'TEXTAREA') {
+            // Do not change the selection if the focus is set within an input
+            // or a textarea so as not to lose that focus.
+            return;
+        }
+
         if (selection.range.isCollapsed()) {
             // Prevent rendering a collapsed selection in a non-editable context.
             const target =
