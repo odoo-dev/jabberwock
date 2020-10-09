@@ -32,6 +32,7 @@ import { isInBlockquote, Blockquote } from '../../plugin-blockquote/src/Blockquo
 import { OdooTableDomObjectRenderer } from './OdooTableDomObjectRenderer';
 import { FontAwesomeNode } from '../../plugin-fontawesome/src/FontAwesomeNode';
 import { Core } from '../../core/src/Core';
+import { LinkFormatDomObjectModifierRenderer } from './LinkFormatDomObjectModifierRenderer';
 
 export enum OdooPaddingClasses {
     NONE = 'padding-none',
@@ -186,6 +187,7 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             OdooImageDomObjectRenderer,
             OdooFontAwesomeDomObjectRenderer,
             OdooTableDomObjectRenderer,
+            LinkFormatDomObjectModifierRenderer,
         ],
         components: [
             {
