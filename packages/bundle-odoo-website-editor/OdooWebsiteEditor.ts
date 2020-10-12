@@ -233,7 +233,7 @@ export class OdooWebsiteEditor extends JWEditor {
                     render: async (): Promise<VNode[]> => {
                         const div = new DividerNode();
                         div.modifiers.get(Attributes).set('contentEditable', 'true');
-                        div.modifiers.get(Attributes).classList.add('note-editable');
+                        div.modifiers.get(Attributes).classList.add('note-editable', 'o_editable');
                         div.modifiers.get(Attributes).style.set('width', '100%');
                         const zone = new ZoneNode({ managedZones: ['editable'] });
                         zone.editable = true;
