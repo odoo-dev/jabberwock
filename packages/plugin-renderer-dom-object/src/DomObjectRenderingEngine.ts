@@ -490,7 +490,7 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
             if (parent) {
                 const markers: VNode[] = [];
                 parent.childVNodes.forEach(sibling => {
-                    // Filter and sort the ndoes.
+                    // Filter and sort the nodes.
                     if (setNodes.has(sibling)) {
                         if (sibling.tangible) {
                             renderingUnits.push(this._createUnit(cache, sibling, rendered));
