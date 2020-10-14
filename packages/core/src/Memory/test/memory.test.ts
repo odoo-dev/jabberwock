@@ -2273,7 +2273,7 @@ describe('core', () => {
 
                     expect(Object.keys(memory._slices.snap.data).length).to.equal(1);
                     patch = memory._slices.snap.data[ID];
-                    expect(Object.values(patch.patch)).to.deep.equal([1, 2, 3]);
+                    expect(Object.values(patch.patch).sort()).to.deep.equal([1, 2, 3]);
                 });
                 it('snapshot set changes', () => {
                     const memory = new Memory();
@@ -2316,7 +2316,7 @@ describe('core', () => {
 
                     const add = [];
                     patch.add.forEach((item: number) => add.push(item));
-                    expect(add).to.deep.equal([1, 3]);
+                    expect(add.sort()).to.deep.equal([1, 3]);
                     const remove = [];
                     patch.delete.forEach((item: number) => remove.push(item));
                     expect(remove).to.deep.equal([0]);
@@ -2421,9 +2421,163 @@ describe('core', () => {
                     expect(Object.keys(memory._slices).length).to.equal(4);
                     expect(Object.keys(memory._slices.test.data).length).to.equal(2);
                     patch = memory._slices.test.data[ID];
-                    expect(Object.values(patch.patch)).to.deep.equal([1, 2, 3]);
+                    expect(Object.values(patch.patch).sort()).to.deep.equal([1, 2, 3]);
                     patch = memory._slices.test.data[obj[memoryProxyPramsKey].ID];
                     expect(patch).to.deep.equal({ props: { 'x+y': 3 } });
+                });
+                it('snapshop create some slice and concat data', () => {
+                    const memory = new Memory();
+                    memory._numberOfFlatSlices = 5;
+                    memory._numberOfSlicePerSnapshot = 3;
+
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    const object = new VersionableObject();
+                    memory.attach(object);
+
+                    object['x+'] = 1;
+
+                    for (let i = 0; i < 10; i++) {
+                        memory.create(i.toString());
+                        memory.switchTo(i.toString());
+                    }
+
+                    object['y+'] = 2;
+
+                    for (let i = 10; i < 20; i++) {
+                        memory.create(i.toString());
+                        memory.switchTo(i.toString());
+                    }
+
+                    const sliceAndChanges = memory.getSliceAndChanges(object);
+                    expect(sliceAndChanges.length).to.equal(
+                        6,
+                        'creation in "test", change in "9" and 4 snapshots',
+                    );
+
+                    for (const c of sliceAndChanges) {
+                        switch (c.sliceKey) {
+                            case 'test':
+                            case '2[snapshot from test]':
+                            case '5[snapshot from test]':
+                            case '8[snapshot from test]':
+                                expect(c.changes).to.deep.equal({ props: { 'x+': 1 } }, c.sliceKey);
+                                break;
+                            case '9':
+                                expect(c.changes).to.deep.equal({ props: { 'y+': 2 } }, c.sliceKey);
+                                break;
+                            case '11[snapshot from test]':
+                                expect(c.changes).to.deep.equal(
+                                    { props: { 'x+': 1, 'y+': 2 } },
+                                    c.sliceKey,
+                                );
+                                break;
+                            default:
+                                expect(true).to.equal(false);
+                        }
+                    }
+                });
+                it('undo the slice after a snapshot of added prop of object', () => {
+                    const memory = new Memory();
+                    memory._numberOfFlatSlices = 5;
+                    memory._numberOfSlicePerSnapshot = 3;
+
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    const object = new VersionableObject();
+                    memory.attach(object);
+
+                    object['x+'] = 1;
+
+                    for (let i = 0; i < 10; i++) {
+                        memory.create(i.toString());
+                        memory.switchTo(i.toString());
+                    }
+
+                    object['y+'] = 2;
+
+                    for (let i = 10; i < 20; i++) {
+                        memory.create(i.toString());
+                        memory.switchTo(i.toString());
+                    }
+
+                    memory.switchTo('15');
+                    expect(object).to.deep.equal({ 'x+': 1, 'y+': 2 });
+
+                    memory.switchTo('1');
+                    expect(object).to.deep.equal(
+                        { 'x+': 1 },
+                        'Should removed the last created props',
+                    );
+                });
+                it('undo the slice after a snapshot of added item in array', () => {
+                    const memory = new Memory();
+                    memory._numberOfFlatSlices = 5;
+                    memory._numberOfSlicePerSnapshot = 3;
+
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    const array = new VersionableArray();
+                    memory.attach(array);
+
+                    const object1 = new VersionableObject({ id: '1' });
+                    array[1] = object1;
+
+                    for (let i = 0; i < 10; i++) {
+                        memory.create(i.toString());
+                        memory.switchTo(i.toString());
+                    }
+
+                    const object2 = new VersionableObject({ id: '3' });
+                    array[3] = object2;
+
+                    for (let i = 10; i < 20; i++) {
+                        memory.create(i.toString());
+                        memory.switchTo(i.toString());
+                    }
+
+                    memory.switchTo('15');
+                    expect(array).to.deep.equal([undefined, { id: '1' }, undefined, { id: '3' }]);
+
+                    memory.switchTo('1');
+                    expect(array).to.deep.equal(
+                        [undefined, { id: '1' }],
+                        'Should removed the last created items',
+                    );
+                });
+                it('undo the slice after a snapshot of added item in set', () => {
+                    const memory = new Memory();
+                    memory._numberOfFlatSlices = 5;
+                    memory._numberOfSlicePerSnapshot = 3;
+
+                    memory.create('test');
+                    memory.switchTo('test');
+
+                    const set = new VersionableSet();
+                    memory.attach(set);
+
+                    set.add(1);
+
+                    for (let i = 0; i < 10; i++) {
+                        memory.create(i.toString());
+                        memory.switchTo(i.toString());
+                    }
+
+                    set.add(2);
+
+                    for (let i = 10; i < 20; i++) {
+                        memory.create(i.toString());
+                        memory.switchTo(i.toString());
+                    }
+
+                    memory.switchTo('15');
+                    expect([...set]).to.deep.equal([1, 2]);
+
+                    memory.switchTo('1');
+                    expect([...set]).to.deep.equal([1], 'Should removed the last added items');
                 });
             });
 

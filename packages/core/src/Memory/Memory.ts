@@ -124,6 +124,7 @@ export function markAsDiffRoot(obj: MemoryAllowedObjectType): void {
 
 let memoryID = 0;
 const memoryRootSliceName = '';
+const regExpoSnapshotOrigin = /^.*\[snapshot from (.*)\]$/;
 
 export class MemorySlice {
     name: SliceKey;
@@ -554,6 +555,53 @@ export class Memory {
         }
         return true;
     }
+    /**
+     * Debug tools to get the list of memory slice and changes from a
+     * versionable in order to be able to trace his evolution.
+     *
+     * @param versionable
+     */
+    getSliceAndChanges(
+        versionable: object | number | VersionableID,
+    ): { sliceKey: string; versionableId: number; changes: MemoryType }[] {
+        let id: number;
+        if (typeof versionable === 'number' || versionable instanceof VersionableID) {
+            id = +versionable;
+            versionable = this._proxies[id];
+        } else {
+            for (const key in this._proxies) {
+                if (this._proxies[key] === versionable) {
+                    id = +key;
+                    break;
+                }
+            }
+        }
+        const res: { sliceKey: string; versionableId: number; changes: MemoryType }[] = [];
+        const slices = Object.values(this._slices).filter(slice => slice.data[id]);
+        for (const slice of slices) {
+            let changes: MemoryType;
+            if (versionable instanceof Set) {
+                const data = slice.data[id] as MemoryTypeSet;
+                changes = {
+                    add: new Set(data.add),
+                    delete: new Set(data.delete),
+                };
+            } else if (versionable instanceof Array) {
+                const data = slice.data[id] as MemoryTypeArray;
+                changes = {
+                    props: Object.assign({}, data.props),
+                    patch: Object.assign({}, data.patch),
+                };
+            } else {
+                const data = slice.data[id] as MemoryTypeObject;
+                changes = {
+                    props: Object.assign({}, data.props),
+                };
+            }
+            res.push({ sliceKey: slice.name, versionableId: id, changes: changes });
+        }
+        return res;
+    }
 
     /////////////////////////////////////////////////////
     // private
@@ -867,16 +915,18 @@ export class Memory {
             Object.keys(slice).forEach(ID => {
                 const id = +ID;
                 const memoryItem = slice[id];
-                if (!intoSlices[id]) {
-                    intoSlices[id] = memoryItem;
-                    return;
-                }
                 if (memoryItem instanceof MemoryTypeArray) {
-                    const intoItem = intoSlices[id] as MemoryTypeArray;
+                    let intoItem = intoSlices[id] as MemoryTypeArray;
+                    if (!intoItem) {
+                        intoItem = intoSlices[id] = new MemoryTypeArray();
+                    }
                     Object.assign(intoItem.patch, memoryItem.patch);
                     Object.assign(intoItem.props, memoryItem.props);
                 } else if (memoryItem instanceof MemoryTypeSet) {
-                    const intoItem = intoSlices[id] as MemoryTypeSet;
+                    let intoItem = intoSlices[id] as MemoryTypeSet;
+                    if (!intoItem) {
+                        intoItem = intoSlices[id] = new MemoryTypeSet();
+                    }
                     memoryItem.add.forEach(item => {
                         if (!intoItem.delete.has(item)) {
                             intoItem.add.add(item);
@@ -892,7 +942,10 @@ export class Memory {
                         }
                     });
                 } else {
-                    const intoItem = intoSlices[id] as MemoryTypeObject;
+                    let intoItem = intoSlices[id] as MemoryTypeObject;
+                    if (!intoItem) {
+                        intoItem = intoSlices[id] = new MemoryTypeObject();
+                    }
                     Object.assign(intoItem.props, memoryItem.props);
                 }
             });
@@ -908,7 +961,11 @@ export class Memory {
         if (refs.length > this._numberOfFlatSlices + this._numberOfSlicePerSnapshot) {
             const fromSliceKey = refs[refs.length - 1].name;
             const unitSliceKey = refs[refs.length - 1 - this._numberOfSlicePerSnapshot].name;
-            const newSliceKey = unitSliceKey + '[snapshot from ' + fromSliceKey + ']';
+            const newSliceKey =
+                unitSliceKey +
+                '[snapshot from ' +
+                fromSliceKey.replace(regExpoSnapshotOrigin, '$1') +
+                ']';
             this.snapshot(fromSliceKey, unitSliceKey, newSliceKey);
         }
     }
