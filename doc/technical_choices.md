@@ -46,4 +46,10 @@ Ckeditor: deactivate the spellcheck alltogether and use third party plugins.
 
 Quilljs: ?
 
+# One char per char
+## Benefits
+1) When doing enter, backspace, [list more case], it is easier to create an
+algorithm that does not need to look at all the modifier.
+2) It is easier to handle the range. When we move characters, we do not need
+to calculate the range.
 
