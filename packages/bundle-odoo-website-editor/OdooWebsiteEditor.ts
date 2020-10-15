@@ -191,8 +191,10 @@ export class OdooWebsiteEditor extends JWEditor {
                         <t t-zone="tools"/>
                     </div>
                     <div class="d-flex flex-grow-1 overflow-auto">
-                        <t t-zone="snippetManipulators"/>
-                        <t t-zone="main"/>
+                        <t-theme name="default">
+                            <t t-zone="snippetManipulators"/>
+                            <t t-zone="main"/>
+                        </t-theme>
                     </div>
                 </div>
                 <t t-zone="main_sidebar"/>
@@ -240,11 +242,6 @@ export class OdooWebsiteEditor extends JWEditor {
                         const zone = new ZoneNode({ managedZones: ['editable'] });
                         zone.editable = true;
                         div.append(zone);
-                        if (options.devicePreview) {
-                            const theme = new ThemeNode();
-                            theme.append(div);
-                            return [theme];
-                        }
                         return [div];
                     },
                 },
@@ -285,8 +282,7 @@ export class OdooWebsiteEditor extends JWEditor {
             this.configure(DevicePreview, {
                 getTheme(editor: JWEditor) {
                     const layout = editor.plugins.get(Layout);
-                    const domLayout = layout.engines.dom;
-                    return domLayout.components.main[0] as ThemeNode;
+                    return layout.engines.dom.root.firstDescendant(ThemeNode);
                 },
             });
         }
