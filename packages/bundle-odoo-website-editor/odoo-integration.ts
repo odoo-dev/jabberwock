@@ -25,6 +25,7 @@ import { SeparatorNode } from '../core/src/VNodes/SeparatorNode';
 import { Format } from '../core/src/Format';
 import { OdooVideoNode } from '../plugin-odoo-video/src/OdooVideoNode';
 import { ReactiveEditorInfo } from '../plugin-reactive-info/src/ReactiveEditorInfo';
+import { Resizer } from '../plugin-resizer/src/Resizer';
 
 export {
     OdooWebsiteEditor,
@@ -54,4 +55,5 @@ export {
     SeparatorNode,
     Format,
     ReactiveEditorInfo,
+    Resizer,
 };

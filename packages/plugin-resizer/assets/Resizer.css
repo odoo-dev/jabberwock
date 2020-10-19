@@ -17,4 +17,6 @@ jw-resizer::before {
     margin-top: 1px;
     display: inline-block;
     transform: scale(5,1);
+    color: black;
+    vertical-align: middle;
 }

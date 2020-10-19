@@ -97,13 +97,14 @@ export class ResizerDomObjectRenderer extends NodeRenderer<DomObject> {
         const mainZone = this.domEngine.root.descendants(
             node => node instanceof ZoneNode && node.managedZones.includes('main'),
         )[0];
-        this.targetToResize = (this.domEngine.getDomNodes(
-            mainZone,
-        )[0] as HTMLElement)?.parentElement;
+        const domMain = this.domEngine.getDomNodes(mainZone)[0] as HTMLElement;
+        this.targetToResize = domMain?.parentElement || domMain;
 
         // Force the overflow on the targetElement.
         // Necesary to make the resizer works out of the box.
-        this.targetToResize.style.overflow = 'auto';
+        if (this.targetToResize) {
+            this.targetToResize.style.overflow = 'auto';
+        }
     }
     /**
      * Change the height of the target HTMLElement.
@@ -112,6 +113,8 @@ export class ResizerDomObjectRenderer extends NodeRenderer<DomObject> {
      */
     _resizeTargetHeight(height: number): void {
         height = Math.max(height, 50); // todo : implement a way to force the min-height with resizer parameters ?
-        if (this.targetToResize) this.targetToResize.style.height = height + 'px';
+        if (this.targetToResize) {
+            this.targetToResize.style.height = height + 'px';
+        }
     }
 }
