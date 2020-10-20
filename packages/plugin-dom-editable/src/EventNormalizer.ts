@@ -4,6 +4,7 @@ import { caretPositionFromPoint, elementFromPoint } from '../../utils/src/polyfi
 import { targetDeepest } from '../../utils/src/Dom';
 import { nodeName, getDocument, nodeLength, isInstanceOf } from '../../utils/src/utils';
 import { removeFormattingSpace } from '../../utils/src/formattingSpace';
+import { isBlock } from '../../utils/src/isBlock';
 
 const navigationKey = new Set([
     'ArrowUp',
@@ -287,6 +288,7 @@ interface CurrentStackObservations {
         keyboardSelectAll?: CustomEvent;
     };
     mutations: MutationRecord[];
+    flickeringRemoved: Set<EventToProcess>;
 }
 
 /**
@@ -777,7 +779,10 @@ export class EventNormalizer {
         // events occuring during one tick is not enough so we need to delay the
         // analysis after we observe events during two ticks instead.
         const needSecondTickObservation = currentStackObservation._events.every(ev => {
-            return !MultiStackEventTypes.includes(ev.type);
+            return (
+                !MultiStackEventTypes.includes(ev.type) &&
+                !currentStackObservation.flickeringRemoved.has(ev)
+            );
         });
         if (needSecondTickObservation && !secondTickObservation) {
             return await new Promise((resolve): void => {
@@ -813,6 +818,7 @@ export class EventNormalizer {
         const inferredKeydownEvent: InferredKeydownEvent =
             keydownEvent &&
             keydownEvent.key === 'Unidentified' &&
+            inputEvent &&
             this._inferKeydownEvent(inputEvent);
         //
         // First pass to get the informations
@@ -876,14 +882,18 @@ export class EventNormalizer {
         // multiples keys pushed.
         if (currentStackObservation._multiKeyStack.length > 1 && possibleMultiKeydown) {
             currentStackObservation._multiKeyStack.map(keydownMap => {
-                const keyboardAction = this._getKeyboardAction(
-                    currentStackObservation.mutations,
-                    keydownMap.keydown.key,
-                    (keydownMap.input && keydownMap.input.inputType) || '',
-                    !!mutatedElements.size,
-                );
-                if (keyboardAction) {
-                    normalizedActions.push(keyboardAction);
+                if (
+                    mutatedElements.size ||
+                    currentStackObservation.flickeringRemoved.has(keydownMap.keydown)
+                ) {
+                    const keyboardAction = this._getKeyboardAction(
+                        currentStackObservation.mutations,
+                        keydownMap.keydown.key,
+                        (keydownMap.input && keydownMap.input.inputType) || '',
+                    );
+                    if (keyboardAction) {
+                        normalizedActions.push(keyboardAction);
+                    }
                 }
             });
         } else if (cutEvent) {
@@ -906,15 +916,19 @@ export class EventNormalizer {
             normalizedActions.length === 0 &&
             ((!compositionEvent && key) || isCompositionKeyboard || isVirtualKeyboard)
         ) {
-            const keyboardAction = this._getKeyboardAction(
-                currentStackObservation.mutations,
-                key,
-                inputType,
-                !!mutatedElements.size,
-                keydownEvent,
-            );
-            if (keyboardAction) {
-                normalizedActions.push(keyboardAction);
+            if (
+                mutatedElements.size ||
+                currentStackObservation.flickeringRemoved.has(keydownEvent)
+            ) {
+                const keyboardAction = this._getKeyboardAction(
+                    currentStackObservation.mutations,
+                    key,
+                    inputType,
+                    keydownEvent,
+                );
+                if (keyboardAction) {
+                    normalizedActions.push(keyboardAction);
+                }
             }
 
             if (compositionReplaceOneChar) {
@@ -978,6 +992,7 @@ export class EventNormalizer {
             _multiKeyStack: [],
             _eventsMap: {},
             mutations: undefined,
+            flickeringRemoved: new Set(),
         };
     }
 
@@ -1042,7 +1057,6 @@ export class EventNormalizer {
         mutations: MutationRecord[],
         key: string,
         inputType: string,
-        hasMutatedElements: boolean,
         keydownEvent?: KeyboardEvent,
     ):
         | InsertLineBreakAction
@@ -1051,8 +1065,7 @@ export class EventNormalizer {
         | DeleteWordAction
         | DeleteHardLineAction
         | DeleteContentAction {
-        const isInsertOrRemoveAction = hasMutatedElements && !inputTypeCommands.has(inputType);
-        if (isInsertOrRemoveAction) {
+        if (!inputTypeCommands.has(inputType)) {
             if (key === 'Backspace' || key === 'Delete') {
                 return this._getRemoveAction(mutations, key, inputType, keydownEvent);
             } else if (key === 'Enter') {
@@ -1720,6 +1733,104 @@ export class EventNormalizer {
         }
         const [offsetNode, offset] = targetDeepest(selection.anchorNode, selection.anchorOffset);
         this._initialCaretPosition = { offsetNode, offset };
+
+        Promise.resolve().then(() => {
+            // Wait the next micro task to allow the external features to
+            // prevent the default and cancel the normalized keypress.
+            if (!ev.defaultPrevented && this._isSafeToPreventKeyboardEvent(ev, selection)) {
+                ev.preventDefault();
+                this.currentStackObservation.flickeringRemoved.add(ev);
+            }
+        });
+    }
+    /**
+     * Check the selection to preventDefault events (Enter, Backspace, Delete)
+     * and remove flickering without break the browser auto completion and
+     * spellcheckers.
+     *
+     * @param {KeyboardEvent} ev
+     */
+    _isSafeToPreventKeyboardEvent(ev: KeyboardEvent, selection: DomSelectionDescription): boolean {
+        const code = ev.code || ev.key;
+        if (
+            this._modifierKeys.ctrlKey ||
+            this._modifierKeys.altKey ||
+            this._modifierKeys.metaKey ||
+            this._modifierKeys.shiftKey ||
+            (code !== 'Backspace' && code !== 'Delete' && code !== 'Enter')
+        ) {
+            // If a control key is applied, you must let the browser apply its
+            // own behavior because you do not know the command in advance.
+            return false;
+        }
+
+        if (
+            isBlock(selection.anchorNode) ||
+            (selection.anchorNode !== selection.focusNode && isBlock(selection.focusNode))
+        ) {
+            // If the range is on a block, there is no risk of altering the
+            // behavior of the spellcheckers.
+            return true;
+        }
+
+        const previous = this._geSiblingInlineText(
+            selection.anchorNode,
+            selection.anchorOffset,
+            true,
+        );
+        const next = this._geSiblingInlineText(selection.focusNode, selection.focusOffset, false);
+        const regExpChar = /[^\s\t\r\n\u00A0\u200b]/;
+
+        if (
+            code === 'Backspace' &&
+            !regExpChar.test(previous.slice(-2)) &&
+            !regExpChar.test(next[0] || '')
+        ) {
+            return true;
+        }
+        if (
+            code === 'Delete' &&
+            !regExpChar.test(previous[previous.length - 1] || '') &&
+            !regExpChar.test(next.slice(0, 2))
+        ) {
+            return true;
+        }
+        if (code === 'Enter' && !regExpChar.test(previous.slice(-2))) {
+            return true;
+        }
+    }
+    /**
+     * Return the sibling text passing through inlines formatting.
+     *
+     * @param {KeyboardEvent} ev
+     */
+    _geSiblingInlineText(node: Node, offset: number, before = true): string {
+        let text = '';
+        while (node) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                if (before) {
+                    text += node.textContent.slice(0, offset);
+                } else {
+                    text += node.textContent.slice(offset);
+                }
+            } else if (isBlock(node)) {
+                return text;
+            } else {
+                text += node.textContent;
+            }
+            let sibling = node[before ? 'previousSibling' : 'nextSibling'];
+            while (node && !sibling && node.parentNode) {
+                if (isBlock(node.parentNode)) {
+                    return text;
+                } else {
+                    node = node.parentNode;
+                    sibling = node[before ? 'previousSibling' : 'nextSibling'];
+                }
+            }
+            node = sibling;
+            offset = before ? nodeLength(sibling) : 0;
+        }
+        return text;
     }
     /**
      * Set internal properties of the pointer down event to retrieve them later

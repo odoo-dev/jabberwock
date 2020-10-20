@@ -842,299 +842,302 @@ describe('DomEditable', () => {
                 });
             });
         });
-
-        it('should trigger commands in proper order', async () => {
-            await testEditor(BasicEditor, {
-                contentBefore: '<div>[]</div>',
-                stepFunction: async editor => {
-                    const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-                    const domEditable = editor.plugins.get(DomEditable);
-                    const editable = domEngine.components.editable[0];
-                    const editableDom = domEngine.getDomNodes(editable)[0] as HTMLElement;
-                    const textNode = editableDom.childNodes[0];
-                    triggerEvent(editableDom, 'keydown', { key: 'a', code: 'KeyA' });
-                    textNode.textContent = 'a';
-                    triggerEvent(editableDom, 'keyup', { key: 'a', code: 'KeyA' });
-                    triggerEvent(editableDom, 'input', { data: 'a', inputType: 'insertText' });
-                    triggerEvent(editableDom, 'keydown', { key: 'b', code: 'KeyB' });
-                    textNode.textContent = 'ab';
-                    triggerEvent(editableDom, 'keyup', { key: 'b', code: 'KeyB' });
-                    triggerEvent(editableDom, 'input', { data: 'b', inputType: 'insertText' });
-                    domEditable.eventNormalizer.currentStackObservation.mutations = [
-                        {
-                            addedNodes: editableDom.childNodes,
-                            attributeName: null,
-                            attributeNamespace: null,
-                            nextSibling: null,
-                            oldValue: null,
-                            previousSibling: null,
-                            removedNodes: editableDom.childNodes,
-                            target: editableDom,
-                            type: 'childList',
-                        },
-                    ];
-                    triggerEvent(editableDom, 'keydown', { key: 'Tab', code: 'Tab' });
-                    triggerEvent(editableDom, 'keyup', { key: 'Tab', code: 'Tab' });
-                    triggerEvent(editableDom, 'keydown', { key: 'c', code: 'KeyC' });
-                    textNode.textContent = 'ab  c';
-                    triggerEvent(editableDom, 'keyup', { key: 'c', code: 'KeyC' });
-                    triggerEvent(editableDom, 'input', { data: 'c', inputType: 'insertText' });
-                    triggerEvent(editableDom, 'keydown', { key: 'd', code: 'KeyD' });
-                    textNode.textContent = 'ab  cd';
-                    triggerEvent(editableDom, 'keyup', { key: 'c', code: 'KeyC' });
-                    triggerEvent(editableDom, 'input', { data: 'd', inputType: 'insertText' });
-
-                    // wait for the event to be processed in the next tick
-                    await nextTick();
-                    // wait for the last event in the editor mutex to finish
-                    await editor.execCommand(() => {});
-                },
-                contentAfter: '<div>ab\u2003cd[]</div>',
-            });
-        });
-        it('should trigger a shortcut', async () => {
-            editor = new JWEditor();
-            editor.load(Html);
-            editor.load(Char);
-            editor.load(LineBreak);
-            editor.load(DomEditable);
-            editor.configure(DomLayout, {
-                location: [section, 'replace'],
-                components: [
-                    {
-                        id: 'editable',
-                        render: async (editor: JWEditor): Promise<VNode[]> =>
-                            parseEditable(editor, section, true),
-                    },
-                ],
-                componentZones: [['editable', ['main']]],
-            });
-            section.innerHTML = '<div>abcd</div>';
-            editor.configure(Keymap, { platform: Platform.PC });
-            const loadables: Loadables<Keymap> = {
-                shortcuts: [
-                    {
-                        pattern: 'CTRL+A',
-                        commandId: 'command-b',
-                    },
-                ],
-            };
-            editor.load(loadables);
-            await editor.start();
-
-            const commands = [];
-            editor.dispatcher.registerCommandHook('*', (none, commandId) => {
-                commands.push(commandId);
-            });
-
-            await selectAllWithKeyA(container);
-            expect(commands.join(',')).to.eql('@focus,@preKeydownCommand,command-b,@commit');
-        });
-        it('should trigger a select all, with an other editor which have a shortcut', async () => {
-            editor = new JWEditor();
-            editor.load(Html);
-            editor.load(Char);
-            editor.load(LineBreak);
-            const container1 = document.createElement('div');
-            container.appendChild(container1);
-            const section = document.createElement('section');
-            container1.appendChild(section);
-            editor.load(DomEditable);
-            editor.configure(DomLayout, {
-                location: [section, 'replace'],
-                components: [
-                    {
-                        id: 'editable',
-                        render: async (editor: JWEditor): Promise<VNode[]> =>
-                            parseEditable(editor, section, true),
-                    },
-                ],
-                componentZones: [['editable', ['main']]],
-            });
-            section.innerHTML = '<div>abcd</div>';
-            editor.configure(Keymap, { platform: Platform.PC });
-            const loadables: Loadables<Keymap> = {
-                shortcuts: [
-                    {
-                        pattern: 'CTRL+A',
-                        commandId: 'command-b',
-                    },
-                ],
-            };
-            editor.load(loadables);
-            await editor.start();
-
-            const execSpy = spy(editor.dispatcher, 'dispatch');
-
-            const editor2 = new JWEditor();
-            editor2.load(Html);
-            editor2.load(Char);
-            editor2.load(LineBreak);
-            const container2 = document.createElement('div');
-            container.appendChild(container2);
-            const article = document.createElement('article');
-            container2.appendChild(article);
-            editor2.load(DomEditable);
-            editor2.configure(DomLayout, {
-                location: [article, 'replace'],
-                components: [
-                    {
-                        id: 'editable',
-                        render: async (editor: JWEditor): Promise<VNode[]> =>
-                            parseEditable(editor, article, true),
-                    },
-                ],
-                componentZones: [['editable', ['main']]],
-            });
-            article.innerHTML = '<div>abcd</div>';
-            await editor2.start();
-
-            const execSpy2 = spy(editor2.dispatcher, 'dispatch');
-            await selectAllWithKeyA(container1);
-            await selectAllWithKeyA(container2);
-
-            expect(execSpy.args.map(c => c[0]).join(',')).to.eql(
-                '@focus,@preKeydownCommand,command-b,@commit,@blur',
-            );
-            expect(execSpy2.args.map(c => c[0]).join(',')).to.eql('@focus,selectAll,@commit');
-
-            await editor.stop();
-            await editor2.stop();
-        });
-        it('deleteContentBackward (SwiftKey) with special keymap', async () => {
-            section.innerHTML = '<div>abcd</div>';
-            setDomSelection(section.firstChild.firstChild, 2, section.firstChild.firstChild, 2);
-            editor = new JWEditor();
-            editor.load(Html);
-            editor.load(Char);
-            editor.load(DomEditable);
-            editor.configure(DomLayout, {
-                location: [section, 'replace'],
-                components: [
-                    {
-                        id: 'editable',
-                        render: async (editor: JWEditor): Promise<VNode[]> =>
-                            parseEditable(editor, section),
-                    },
-                ],
-                componentZones: [['editable', ['main']]],
-            });
-            editor.configure(Keymap, { platform: Platform.PC });
-            editor.load(
-                class A<T extends JWPluginConfig> extends JWPlugin<T> {
-                    loadables: Loadables<Keymap> = {
-                        shortcuts: [
+        describe('shortcut', () => {
+            it('should trigger commands in proper order', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<div>[]</div>',
+                    stepFunction: async editor => {
+                        const domEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
+                        const domEditable = editor.plugins.get(DomEditable);
+                        const editable = domEngine.components.editable[0];
+                        const editableDom = domEngine.getDomNodes(editable)[0] as HTMLElement;
+                        const textNode = editableDom.childNodes[0];
+                        triggerEvent(editableDom, 'keydown', { key: 'a', code: 'KeyA' });
+                        textNode.textContent = 'a';
+                        triggerEvent(editableDom, 'keyup', { key: 'a', code: 'KeyA' });
+                        triggerEvent(editableDom, 'input', { data: 'a', inputType: 'insertText' });
+                        triggerEvent(editableDom, 'keydown', { key: 'b', code: 'KeyB' });
+                        textNode.textContent = 'ab';
+                        triggerEvent(editableDom, 'keyup', { key: 'b', code: 'KeyB' });
+                        triggerEvent(editableDom, 'input', { data: 'b', inputType: 'insertText' });
+                        domEditable.eventNormalizer.currentStackObservation.mutations = [
                             {
-                                pattern: 'BACKSPACE',
-                                commandId: 'deleteForward',
+                                addedNodes: editableDom.childNodes,
+                                attributeName: null,
+                                attributeNamespace: null,
+                                nextSibling: null,
+                                oldValue: null,
+                                previousSibling: null,
+                                removedNodes: editableDom.childNodes,
+                                target: editableDom,
+                                type: 'childList',
                             },
-                        ],
-                    };
-                },
-            );
-            await editor.start();
+                        ];
+                        triggerEvent(editableDom, 'keydown', { key: 'Tab', code: 'Tab' });
+                        triggerEvent(editableDom, 'keyup', { key: 'Tab', code: 'Tab' });
+                        triggerEvent(editableDom, 'keydown', { key: 'c', code: 'KeyC' });
+                        textNode.textContent = 'ab  c';
+                        triggerEvent(editableDom, 'keyup', { key: 'c', code: 'KeyC' });
+                        triggerEvent(editableDom, 'input', { data: 'c', inputType: 'insertText' });
+                        triggerEvent(editableDom, 'keydown', { key: 'd', code: 'KeyD' });
+                        textNode.textContent = 'ab  cd';
+                        triggerEvent(editableDom, 'keyup', { key: 'c', code: 'KeyC' });
+                        triggerEvent(editableDom, 'input', { data: 'd', inputType: 'insertText' });
 
-            // key: o
-            await triggerEvents([
-                [
-                    { 'type': 'keydown', 'key': 'Unidentified', 'code': '' },
-                    {
-                        'type': 'beforeinput',
-                        'data': null,
-                        'inputType': 'deleteContentBackward',
+                        // wait for the event to be processed in the next tick
+                        await nextTick();
+                        // wait for the last event in the editor mutex to finish
+                        await editor.execCommand(() => {});
                     },
-                    {
-                        'type': 'input',
-                        'data': null,
-                        'inputType': 'deleteContentBackward',
-                    },
-                    {
-                        'type': 'mutation',
-                        'mutationType': 'characterData',
-                        'textContent': 'acd',
-                        'targetId': 2,
-                    },
-                    { 'type': 'keyup', 'key': 'Unidentified', 'code': '' },
-                    {
-                        'type': 'selection',
-                        'focus': { 'nodeId': 2, 'offset': 1 },
-                        'anchor': { 'nodeId': 2, 'offset': 1 },
-                    },
-                ],
-            ]);
+                    contentAfter: '<div>ab\u2003cd[]</div>',
+                });
+            });
+            it('should trigger a shortcut', async () => {
+                editor = new JWEditor();
+                editor.load(Html);
+                editor.load(Char);
+                editor.load(LineBreak);
+                editor.load(DomEditable);
+                editor.configure(DomLayout, {
+                    location: [section, 'replace'],
+                    components: [
+                        {
+                            id: 'editable',
+                            render: async (editor: JWEditor): Promise<VNode[]> =>
+                                parseEditable(editor, section, true),
+                        },
+                    ],
+                    componentZones: [['editable', ['main']]],
+                });
+                section.innerHTML = '<div>abcd</div>';
+                editor.configure(Keymap, { platform: Platform.PC });
+                const loadables: Loadables<Keymap> = {
+                    shortcuts: [
+                        {
+                            pattern: 'CTRL+A',
+                            commandId: 'command-b',
+                        },
+                    ],
+                };
+                editor.load(loadables);
+                await editor.start();
 
-            expect(editor.memoryInfo.commandNames.join(',')).to.equal('deleteForward');
-            expect(container.innerHTML).to.equal(
-                '<jw-editor><section contenteditable="true">' +
-                    '<div>abd</div>' +
-                    '</section></jw-editor>',
-            );
-            const domSelection = section.ownerDocument.getSelection();
-            expect({
-                anchorNode: domSelection.anchorNode,
-                anchorOffset: domSelection.anchorOffset,
-                focusNode: domSelection.focusNode,
-                focusOffset: domSelection.focusOffset,
-            }).to.deep.equal({
-                anchorNode: container.querySelector('section').firstChild.firstChild,
-                anchorOffset: 2,
-                focusNode: container.querySelector('section').firstChild.firstChild,
-                focusOffset: 2,
+                const commands = [];
+                editor.dispatcher.registerCommandHook('*', (none, commandId) => {
+                    commands.push(commandId);
+                });
+
+                await selectAllWithKeyA(container);
+                expect(commands.join(',')).to.eql('@focus,@preKeydownCommand,command-b,@commit');
+            });
+            it('should trigger a select all, with an other editor which have a shortcut', async () => {
+                editor = new JWEditor();
+                editor.load(Html);
+                editor.load(Char);
+                editor.load(LineBreak);
+                const container1 = document.createElement('div');
+                container.appendChild(container1);
+                const section = document.createElement('section');
+                container1.appendChild(section);
+                editor.load(DomEditable);
+                editor.configure(DomLayout, {
+                    location: [section, 'replace'],
+                    components: [
+                        {
+                            id: 'editable',
+                            render: async (editor: JWEditor): Promise<VNode[]> =>
+                                parseEditable(editor, section, true),
+                        },
+                    ],
+                    componentZones: [['editable', ['main']]],
+                });
+                section.innerHTML = '<div>abcd</div>';
+                editor.configure(Keymap, { platform: Platform.PC });
+                const loadables: Loadables<Keymap> = {
+                    shortcuts: [
+                        {
+                            pattern: 'CTRL+A',
+                            commandId: 'command-b',
+                        },
+                    ],
+                };
+                editor.load(loadables);
+                await editor.start();
+
+                const execSpy = spy(editor.dispatcher, 'dispatch');
+
+                const editor2 = new JWEditor();
+                editor2.load(Html);
+                editor2.load(Char);
+                editor2.load(LineBreak);
+                const container2 = document.createElement('div');
+                container.appendChild(container2);
+                const article = document.createElement('article');
+                container2.appendChild(article);
+                editor2.load(DomEditable);
+                editor2.configure(DomLayout, {
+                    location: [article, 'replace'],
+                    components: [
+                        {
+                            id: 'editable',
+                            render: async (editor: JWEditor): Promise<VNode[]> =>
+                                parseEditable(editor, article, true),
+                        },
+                    ],
+                    componentZones: [['editable', ['main']]],
+                });
+                article.innerHTML = '<div>abcd</div>';
+                await editor2.start();
+
+                const execSpy2 = spy(editor2.dispatcher, 'dispatch');
+                await selectAllWithKeyA(container1);
+                await selectAllWithKeyA(container2);
+
+                expect(execSpy.args.map(c => c[0]).join(',')).to.eql(
+                    '@focus,@preKeydownCommand,command-b,@commit,@blur',
+                );
+                expect(execSpy2.args.map(c => c[0]).join(',')).to.eql('@focus,selectAll,@commit');
+
+                await editor.stop();
+                await editor2.stop();
+            });
+            it('deleteContentBackward (SwiftKey) with special keymap', async () => {
+                section.innerHTML = '<div>abcd</div>';
+                setDomSelection(section.firstChild.firstChild, 2, section.firstChild.firstChild, 2);
+                editor = new JWEditor();
+                editor.load(Html);
+                editor.load(Char);
+                editor.load(DomEditable);
+                editor.configure(DomLayout, {
+                    location: [section, 'replace'],
+                    components: [
+                        {
+                            id: 'editable',
+                            render: async (editor: JWEditor): Promise<VNode[]> =>
+                                parseEditable(editor, section),
+                        },
+                    ],
+                    componentZones: [['editable', ['main']]],
+                });
+                editor.configure(Keymap, { platform: Platform.PC });
+                editor.load(
+                    class A<T extends JWPluginConfig> extends JWPlugin<T> {
+                        loadables: Loadables<Keymap> = {
+                            shortcuts: [
+                                {
+                                    pattern: 'BACKSPACE',
+                                    commandId: 'deleteForward',
+                                },
+                            ],
+                        };
+                    },
+                );
+                await editor.start();
+
+                // key: o
+                await triggerEvents([
+                    [
+                        { 'type': 'keydown', 'key': 'Unidentified', 'code': '' },
+                        {
+                            'type': 'beforeinput',
+                            'data': null,
+                            'inputType': 'deleteContentBackward',
+                        },
+                        {
+                            'type': 'input',
+                            'data': null,
+                            'inputType': 'deleteContentBackward',
+                        },
+                        {
+                            'type': 'mutation',
+                            'mutationType': 'characterData',
+                            'textContent': 'acd',
+                            'targetId': 2,
+                        },
+                        { 'type': 'keyup', 'key': 'Unidentified', 'code': '' },
+                        {
+                            'type': 'selection',
+                            'focus': { 'nodeId': 2, 'offset': 1 },
+                            'anchor': { 'nodeId': 2, 'offset': 1 },
+                        },
+                    ],
+                ]);
+
+                expect(editor.memoryInfo.commandNames.join(',')).to.equal('deleteForward');
+                expect(container.innerHTML).to.equal(
+                    '<jw-editor><section contenteditable="true">' +
+                        '<div>abd</div>' +
+                        '</section></jw-editor>',
+                );
+                const domSelection = section.ownerDocument.getSelection();
+                expect({
+                    anchorNode: domSelection.anchorNode,
+                    anchorOffset: domSelection.anchorOffset,
+                    focusNode: domSelection.focusNode,
+                    focusOffset: domSelection.focusOffset,
+                }).to.deep.equal({
+                    anchorNode: container.querySelector('section').firstChild.firstChild,
+                    anchorOffset: 2,
+                    focusNode: container.querySelector('section').firstChild.firstChild,
+                    focusOffset: 2,
+                });
             });
         });
-        it('mouse setRange (ubuntu chrome)', async () => {
-            editor = new JWEditor();
-            editor.load(Html);
-            editor.load(Char);
-            editor.load(LineBreak);
-            editor.load(DomEditable);
-            editor.configure(DomLayout, {
-                location: [section, 'replace'],
-                components: [
-                    {
-                        id: 'editable',
-                        render: async (editor: JWEditor): Promise<VNode[]> =>
-                            parseEditable(editor, section),
-                    },
-                ],
-                componentZones: [['editable', ['main']]],
+        describe('mouse', () => {
+            it('mouse setRange (ubuntu chrome)', async () => {
+                editor = new JWEditor();
+                editor.load(Html);
+                editor.load(Char);
+                editor.load(LineBreak);
+                editor.load(DomEditable);
+                editor.configure(DomLayout, {
+                    location: [section, 'replace'],
+                    components: [
+                        {
+                            id: 'editable',
+                            render: async (editor: JWEditor): Promise<VNode[]> =>
+                                parseEditable(editor, section),
+                        },
+                    ],
+                    componentZones: [['editable', ['main']]],
+                });
+                section.innerHTML = '<p>a</p><p>b</p><p>c<br/><br/></p>';
+                await editor.start();
+
+                expect(!!editor.selection.anchor.parent).to.equal(false);
+
+                const editable = container.querySelector('section');
+                const p1 = editable.firstChild;
+                const text1 = p1.firstChild;
+                const p2 = editable.childNodes[1];
+                const text2 = p2.firstChild;
+                await nextTick();
+
+                triggerEvent(p1, 'mousedown', {
+                    button: 2,
+                    detail: 1,
+                    clientX: 10,
+                    clientY: 10,
+                });
+                setDomSelection(text1, 1, text1, 1);
+                setDomSelection(text1, 1, text2, 1);
+                triggerEvent(p2, 'click', { button: 2, detail: 0, clientX: 10, clientY: 25 });
+                triggerEvent(p2, 'mouseup', { button: 2, detail: 0, clientX: 10, clientY: 25 });
+
+                await nextTick();
+                await nextTick();
+
+                const sectionNode = editor.selection.anchor.ancestor(
+                    node => node instanceof TagNode && node.htmlTag === 'SECTION',
+                );
+                expect(!!sectionNode).to.equal(true);
+                expect(editor.selection.anchor.previous()?.id).to.equal(
+                    sectionNode.firstDescendant(CharNode).id,
+                );
+                expect(editor.selection.focus.previous()?.id).to.equal(
+                    sectionNode.children()[1].firstChild().id,
+                );
             });
-            section.innerHTML = '<p>a</p><p>b</p><p>c<br/><br/></p>';
-            await editor.start();
-
-            expect(!!editor.selection.anchor.parent).to.equal(false);
-
-            const editable = container.querySelector('section');
-            const p1 = editable.firstChild;
-            const text1 = p1.firstChild;
-            const p2 = editable.childNodes[1];
-            const text2 = p2.firstChild;
-            await nextTick();
-
-            triggerEvent(p1, 'mousedown', {
-                button: 2,
-                detail: 1,
-                clientX: 10,
-                clientY: 10,
-            });
-            setDomSelection(text1, 1, text1, 1);
-            setDomSelection(text1, 1, text2, 1);
-            triggerEvent(p2, 'click', { button: 2, detail: 0, clientX: 10, clientY: 25 });
-            triggerEvent(p2, 'mouseup', { button: 2, detail: 0, clientX: 10, clientY: 25 });
-
-            await nextTick();
-            await nextTick();
-
-            const sectionNode = editor.selection.anchor.ancestor(
-                node => node instanceof TagNode && node.htmlTag === 'SECTION',
-            );
-            expect(!!sectionNode).to.equal(true);
-            expect(editor.selection.anchor.previous()?.id).to.equal(
-                sectionNode.firstDescendant(CharNode).id,
-            );
-            expect(editor.selection.focus.previous()?.id).to.equal(
-                sectionNode.children()[1].firstChild().id,
-            );
         });
     });
 });
