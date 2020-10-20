@@ -22,7 +22,7 @@ export class OdooVideoHtmlDomRenderer extends NodeRenderer<DomObject> {
             });
         };
         const openMedia = (): void => {
-            this.engine.editor.execCommand('openMedia');
+            this.engine.editor.execCommand('openMedia', { media: node });
         };
         const wrapper: DomObject = {
             tag: 'DIV',
