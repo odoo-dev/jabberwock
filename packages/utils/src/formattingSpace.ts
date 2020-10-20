@@ -104,11 +104,40 @@ function _followsInlineSpace(node: Node): boolean {
 function _isAtSegmentBreak(node: Node, side: 'start' | 'end'): boolean {
     const siblingSide = side === 'start' ? 'previousSibling' : 'nextSibling';
     const sibling = node && node[siblingSide];
-    const isAgainstAnotherSegment = sibling && _isSegment(sibling);
+    const isAgainstAnotherSegment = _isAgainstAnotherSegment(node, side);
     const isAtEdgeOfOwnSegment = _isBlockEdge(node, side);
     // In the DOM, a space before a BR is rendered but a space after a BR isn't.
     const isBeforeBR = side === 'end' && sibling && nodeName(sibling) === 'BR';
     return (isAgainstAnotherSegment && !isBeforeBR) || isAtEdgeOfOwnSegment;
+}
+/**
+ * Return true if the given node is just before or just after another segment.
+ * Eg: <div>abc<div>def</div></div> -> abc is before another segment (div).
+ * Eg: <div><a>abc</a>     <div>def</div></div> -> abc is before another segment
+ * (div).
+ *
+ * @param {Node} node
+ * @param {'start'|'end'} side
+ * @returns {boolean}
+ */
+function _isAgainstAnotherSegment(node: Node, side: 'start' | 'end'): boolean {
+    const siblingSide = side === 'start' ? 'previousSibling' : 'nextSibling';
+    const sibling = node && node[siblingSide];
+    if (sibling) {
+        return sibling && _isSegment(sibling);
+    } else {
+        // Look further (eg.: `<div><a>abc</a>     <div>def</div></div>`: the
+        // space should be removed).
+        let ancestor = node;
+        while (ancestor && !ancestor[siblingSide]) {
+            ancestor = ancestor.parentNode;
+        }
+        let cousin = ancestor && !_isSegment(ancestor) && ancestor.nextSibling;
+        while (cousin && isInstanceOf(cousin, Text)) {
+            cousin = cousin.nextSibling;
+        }
+        return cousin && _isSegment(cousin);
+    }
 }
 /**
  * Return true if the node is a segment according to W3 formatting model.

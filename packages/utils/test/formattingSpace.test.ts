@@ -322,5 +322,9 @@ describe('removeFormattingSpace() util function', () => {
                 ),
             ).to.equal('ef ', 'test #2');
         });
+        it('should remove space between a <a> and a <div>', async () => {
+            const nodes = htmlToElements('<div><a>abc</a>     <div>def</div></div>');
+            expect(removeFormattingSpace(nodes[0].childNodes[1])).to.equal('');
+        });
     });
 });
