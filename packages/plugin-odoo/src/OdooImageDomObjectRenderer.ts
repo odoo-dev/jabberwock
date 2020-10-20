@@ -12,7 +12,7 @@ export class OdooImageDomObjectRenderer extends ImageDomObjectRenderer {
             const savedAttach = image.attach;
             const savedDetach = image.detach;
             const handleClick = (): void => {
-                const params = { image: node };
+                const params = { media: node };
                 this.engine.editor.execCommand('openMedia', params);
             };
             image.attach = (el: HTMLElement): void => {

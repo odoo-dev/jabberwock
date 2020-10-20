@@ -16,7 +16,7 @@ export class OdooFontAwesomeDomObjectRenderer extends FontAwesomeDomObjectRender
 
             if ('tag' in fa) {
                 const dbclickCallback = (): void => {
-                    this.engine.editor.execCommand('openMedia');
+                    this.engine.editor.execCommand('openMedia', { media: node });
                 };
 
                 const savedAttach = fa.attach;
