@@ -1,5 +1,5 @@
 import xml from 'rollup-plugin-xml';
-import css from 'rollup-plugin-css-only';
+import postcss from 'rollup-plugin-postcss';
 
 export default {
     input: 'build/odoo/packages/bundle-odoo-website-editor/odoo-integration.js',
@@ -16,6 +16,8 @@ export default {
         xml({
             format: 'compact',
         }),
-        css({ output: 'build/odoo/odoo-integration.css' }),
+        postcss({
+            extract: true,
+        }),
     ],
 };
