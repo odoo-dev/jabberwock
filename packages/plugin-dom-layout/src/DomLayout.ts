@@ -20,9 +20,7 @@ import { ActionableDomObjectRenderer } from './ActionableDomObjectRenderer';
 import { ActionableGroupDomObjectRenderer } from './ActionableGroupDomObjectRenderer';
 import { LabelDomObjectRenderer } from './LabelDomObjectRenderer';
 import { SeparatorDomObjectRenderer } from './SeparatorDomObjectRenderer';
-import { RuleProperty } from '../../core/src/Mode';
-import { isContentEditable, nodeName, isInstanceOf } from '../../utils/src/utils';
-import { VNode } from '../../core/src/VNodes/VNode';
+import { nodeName, isInstanceOf } from '../../utils/src/utils';
 
 const FocusAndBlurEvents = ['selectionchange', 'blur', 'focus', 'mousedown', 'touchstart'];
 
@@ -98,7 +96,9 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         domLayoutEngine.location = this.configuration.location;
         await domLayoutEngine.start();
         window.addEventListener('keydown', this.processKeydown, true);
+        window.addEventListener('keypress', this.processKeydown, true);
         window.addEventListener('keydown-iframe', this.processKeydown, true);
+        window.addEventListener('keypress-iframe', this.processKeydown, true);
     }
     async stop(): Promise<void> {
         clearTimeout(this._debounce);
@@ -107,7 +107,9 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
             window.removeEventListener(eventName + '-iframe', this._checkFocusChanged, true);
         });
         window.removeEventListener('keydown', this.processKeydown, true);
+        window.removeEventListener('keypress', this.processKeydown, true);
         window.removeEventListener('keydown-iframe', this.processKeydown, true);
+        window.removeEventListener('keypress-iframe', this.processKeydown, true);
         const layout = this.dependencies.get(Layout);
         const domLayoutEngine = layout.engines.dom;
         await domLayoutEngine.stop();
@@ -121,6 +123,8 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
     /**
      * KeyboardEvent listener to be added to the DOM that calls `execCommand` if
      * the keys pressed match one of the shortcut registered in the keymap.
+     * If a shortcut is detected, then a preventDefault is performed an key
+     * event.
      *
      * @param event
      */
@@ -153,10 +157,13 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
-            await Promise.all([
-                this.editor.dispatcher.dispatch('@preKeydownCommand', {}),
-                processingContext.execCommand(command.commandId, params),
-            ]);
+            // Prevent default the keypress but don't trigger the command for this.
+            if (event.type.includes('keydown')) {
+                await Promise.all([
+                    this.editor.dispatcher.dispatch('@preKeydownCommand', {}),
+                    processingContext.execCommand(command.commandId, params),
+                ]);
+            }
             return command.commandId;
         }
     }

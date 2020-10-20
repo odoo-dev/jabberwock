@@ -1409,9 +1409,7 @@ describe('utils', () => {
                     ];
                     expect(ctx.eventBatches).to.deep.equal(batchEvents);
                 });
-
-                // ? why?
-                it('prevent default the keypress', async () => {
+                it('prevent default the keypress (external fature can stop some insertion)', async () => {
                     const p = document.createElement('p');
                     const text = document.createTextNode('hell');
                     ctx.editable.innerHTML = '';
@@ -4025,7 +4023,7 @@ describe('utils', () => {
 
                         await nextTick();
                         ctx.eventBatches.splice(0);
-                        triggerEvent(ctx.editable, 'keydown', {
+                        const keydownEvent = triggerEvent(ctx.editable, 'keydown', {
                             key: 'Backspace',
                             code: 'Backspace',
                         });
@@ -4037,6 +4035,11 @@ describe('utils', () => {
                         triggerEvent(ctx.editable, 'input', {});
                         setDomSelection(text, 4, text, 4);
                         await nextTick();
+
+                        expect(keydownEvent.defaultPrevented).to.equal(
+                            false,
+                            'Should not prevent default the keydown',
+                        );
 
                         const keyboardActions: NormalizedAction[] = [
                             {
@@ -5174,7 +5177,11 @@ describe('utils', () => {
                         setDomSelection(text, 2, text, 2);
                         await nextTick();
                         ctx.eventBatches.splice(0);
-                        triggerEvent(ctx.editable, 'keydown', { key: 'Enter', code: 'Enter' });
+                        const keydownEvent = triggerEvent(ctx.editable, 'keydown', {
+                            key: 'Enter',
+                            code: 'Enter',
+                        });
+                        await Promise.resolve();
                         triggerEvent(ctx.editable, 'beforeinput', { inputType: 'insertParagraph' });
 
                         const newText = document.createTextNode('ab');
@@ -5188,6 +5195,11 @@ describe('utils', () => {
                         triggerEvent(ctx.editable, 'input', { inputType: 'insertParagraph' });
                         await nextTick();
                         await nextTick();
+
+                        expect(keydownEvent.defaultPrevented).to.equal(
+                            false,
+                            'Should not prevent default the keydown',
+                        );
 
                         const batchEvents: EventBatch[] = [
                             {
@@ -5204,7 +5216,10 @@ describe('utils', () => {
                         setDomSelection(text, 2, text, 2);
                         await nextTick();
                         ctx.eventBatches.splice(0);
-                        triggerEvent(ctx.editable, 'keydown', { key: 'Enter', code: '' });
+                        const keydownEvent = triggerEvent(ctx.editable, 'keydown', {
+                            key: 'Enter',
+                            code: '',
+                        });
                         triggerEvent(ctx.editable, 'keypress', { key: 'Enter', code: '' });
                         triggerEvent(ctx.editable, 'beforeinput', { inputType: 'insertParagraph' });
 
@@ -5219,6 +5234,11 @@ describe('utils', () => {
                         triggerEvent(ctx.editable, 'input', { inputType: 'insertParagraph' });
                         await nextTick();
                         await nextTick();
+
+                        expect(keydownEvent.defaultPrevented).to.equal(
+                            false,
+                            'Should not prevent default the keydown',
+                        );
 
                         const keyboardActions: NormalizedAction[] = [
                             {
@@ -5245,7 +5265,10 @@ describe('utils', () => {
                         ctx.eventBatches.splice(0);
                         triggerEvent(ctx.editable, 'compositionend', { data: 'def' });
                         await nextTick();
-                        triggerEvent(ctx.editable, 'keydown', { key: 'Unidentified', code: '' });
+                        const keydownEvent = triggerEvent(ctx.editable, 'keydown', {
+                            key: 'Unidentified',
+                            code: '',
+                        });
                         triggerEvent(ctx.editable, 'keydown', { key: 'Enter', code: '' });
                         triggerEvent(ctx.editable, 'keypress', { key: 'Enter', code: '' });
                         triggerEvent(ctx.editable, 'beforeinput', { inputType: 'insertParagraph' });
@@ -5265,6 +5288,11 @@ describe('utils', () => {
 
                         await nextTick();
                         await nextTick();
+
+                        expect(keydownEvent.defaultPrevented).to.equal(
+                            false,
+                            'Should not prevent default the keydown',
+                        );
 
                         const keyboardActions: NormalizedAction[] = [
                             {
@@ -5291,7 +5319,10 @@ describe('utils', () => {
                         ctx.eventBatches.splice(0);
                         triggerEvent(ctx.editable, 'compositionend', { data: 'abc' });
                         await nextTick();
-                        triggerEvent(ctx.editable, 'keydown', { key: 'Unidentified', code: '' });
+                        const keydownEvent = triggerEvent(ctx.editable, 'keydown', {
+                            key: 'Unidentified',
+                            code: '',
+                        });
                         triggerEvent(ctx.editable, 'keydown', { key: 'Enter', code: '' });
                         triggerEvent(ctx.editable, 'keypress', { key: 'Enter', code: '' });
                         triggerEvent(ctx.editable, 'beforeinput', { inputType: 'insertParagraph' });
@@ -5311,6 +5342,11 @@ describe('utils', () => {
 
                         await nextTick();
                         await nextTick();
+
+                        expect(keydownEvent.defaultPrevented).to.equal(
+                            false,
+                            'Should not prevent default the keydown',
+                        );
 
                         const keyboardActions: NormalizedAction[] = [
                             {
@@ -5821,6 +5857,345 @@ describe('utils', () => {
                         },
                     ];
                     expect(ctx.eventBatches).to.deep.equal(batchEvents);
+                });
+            });
+
+            describe('remove flickering', () => {
+                // Other tests do not take care of the prevent (to remove
+                // the flickering), and all events/updates are triggered.
+
+                async function testPrevent(
+                    key: string,
+                    test: NormalizedAction | false,
+                ): Promise<void> {
+                    await nextTick();
+                    ctx.eventBatches.splice(0);
+                    const ev = triggerEvent(ctx.editable, 'keydown', { key: key, code: key });
+                    const ev2 = triggerEvent(ctx.editable, 'keypress', { key: key, code: key });
+                    await nextTick();
+                    expect(ev.defaultPrevented).to.equal(!!test);
+                    expect(ev2.defaultPrevented).to.equal(!!test);
+
+                    if (test) {
+                        const keyboardActions: NormalizedAction[] = [test];
+                        const batchEvents: EventBatch[] = [
+                            {
+                                actions: keyboardActions,
+                                mutatedElements: new Set([]),
+                            },
+                        ];
+                        expect(ctx.eventBatches).to.deep.equal(batchEvents);
+                    }
+                }
+
+                describe('backspace', async () => {
+                    describe("don't prevent", async () => {
+                        it('in a word', async () => {
+                            ctx.editable.innerHTML = '<p>abc</p>';
+                            const text = ctx.editable.firstChild.firstChild;
+                            setDomSelection(text, 1, text, 1);
+                            await testPrevent('Backspace', false);
+                        });
+                        it('after a word', async () => {
+                            ctx.editable.innerHTML = '<p>abc </p>';
+                            const text = ctx.editable.firstChild.firstChild;
+                            setDomSelection(text, 3, text, 3);
+                            await testPrevent('Backspace', false);
+                        });
+                        it('after a word in a bold', async () => {
+                            ctx.editable.innerHTML = '<p><b>abc</b> \u00A0</p>';
+                            const text = ctx.editable.firstChild.lastChild;
+                            setDomSelection(text, 0, text, 0);
+                            await testPrevent('Backspace', false);
+                        });
+                        it('after a word, when range is in a bold', async () => {
+                            ctx.editable.innerHTML = '<p>abc<b> \u00A0</b></p>';
+                            const text = ctx.editable.querySelector('b').firstChild;
+                            setDomSelection(text, 0, text, 0);
+                            await testPrevent('Backspace', false);
+                        });
+                        it('after a word, complex formating', async () => {
+                            ctx.editable.innerHTML =
+                                '<p><u><i>abc</i><span><b> \u00A0</b></span></u></p>';
+                            const text = ctx.editable.querySelector('b').firstChild;
+                            setDomSelection(text, 0, text, 0);
+                            await testPrevent('Backspace', false);
+                        });
+                        it.skip('before a word', async () => {
+                            // TODO: test with IOS & Gboard
+                            ctx.editable.innerHTML = '<p>abc</p><p>def</p>';
+                            const text = ctx.editable.lastChild.firstChild;
+                            setDomSelection(text, 0, text, 0);
+                            await testPrevent('Backspace', false);
+                        });
+                    });
+                    describe('prevent', async () => {
+                        it('empty block', async () => {
+                            ctx.editable.innerHTML = '<p><br></p>';
+                            const p = ctx.editable.firstChild;
+                            setDomSelection(p, 0, p, 0);
+                            await testPrevent('Backspace', {
+                                type: 'deleteContent',
+                                direction: Direction.BACKWARD,
+                            });
+                        });
+                        it('after a block', async () => {
+                            ctx.editable.innerHTML = '<div><div>abc</div> \u00A0</div>';
+                            const text = ctx.editable.firstChild.lastChild;
+                            setDomSelection(text, 0, text, 0);
+                            await testPrevent('Backspace', {
+                                type: 'deleteContent',
+                                direction: Direction.BACKWARD,
+                            });
+                        });
+                        it('after twice space', async () => {
+                            ctx.editable.innerHTML = '<p>abc \u00A0 def</p>';
+                            const text = ctx.editable.firstChild.firstChild;
+                            setDomSelection(text, 5, text, 5);
+                            await testPrevent('Backspace', {
+                                type: 'deleteContent',
+                                direction: Direction.BACKWARD,
+                            });
+                        });
+                        it.skip('after only blanc spaces', async () => {
+                            // TODO: test with IOS & Gboard
+                            ctx.editable.innerHTML = '<p>abc</p><p>   def</p>';
+                            const text = ctx.editable.lastChild.firstChild;
+                            setDomSelection(text, 3, text, 3);
+                            await testPrevent('Backspace', {
+                                type: 'deleteContent',
+                                direction: Direction.BACKWARD,
+                            });
+                        });
+                        it('between 2 blocks', async () => {
+                            ctx.editable.innerHTML = '<div><div>abc</div> <div>def</div></div>';
+                            const text = ctx.editable.firstChild.childNodes[1];
+                            setDomSelection(text, 1, text, 1);
+                            await testPrevent('Backspace', {
+                                type: 'deleteContent',
+                                direction: Direction.BACKWARD,
+                            });
+                        });
+                    });
+                });
+
+                describe('delete', async () => {
+                    describe("don't prevent", async () => {
+                        it('in a word', async () => {
+                            ctx.editable.innerHTML = '<p>abc</p>';
+                            const text = ctx.editable.firstChild.firstChild;
+                            setDomSelection(text, 1, text, 1);
+                            await testPrevent('Delete', false);
+                        });
+                        it('before a word', async () => {
+                            ctx.editable.innerHTML = '<p> abc</p>';
+                            const text = ctx.editable.firstChild.firstChild;
+                            setDomSelection(text, 1, text, 1);
+                            await testPrevent('Delete', false);
+                        });
+                        it('before a word in a bold', async () => {
+                            ctx.editable.innerHTML = '<p>\u00A0 <b>abc</b></p>';
+                            const text = ctx.editable.firstChild.firstChild;
+                            setDomSelection(text, 2, text, 2);
+                            await testPrevent('Delete', false);
+                        });
+                        it('before a word, when range is in a bold', async () => {
+                            ctx.editable.innerHTML = '<p><b>\u00A0 </b>abc</p>';
+                            const text = ctx.editable.querySelector('b').firstChild;
+                            setDomSelection(text, 2, text, 2);
+                            await testPrevent('Delete', false);
+                        });
+                        it('before a word, complex formating', async () => {
+                            ctx.editable.innerHTML =
+                                '<p><u><span><b>\u00A0 </b></span><i>abc</i></u></p>';
+                            const text = ctx.editable.querySelector('b').firstChild;
+                            setDomSelection(text, 2, text, 2);
+                            await testPrevent('Delete', false);
+                        });
+                        it('after a word', async () => {
+                            ctx.editable.innerHTML = '<p>abc</p>';
+                            const text = ctx.editable.firstChild.firstChild;
+                            setDomSelection(text, 3, text, 3);
+                            await testPrevent('Delete', false);
+                        });
+                    });
+                    describe('prevent', async () => {
+                        it('empty block', async () => {
+                            ctx.editable.innerHTML = '<p><br></p>';
+                            const p = ctx.editable.firstChild;
+                            setDomSelection(p, 0, p, 0);
+                            await testPrevent('Delete', {
+                                type: 'deleteContent',
+                                direction: Direction.FORWARD,
+                            });
+                        });
+                        it('before a block', async () => {
+                            ctx.editable.innerHTML = '<div>\u00A0 <div>abc</div></div>';
+                            const text = ctx.editable.firstChild.firstChild;
+                            setDomSelection(text, 2, text, 2);
+                            await testPrevent('Delete', {
+                                type: 'deleteContent',
+                                direction: Direction.FORWARD,
+                            });
+                        });
+                        it('before twice space', async () => {
+                            ctx.editable.innerHTML = '<p>abc \u00A0 def</p>';
+                            const text = ctx.editable.firstChild.firstChild;
+                            setDomSelection(text, 4, text, 4);
+                            await testPrevent('Delete', {
+                                type: 'deleteContent',
+                                direction: Direction.FORWARD,
+                            });
+                        });
+                        it('between 2 blocks', async () => {
+                            ctx.editable.innerHTML = '<div><div>abc</div> <div>def</div></div>';
+                            const text = ctx.editable.firstChild.childNodes[1];
+                            setDomSelection(text, 1, text, 1);
+                            await testPrevent('Delete', {
+                                type: 'deleteContent',
+                                direction: Direction.FORWARD,
+                            });
+                        });
+                    });
+                });
+
+                describe('enter', async () => {
+                    describe("don't prevent", async () => {
+                        it('in a word', async () => {
+                            ctx.editable.innerHTML = '<p>abc</p>';
+                            const text = ctx.editable.firstChild.firstChild;
+                            setDomSelection(text, 1, text, 1);
+                            await testPrevent('Enter', false);
+                        });
+                        it('after a word', async () => {
+                            ctx.editable.innerHTML = '<p>abc </p>';
+                            const text = ctx.editable.firstChild.firstChild;
+                            setDomSelection(text, 3, text, 3);
+                            await testPrevent('Enter', false);
+                        });
+                        it('after a word in a bold', async () => {
+                            ctx.editable.innerHTML = '<p><b>abc</b> \u00A0</p>';
+                            const text = ctx.editable.firstChild.lastChild;
+                            setDomSelection(text, 0, text, 0);
+                            await testPrevent('Enter', false);
+                        });
+                        it('after a word, when range is in a bold', async () => {
+                            ctx.editable.innerHTML = '<p>abc<b> \u00A0</b></p>';
+                            const text = ctx.editable.querySelector('b').firstChild;
+                            setDomSelection(text, 0, text, 0);
+                            await testPrevent('Enter', false);
+                        });
+                        it('after a word, complex formating', async () => {
+                            ctx.editable.innerHTML =
+                                '<p><u><i>abc</i><span><b> \u00A0</b></span></u></p>';
+                            const text = ctx.editable.querySelector('b').firstChild;
+                            setDomSelection(text, 0, text, 0);
+                            await testPrevent('Enter', false);
+                        });
+                        it('after a word', async () => {
+                            ctx.editable.innerHTML = '<p>abc</p>';
+                            const text = ctx.editable.firstChild.firstChild;
+                            setDomSelection(text, 3, text, 3);
+                            await testPrevent('Enter', false);
+                        });
+                        it('after a word and before only blanc spaces', async () => {
+                            ctx.editable.innerHTML = '<p>abc   </p>';
+                            const text = ctx.editable.firstChild.firstChild;
+                            setDomSelection(text, 3, text, 3);
+                            await testPrevent('Enter', false);
+                        });
+                    });
+                    describe('prevent', async () => {
+                        it('empty block', async () => {
+                            ctx.editable.innerHTML = '<p><br></p>';
+                            const p = ctx.editable.firstChild;
+                            setDomSelection(p, 0, p, 0);
+                            await testPrevent('Enter', {
+                                type: 'insertParagraphBreak',
+                            });
+                        });
+                        it('after a block', async () => {
+                            ctx.editable.innerHTML = '<div><div>abc</div> \u00A0</div>';
+                            const text = ctx.editable.firstChild.lastChild;
+                            setDomSelection(text, 0, text, 0);
+                            await testPrevent('Enter', {
+                                type: 'insertParagraphBreak',
+                            });
+                        });
+                        it('before a block', async () => {
+                            ctx.editable.innerHTML = '<div>\u00A0 <div>abc</div></div>';
+                            const text = ctx.editable.firstChild.firstChild;
+                            setDomSelection(text, 2, text, 2);
+                            await testPrevent('Enter', {
+                                type: 'insertParagraphBreak',
+                            });
+                        });
+                        it('begining of a block', async () => {
+                            ctx.editable.innerHTML = '<p>abc</p>';
+                            const text = ctx.editable.firstChild.firstChild;
+                            setDomSelection(text, 0, text, 0);
+                            await testPrevent('Enter', {
+                                type: 'insertParagraphBreak',
+                            });
+                        });
+                        it('after twice space and before a space', async () => {
+                            ctx.editable.innerHTML = '<p>abc \u00A0 def</p>';
+                            const text = ctx.editable.firstChild.firstChild;
+                            setDomSelection(text, 5, text, 5);
+                            await testPrevent('Enter', {
+                                type: 'insertParagraphBreak',
+                            });
+                        });
+                        it('before a word and after only blanc spaces', async () => {
+                            ctx.editable.innerHTML = '<p>   abc</p>';
+                            const text = ctx.editable.firstChild.firstChild;
+                            setDomSelection(text, 3, text, 3);
+                            await testPrevent('Enter', {
+                                type: 'insertParagraphBreak',
+                            });
+                        });
+                        it('before a word in a bold', async () => {
+                            ctx.editable.innerHTML = '<p>\u00A0 <b>abc</b></p>';
+                            const text = ctx.editable.firstChild.firstChild;
+                            setDomSelection(text, 2, text, 2);
+                            await testPrevent('Enter', {
+                                type: 'insertParagraphBreak',
+                            });
+                        });
+                        it('before a word, when range is in a bold', async () => {
+                            ctx.editable.innerHTML = '<p><b>\u00A0 </b>abc</p>';
+                            const text = ctx.editable.querySelector('b').firstChild;
+                            setDomSelection(text, 2, text, 2);
+                            await testPrevent('Enter', {
+                                type: 'insertParagraphBreak',
+                            });
+                        });
+                        it('before a word, complex formating', async () => {
+                            ctx.editable.innerHTML =
+                                '<p><u><span><b>\u00A0 </b></span><i>abc</i></u></p>';
+                            const text = ctx.editable.querySelector('b').firstChild;
+                            setDomSelection(text, 2, text, 2);
+                            await testPrevent('Enter', {
+                                type: 'insertParagraphBreak',
+                            });
+                        });
+                        it('between 2 blocks', async () => {
+                            ctx.editable.innerHTML = '<div><div>abc</div> <div>def</div></div>';
+                            const text = ctx.editable.firstChild.childNodes[1];
+                            setDomSelection(text, 1, text, 1);
+                            await testPrevent('Enter', {
+                                type: 'insertParagraphBreak',
+                            });
+                        });
+                        it('in a text with at least 2 spaces before or after', async () => {
+                            ctx.editable.innerHTML = '<p>a \u00A0 \u00A0b</p>';
+                            const text = ctx.editable.firstChild.firstChild;
+                            setDomSelection(text, 3, text, 3);
+                            await testPrevent('Enter', {
+                                type: 'insertParagraphBreak',
+                            });
+                        });
+                    });
                 });
             });
         });
