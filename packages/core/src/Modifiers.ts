@@ -4,7 +4,7 @@ import { EventMixin } from '../../utils/src/EventMixin';
 import { VersionableArray } from './Memory/VersionableArray';
 import { makeVersionable } from './Memory/Versionable';
 
-export class Modifiers extends EventMixin {
+export class Modifiers extends EventMixin implements Iterable<Modifier> {
     private _contents: Modifier[];
     constructor(...modifiers: Array<Modifier | Constructor<Modifier>>) {
         super();
@@ -250,6 +250,20 @@ export class Modifiers extends EventMixin {
         this.remove(modifier) || this.append(modifier);
     }
     /**
+     * Check that all `otherModifiers` ar contained within this ones.
+     *
+     * @param otherModifiers
+     */
+    contains(otherModifiers: Modifiers): boolean {
+        for (const otherModifier of otherModifiers) {
+            const foundModifier = this.find(m => m.isSameAs(otherModifier));
+            if (!foundModifier && !otherModifier.isSameAs(undefined)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    /**
      * Return true if the modifiers in this array are the same as the modifiers
      * in the given array (as defined by the `isSameAs` methods of the
      * modifiers).
@@ -257,17 +271,7 @@ export class Modifiers extends EventMixin {
      * @param otherModifiers
      */
     areSameAs(otherModifiers: Modifiers): boolean {
-        const modifiersMap = new Map(
-            this._contents?.map(a => [a, otherModifiers.find(b => a.isSameAs(b))]) || [],
-        );
-        const aModifiers = Array.from(modifiersMap.keys());
-        const bModifiers = Array.from(modifiersMap.values());
-
-        const allAinB = aModifiers.every(a => a.isSameAs(modifiersMap.get(a)));
-        const allBinA = otherModifiers.every(
-            b => bModifiers.includes(b) || b.isSameAs(this.find(b)),
-        );
-        return allAinB && allBinA;
+        return this.contains(otherModifiers) && otherModifiers.contains(this);
     }
     /**
      * Remove all modifiers.
@@ -307,6 +311,20 @@ export class Modifiers extends EventMixin {
      */
     map<T>(callbackfn: (value: Modifier, index: number, array: Modifier[]) => T): T[] {
         return this._contents?.map(callbackfn) || [];
+    }
+    /**
+     * Iterate through all modifiers.
+     */
+    [Symbol.iterator](): Iterator<Modifier> {
+        let index = -1;
+        const data = this._contents || [];
+
+        return {
+            next: (): IteratorResult<Modifier> => ({
+                value: data[++index],
+                done: !(index in data),
+            }),
+        };
     }
     /**
      * @override
