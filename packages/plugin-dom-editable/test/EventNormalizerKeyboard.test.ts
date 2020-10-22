@@ -5868,6 +5868,8 @@ describe('utils', () => {
                     key: string,
                     test: NormalizedAction | false,
                 ): Promise<void> {
+                    ctx.normalizer.hasSpellchecker = true;
+
                     await nextTick();
                     ctx.eventBatches.splice(0);
                     const ev = triggerEvent(ctx.editable, 'keydown', { key: key, code: key });

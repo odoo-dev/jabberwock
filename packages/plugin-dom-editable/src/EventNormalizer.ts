@@ -392,6 +392,19 @@ type TriggerEventBatchCallback = (batch: Promise<EventBatch>) => void;
  */
 export class EventNormalizer {
     /**
+     * The normalizer detects if there is a auto-completion feature and that it
+     * must therefore be taken into account so as not to cancel modifications
+     * which would alter its correct functioning.
+     * By default, mobile browsers are considered to have an auto-completion.
+     * The detection is then done on the use of the composition events.
+     * A device can have a spell checker without auto-completion, the chrome
+     * spell checker trigger a replacement inputEvent without using composition
+     * events.
+     */
+    hasSpellchecker = /Android|Mobile|Phone|webOS|iPad|iPod|BlackBerry|Opera Mini/i.test(
+        navigator.userAgent,
+    );
+    /**
      * Event listeners that are bound in the DOM by the normalizer on creation
      * and unbound on destroy.
      */
@@ -555,7 +568,7 @@ export class EventNormalizer {
         this._bindEventInEditable(root, 'keydown', this._onKeyDownOrKeyPress);
         this._bindEventInEditable(root, 'keypress', this._onKeyDownOrKeyPress);
 
-        this._bindEventInEditable(root, 'compositionstart', this._registerEvent);
+        this._bindEventInEditable(root, 'compositionstart', this._onCompositionStart);
         this._bindEventInEditable(root, 'compositionupdate', this._registerEvent);
         this._bindEventInEditable(root, 'compositionend', this._registerEvent);
         this._bindEventInEditable(root, 'beforeinput', this._registerEvent);
@@ -1719,6 +1732,15 @@ export class EventNormalizer {
         this._mousedownInEditable = false;
     }
     /**
+     * Catch start composition event
+     *
+     * @param {CompositionEvent} ev
+     */
+    _onCompositionStart(ev: CompositionEvent): void {
+        this.hasSpellchecker = true;
+        this._registerEvent(ev);
+    }
+    /**
      * Catch Enter, Backspace, Delete and insert actions
      *
      * @param {KeyboardEvent} ev
@@ -1762,6 +1784,11 @@ export class EventNormalizer {
             // If a control key is applied, you must let the browser apply its
             // own behavior because you do not know the command in advance.
             return false;
+        }
+
+        if (!this.hasSpellchecker) {
+            // there is no risk of breaking the spellcheckers if there is none.
+            return true;
         }
 
         if (
