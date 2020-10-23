@@ -102,42 +102,56 @@ function _followsInlineSpace(node: Node): boolean {
  * @returns {boolean}
  */
 function _isAtSegmentBreak(node: Node, side: 'start' | 'end'): boolean {
-    const siblingSide = side === 'start' ? 'previousSibling' : 'nextSibling';
-    const sibling = node && node[siblingSide];
-    const isAgainstAnotherSegment = _isAgainstAnotherSegment(node, side);
+    const direction = side === 'start' ? 'previous' : 'next';
+    const sibling = _significantSibling(node, direction);
+    const isAgainstAnotherSegment = sibling && _isSegment(sibling);
     const isAtEdgeOfOwnSegment = _isBlockEdge(node, side);
     // In the DOM, a space before a BR is rendered but a space after a BR isn't.
     const isBeforeBR = side === 'end' && sibling && nodeName(sibling) === 'BR';
     return (isAgainstAnotherSegment && !isBeforeBR) || isAtEdgeOfOwnSegment;
 }
 /**
- * Return true if the given node is just before or just after another segment.
- * Eg: <div>abc<div>def</div></div> -> abc is before another segment (div).
- * Eg: <div><a>abc</a>     <div>def</div></div> -> abc is before another segment
- * (div).
+ * Return the next|previous "significant" node. Nodes to skip are empty text
+ * nodes (text nodes with no text content or only whitespace), and hidden
+ * inputs.
+ * If `searchUp` is true (which is the default), the next|previous "significant"
+ * node may be a cousin.
  *
  * @param {Node} node
- * @param {'start'|'end'} side
- * @returns {boolean}
+ * @param {'previous'|'next'} direction
+ * @param {boolean} [searchUp] (default: true)
+ * @returns {Node}
  */
-function _isAgainstAnotherSegment(node: Node, side: 'start' | 'end'): boolean {
-    const siblingSide = side === 'start' ? 'previousSibling' : 'nextSibling';
-    const sibling = node && node[siblingSide];
-    if (sibling) {
-        return sibling && _isSegment(sibling);
-    } else {
+function _significantSibling(node: Node, direction: 'previous' | 'next', searchUp = true): Node {
+    const siblingSide = direction === 'previous' ? 'previousSibling' : 'nextSibling';
+    let sibling: Node = node && node[siblingSide];
+    let lastExisting = sibling || node;
+    if (
+        sibling &&
+        // Sibling is an empty text node.
+        ((sibling.nodeType === Node.TEXT_NODE &&
+            onlyTabsSpacesAndNewLines.test(sibling.textContent)) ||
+            // Sibling is a hidden input.
+            (nodeName(sibling) === 'INPUT' &&
+                (sibling as Element).getAttribute('type') === 'hidden'))
+    ) {
+        lastExisting = sibling;
+        sibling = sibling[siblingSide];
+    }
+    if (!sibling && searchUp) {
         // Look further (eg.: `<div><a>abc</a>     <div>def</div></div>`: the
         // space should be removed).
-        let ancestor = node;
-        while (ancestor && !ancestor[siblingSide]) {
+        let ancestor = lastExisting;
+        while (ancestor && !_significantSibling(ancestor, direction, false)) {
             ancestor = ancestor.parentNode;
         }
-        let cousin = ancestor && !_isSegment(ancestor) && ancestor.nextSibling;
-        while (cousin && isInstanceOf(cousin, Text)) {
-            cousin = cousin.nextSibling;
+        sibling =
+            ancestor && !_isSegment(ancestor) && _significantSibling(ancestor, direction, false);
+        while (sibling && isInstanceOf(sibling, Text)) {
+            sibling = _significantSibling(sibling, direction, false);
         }
-        return cousin && _isSegment(cousin);
     }
+    return sibling;
 }
 /**
  * Return true if the node is a segment according to W3 formatting model.
@@ -175,15 +189,15 @@ function _isBlockEdge(node: Node, side: 'start' | 'end'): boolean {
 
     // Return true if no ancestor up to the first block ancestor has a
     // sibling on the specified side
-    const siblingSide = side === 'start' ? 'previousSibling' : 'nextSibling';
+    const direction = side === 'start' ? 'previous' : 'next';
     return ancestorsUpToBlock.every(ancestor => {
-        let sibling = ancestor[siblingSide];
+        let sibling = _significantSibling(ancestor, direction);
         while (
             sibling &&
             isInstanceOf(sibling, Text) &&
             sibling.textContent.match(onlyTabsSpacesAndNewLines)
         ) {
-            sibling = sibling[siblingSide];
+            sibling = _significantSibling(sibling, direction);
         }
         return !sibling;
     });
