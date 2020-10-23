@@ -326,5 +326,33 @@ describe('removeFormattingSpace() util function', () => {
             const nodes = htmlToElements('<div><a>abc</a>     <div>def</div></div>');
             expect(removeFormattingSpace(nodes[0].childNodes[1])).to.equal('');
         });
+        it('should remove space between a <a> and a <select>', async () => {
+            const nodes = htmlToElements(
+                '<div><a>abc</a>     <select><option>def</option></select></div>',
+            );
+            expect(removeFormattingSpace(nodes[0].childNodes[1])).to.equal('');
+        });
+        it('should remove space between hidden inputs', async () => {
+            const nodes = htmlToElements(
+                '<div><input type="hidden"/>     <input type="hidden"/></div>',
+            );
+            expect(removeFormattingSpace(nodes[0].childNodes[1])).to.equal('');
+        });
+        it('should preserve space between text nodes separated by hidden input (1)', async () => {
+            const nodes = htmlToElements('<div>abc <input type="hidden"/>def</div>');
+            expect(removeFormattingSpace(nodes[0].childNodes[0])).to.equal('abc ');
+        });
+        it('should preserve space between text nodes separated by hidden input (2)', async () => {
+            const nodes = htmlToElements('<div>abc<input type="hidden"/> def</div>');
+            expect(removeFormattingSpace(nodes[0].childNodes[2])).to.equal(' def');
+        });
+        it('should remove space between text node and block separated by hidden input (1)', async () => {
+            const nodes = htmlToElements('<div>abc <input type="hidden"/><p>def</p></div>');
+            expect(removeFormattingSpace(nodes[0].childNodes[0])).to.equal('abc');
+        });
+        it('should remove space between text node and block separated by hidden input (1)', async () => {
+            const nodes = htmlToElements('<div>abc<input type="hidden"/> <p>def</p></div>');
+            expect(removeFormattingSpace(nodes[0].childNodes[2])).to.equal('');
+        });
     });
 });
