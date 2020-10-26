@@ -22,10 +22,11 @@ export class LineBreakDomObjectRenderer extends NodeRenderer<DomObject> {
         worker.locate([node], br);
         if (!node.nextSibling()) {
             // If a LineBreakNode has no next sibling, it must be rendered
-            // as two BRs in order for it to be visible.
-            const br2 = { tag: 'BR' };
-            const domObject = { children: [br, br2] };
-            worker.locate([node], br2);
+            // as a BR and a placeholder invisible char in order for it to be
+            // visible.
+            const invisible: DomObject = { text: '\u200B' };
+            const domObject = { children: [br, invisible] };
+            worker.locate([node], invisible);
             return domObject;
         }
         return br;
