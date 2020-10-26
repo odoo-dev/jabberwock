@@ -115,6 +115,40 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         return context.execCommand(domHelpersToggleClass);
     }
     /**
+     * Add (state: true) or remove (state: false) a class or a list of classes
+     * from a DOM node or a list of DOM nodes.
+     *
+     * @param context
+     * @param originalDomNode
+     * @param className
+     * @param state
+     */
+    async setClass(
+        context: ExecutionContext,
+        originalDomNode: Node | Node[],
+        className: string,
+        state: boolean,
+    ): Promise<ExecCommandResult> {
+        const domHelpersSetClass = async (): Promise<void> => {
+            const classes = Array.isArray(className) ? className : [className];
+            const domNodes = Array.isArray(originalDomNode) ? originalDomNode : [originalDomNode];
+            for (const domNode of domNodes) {
+                const Attributes = this._getAttributesConstructor(domNode);
+                for (const node of this.getNodes(domNode)) {
+                    const classList = node.modifiers.find(Attributes)?.classList;
+                    for (const oneClass of classes) {
+                        if (state && !classList?.has(oneClass)) {
+                            node.modifiers.get(Attributes).classList.add(oneClass);
+                        } else if (!state && classList?.has(oneClass)) {
+                            classList.remove(oneClass);
+                        }
+                    }
+                }
+            }
+        };
+        return context.execCommand(domHelpersSetClass);
+    }
+    /**
      * Set an attribute on a DOM node or a list of DOM nodes.
      *
      * @param params
