@@ -25,6 +25,7 @@ module.exports = {
             "@typescript-eslint/no-unused-expressions": "off",
         }
     }],
+    "ignorePatterns": ['node_modules/', 'build/', 'karma.conf.js'],
     "env": {
         "commonjs": true,
         "es6": true,
