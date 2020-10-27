@@ -836,7 +836,10 @@ export class EventNormalizer {
             (cutEvent && 'deleteByCut') ||
             (dropEvent && 'insertFromDrop') ||
             (pasteEvent && 'insertFromPaste') ||
-            (key === 'Enter' && inputEvent?.inputType === 'insertText' && 'insertLineBreak') ||
+            (key === 'Enter' &&
+                keydownEvent.shiftKey &&
+                inputEvent?.inputType === 'insertText' &&
+                'insertLineBreak') ||
             (inputEvent && inputEvent.inputType);
 
         // In case of accent inserted from a Mac, check that the char before was
