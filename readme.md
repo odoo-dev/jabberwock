@@ -15,7 +15,7 @@ See the "dev" script in [package.json](./package.json)
 
 ### build
 ```bash
-npm run build
+npm run build:odoo
 ```
 See [package.json](./package.json)
 See the "run" script in [package.json](./package.json)
