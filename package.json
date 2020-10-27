@@ -4,9 +4,8 @@
   "description": "The best editor in the world",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "webpack-dev-server --config webpack-examples.config.js",
-    "build": "rm -rf build/examples; mkdir -p build/examples/; cp -r ./examples ./build; webpack --config webpack-examples.config.js",
-    "build-odoo": "rm -rf build/examples; mkdir -p build/examples/; cp -r ./examples ./build; webpack --config webpack-odoo.config.js",
+    "dev": "webpack-dev-server --config webpack.config.js",
+    "build": "rm -rf build/examples; mkdir -p build/examples/; cp -r ./examples ./build; webpack --config webpack.config.js",
     "build:odoo": "npm run build:odoo:js; npm run build:odoo:bundle;",
     "build:odoo:js": "rm -rf build/odoo; mkdir -p build/odoo; cp -r packages build/odoo; find build/odoo -name '*.ts' | xargs rm; tsc --target ES2017 --module es6 --outDir build/odoo/packages",
     "build:odoo:bundle": "rm -rf build/rollup; rollup -c rollup.config.js",
