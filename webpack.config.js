@@ -1,13 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const path = require('path');
 const glob = require('glob');
-const fs = require('fs');
 /* eslint-enable @typescript-eslint/no-var-requires */
-
-const integrationDevPath = path.resolve(
-    __dirname,
-    'packages/bundle-odoo-website-editor/odoo-integration.ts',
-);
 
 const mainConfig = {
     mode: 'development',
@@ -92,9 +86,8 @@ const entries = glob.sync(__dirname + '/examples/**/*.ts').reduce((acc, file) =>
     acc[fileKey] = file;
     return acc;
 }, {});
-entries['odoo-integration'] = integrationDevPath;
 
-module.exports.examples = {
+const examplesConfig = {
     ...mainConfig,
     entry: entries,
     output: {
@@ -104,41 +97,4 @@ module.exports.examples = {
     },
 };
 
-// -----------------------------------------------------------------------------
-// Build for Odoo
-// -----------------------------------------------------------------------------
-const odooBuildPath = path.resolve(__dirname, 'build/odoo');
-const odooBuildFilename = 'odoo-integration.js';
-module.exports.odoo = {
-    ...mainConfig,
-    entry: {
-        'odoo-integration': integrationDevPath,
-    },
-    output: {
-        path: odooBuildPath,
-        filename: odooBuildFilename,
-        library: 'JWEditor',
-    },
-    plugins: [
-        {
-            apply: compiler => {
-                compiler.hooks.afterEmit.tap('AfterEmitBuildOdooIntegration', async () => {
-                    const filename = path.resolve(odooBuildPath, odooBuildFilename);
-                    fs.readFile(filename, (error, content) => {
-                        if (error) throw new Error(error);
-                        const newContent = [
-                            "odoo.define('web_editor.jabberwock', function(require) {",
-                            "'use strict';",
-                            content,
-                            'return JWEditor',
-                            '});',
-                        ].join('\n');
-                        fs.writeFile(filename, newContent, error => {
-                            if (error) throw new Error(error);
-                        });
-                    });
-                });
-            },
-        },
-    ],
-};
+module.exports = examplesConfig;
