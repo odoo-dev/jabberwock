@@ -112,7 +112,13 @@ export class DomReconciliationEngine {
                     const ids = this._renderedNodes.get(linkedNode);
                     if (ids) {
                         for (const id of ids) {
-                            if (!oldObjects.has(id)) {
+                            if (!this._objects[id]) {
+                                console.warn(
+                                    'Trying to remove a rendering object that has already been removed. One of the references is wrong.',
+                                    'Linked VNode:',
+                                    linkedNode,
+                                );
+                            } else if (!oldObjects.has(id)) {
                                 const object = this._objects[id].object;
                                 this._rendererTreated.delete(object);
                                 this._objectIds.delete(object);
@@ -151,10 +157,16 @@ export class DomReconciliationEngine {
                         const ancestorObjectId = this._fromItem.get(ancestorWithRendering);
                         if (ancestorObjectId && !this._diff[ancestorObjectId]) {
                             const parentObject = this._objects[ancestorObjectId];
-                            const nodes = this._items.get(parentObject.object);
-                            mapOldIds.set(parentObject.object, new Set([ancestorObjectId]));
-                            this._rendererTreated.delete(parentObject.object);
-                            this._diffObject(renderings, parentObject.object, nodes, mapOldIds);
+                            if (!parentObject) {
+                                console.warn(
+                                    'Trying to remove a parent that has already been removed. One of the references is wrong.',
+                                );
+                            } else {
+                                const nodes = this._items.get(parentObject.object);
+                                mapOldIds.set(parentObject.object, new Set([ancestorObjectId]));
+                                this._rendererTreated.delete(parentObject.object);
+                                this._diffObject(renderings, parentObject.object, nodes, mapOldIds);
+                            }
                         }
                     }
                 }
@@ -191,7 +203,11 @@ export class DomReconciliationEngine {
         for (const diff of diffs) {
             for (const id of diff.removedChildren) {
                 const object = this._objects[id];
-                if (!object.parent) {
+                if (!object) {
+                    console.warn(
+                        'Trying to remove a rendering object that has already been removed. One of the references is wrong.',
+                    );
+                } else if (!object.parent) {
                     removeObjects.push(id);
                 }
             }
@@ -201,7 +217,14 @@ export class DomReconciliationEngine {
             const object = this._objects[id];
             for (const childId of object.children) {
                 const child = this._objects[childId];
-                if ((!child.parent || child.parent === id) && !removeObjects.includes(childId)) {
+                if (!child) {
+                    console.warn(
+                        'Trying to remove a rendering object that has already been removed. One of the references is wrong.',
+                    );
+                } else if (
+                    (!child.parent || child.parent === id) &&
+                    !removeObjects.includes(childId)
+                ) {
                     object.parent = null;
                     removeObjects.push(childId);
                 }
@@ -212,8 +235,22 @@ export class DomReconciliationEngine {
         const allOldDomNodes: Node[] = [];
         for (const id of removeObjects) {
             const old = this._objects[id];
+            if (!old) {
+                console.warn(
+                    'Trying to remove a rendering object that has already been removed. One of the references is wrong.',
+                );
+                continue;
+            }
             if (typeof old.object.detach === 'function') {
-                old.object.detach(...old.dom);
+                try {
+                    old.object.detach(...old.dom);
+                } catch (e) {
+                    console.warn(
+                        'An error occured while detaching. The target rendering might already have been deleted. Multiple references might target this rendering, in which case at least one of them is wrong.',
+                        'Rendering object',
+                        old.object,
+                    );
+                }
             }
             for (const node of this._locations.get(old.object) || []) {
                 if (this._fromItem.get(node) === id) {
@@ -958,7 +995,13 @@ export class DomReconciliationEngine {
             hasChanged = true;
             for (const childId of oldChildren) {
                 if (!children.includes(childId)) {
-                    if (this._objects[childId].parent === id) {
+                    if (!this._objects[childId]) {
+                        console.warn(
+                            'Trying to remove a rendering object that has already been removed. One of the references is wrong.',
+                            'Last reference inside:',
+                            domObject,
+                        );
+                    } else if (this._objects[childId].parent === id) {
                         this._objects[childId].parent = null;
                     }
                     removedChildren.push(childId);
@@ -1060,7 +1103,15 @@ export class DomReconciliationEngine {
         if (old) {
             oldIdsToRelease.push(old.id);
             if (typeof old.object.detach === 'function') {
-                old.object.detach(...old.dom);
+                try {
+                    old.object.detach(...old.dom);
+                } catch (e) {
+                    console.warn(
+                        'An error occured while detaching. The target rendering might already have been deleted. Multiple references might target this rendering, in which case at least one of them is wrong.',
+                        'Rendering object:',
+                        old.object,
+                    );
+                }
             }
         }
         for (const id of oldIdsToRelease) {
@@ -1368,7 +1419,9 @@ export class DomReconciliationEngine {
                 const child = domObject.children[index];
                 if (!(child instanceof AbstractNode)) {
                     for (const node of this._addLocations(child, locations, from)) {
-                        allItems.push(node);
+                        if (!allItems.includes(node)) {
+                            allItems.push(node);
+                        }
                     }
                 }
             }
@@ -1579,8 +1632,14 @@ export class DomReconciliationEngine {
         const descendents = [id];
         for (const id of descendents) {
             const descendent = this._objects[id];
-            descendent.parentDomNode = parentDomNode;
-            if (this._diff[id]) {
+            if (!descendent) {
+                console.warn(
+                    'Trying to render a rendering object that has already been removed. One of the references is wrong.',
+                    'Diff found:',
+                    this._diff[id],
+                );
+            } else if (this._diff[id]) {
+                descendent.parentDomNode = parentDomNode;
                 this._updateDom(id);
             } else if (!('tag' in descendent.object) && descendent.children) {
                 // Get children if it's a fragment.
