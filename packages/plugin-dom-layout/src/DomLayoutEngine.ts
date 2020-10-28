@@ -560,8 +560,19 @@ export class DomLayoutEngine extends LayoutEngine {
             update.add(node);
         }
 
+        // This code is a safeguard, because there are sometimes references to
+        // destroyed VNodes (and in other memory slices).
+        const updateWithoutZombie = new Set<VNode>();
+        for (const node of update) {
+            if (node.id === undefined) {
+                console.error('Zombie (wrong VNode reference) are found', node);
+            } else {
+                updateWithoutZombie.add(node);
+            }
+        }
+
         // Render nodes.
-        return update;
+        return updateWithoutZombie;
     }
     private _filterInRoot(nodes: Set<VNode>): { keep: Set<VNode>; remove: Set<VNode> } {
         const inRoot = new Set<VNode>([this.root]);
