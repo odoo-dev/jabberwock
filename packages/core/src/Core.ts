@@ -137,7 +137,20 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 }
             }
         } else {
+            const shouldDeleteLine =
+                !range.start.previousSibling() &&
+                !range.end.previousSibling() &&
+                range.startContainer !== range.endContainer;
+            const oldEndContainer = range.endContainer;
+
             range.empty();
+
+            // This handles the special case of a triple click followed by a
+            // backspace: the line should be deleted with its container (no
+            // merging).
+            if (shouldDeleteLine) {
+                range.startContainer.replaceWith(oldEndContainer);
+            }
         }
     }
     /**
@@ -191,7 +204,20 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 }
             }
         } else {
+            const shouldDeleteLine =
+                !range.start.previousSibling() &&
+                !range.end.previousSibling() &&
+                range.startContainer !== range.endContainer;
+            const oldEndContainer = range.endContainer;
+
             range.empty();
+
+            // This handles the special case of a triple click followed by a
+            // delete: the line should be deleted with its container (no
+            // merging).
+            if (shouldDeleteLine) {
+                range.startContainer.replaceWith(oldEndContainer);
+            }
         }
     }
     async deleteWord(params: DeleteWordParams): Promise<void> {

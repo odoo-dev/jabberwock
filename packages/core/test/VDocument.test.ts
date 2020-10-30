@@ -592,6 +592,13 @@ describe('VDocument', () => {
                     contentAfter: '<p>a[]</p><p>f</p>',
                 });
             });
+            it('should delete a heading (triple click delete)', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<h1>[abc</h1><p>]def</p>',
+                    stepFunction: deleteForward,
+                    contentAfter: '<p>[]def</p>',
+                });
+            });
         });
     });
     // Note: implementing a test for deleteBackward, make sure to implement
@@ -1233,6 +1240,13 @@ describe('VDocument', () => {
                     contentBefore: '<h1>]<b>abcd</b></h1><p>ef[gh</p>',
                     stepFunction: deleteBackward,
                     contentAfter: '<h1>[]gh</h1>',
+                });
+            });
+            it('should delete a heading (triple click backspace)', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<h1>[abc</h1><p>]def</p>',
+                    stepFunction: deleteBackward,
+                    contentAfter: '<p>[]def</p>',
                 });
             });
         });
