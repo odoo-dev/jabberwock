@@ -169,6 +169,13 @@ describePlugin(Char, testEditor => {
                         contentAfter: '<p>a[b]c</p>',
                     });
                 });
+                it('should delete a heading (triple click char)', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<h1>[abc</h1><p>]def</p>',
+                        stepFunction: (editor: JWEditor) => insertText(editor, 'g'),
+                        contentAfter: '<h1>g[]def</h1>',
+                    });
+                });
             });
             describe('bold', () => {
                 describe('Selection collapsed', () => {
