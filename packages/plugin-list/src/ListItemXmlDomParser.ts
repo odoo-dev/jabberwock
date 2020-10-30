@@ -93,6 +93,8 @@ export class ListItemXmlDomParser extends AbstractParser<Node> {
             return [container];
         } else if (
             (nodes.length === 1 &&
+                // We can't remove container that contain Attributes
+                nodes[0].modifiers.find(Attributes)?.keys() === undefined &&
                 // TODO: we need some sort of PhrasingContainer class for this.
                 (nodes[0] instanceof ParagraphNode ||
                     nodes[0] instanceof HeadingNode ||

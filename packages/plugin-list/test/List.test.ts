@@ -704,6 +704,32 @@ describePlugin(List, testEditor => {
                     contentAfter: '<ul><li><h1>a[]</h1><p>b</p></li></ul>',
                 });
             });
+            it('should parse a li and keep container if some attribute are set', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: '<ul><li class="x"><p class="y">a[]b</p></li></ul>',
+                    contentAfter: '<ul><li class="x"><p class="y">a[]b</p></li></ul>',
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<ul><li class="x"><div class="y">a[]b</div></li></ul>',
+                    contentAfter: '<ul><li class="x"><div class="y">a[]b</div></li></ul>',
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<ul><li class="x"><p id="y">a[]b</p></li></ul>',
+                    contentAfter: '<ul><li class="x"><p id="y">a[]b</p></li></ul>',
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<ul><li class="x"><p attr-data="y">a[]b</p></li></ul>',
+                    contentAfter: '<ul><li class="x"><p attr-data="y">a[]b</p></li></ul>',
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<ul><li class="x"><p attr-xyz="y">a[]b</p></li></ul>',
+                    contentAfter: '<ul><li class="x"><p attr-xyz="y">a[]b</p></li></ul>',
+                });
+                await testEditor(BasicEditor, {
+                    contentBefore: '<ul><li class="x"><p style="color: white;">a[]b</p></li></ul>',
+                    contentAfter: '<ul><li class="x"><p style="color: white;">a[]b</p></li></ul>',
+                });
+            });
             it('should parse a li with 2 containers and keep li attributes', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore:
