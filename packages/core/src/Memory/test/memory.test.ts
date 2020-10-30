@@ -2195,7 +2195,7 @@ describe('core', () => {
 
                 expect(memory.getPath('after-snap').join()).to.deep.equal('after-snap,snap,test,1');
                 expect(memory.getPath('after-snap', true).join()).to.deep.equal(
-                    'after-snap,snap,test-6,test-5,test-4,test-3,test-2,test-1,test-0,test,1',
+                    'after-snap,test-7,test-6,test-5,test-4,test-3,test-2,test-1,test-0,test,1',
                 );
                 expect(memory.getPath('other').join()).to.deep.equal('other,snap,test,1');
                 expect(memory.getPath('test-7').join()).to.deep.equal(
@@ -2531,6 +2531,48 @@ describe('core', () => {
                     'Should removed the last created items',
                 );
             });
+            it('undo item insertion in each slice after a snapshot in array with initial value', () => {
+                const memory = new Memory();
+                memory._numberOfFlatSlices = 5;
+                memory._numberOfSlicePerSnapshot = 3;
+
+                memory.create('test');
+                memory.switchTo('test');
+
+                const array: Array<string | VersionableObject> = makeVersionable(['a', 'b']);
+                memory.attach(array);
+
+                for (let i = 0; i < 10; i++) {
+                    memory.create(i.toString());
+                    memory.switchTo(i.toString());
+                    array.splice(-1, 0, new VersionableObject({ id: i }));
+                }
+
+                const result = [
+                    'a',
+                    { id: 0 },
+                    { id: 1 },
+                    { id: 2 },
+                    { id: 3 },
+                    { id: 4 },
+                    { id: 5 },
+                    { id: 6 },
+                    { id: 7 },
+                    { id: 8 },
+                    { id: 9 },
+                    'b',
+                ];
+                // undo
+                for (let i = 9; i >= 0; i--) {
+                    memory.switchTo(i.toString());
+                    expect(array).to.deep.equal(result.slice(0, 2 + i).concat(result.slice(-1)));
+                }
+                // redo
+                for (let i = 0; i < 10; i++) {
+                    memory.switchTo(i.toString());
+                    expect(array).to.deep.equal(result.slice(0, 2 + i).concat(result.slice(-1)));
+                }
+            });
             it('undo the slice after a snapshot of added item in set', () => {
                 const memory = new Memory();
                 memory._numberOfFlatSlices = 5;
@@ -2794,10 +2836,7 @@ describe('core', () => {
                             add: [],
                             move: [],
                             remove: [],
-                            update: [
-                                [array, [i - 1]],
-                                [array, [i]], // TODO: merge diff array indexes
-                            ],
+                            update: [[array, [i]]],
                         },
                         'index: ' + i,
                     );
@@ -2862,6 +2901,101 @@ describe('core', () => {
                             update: [[array, [20]]],
                         },
                         'index: ' + i,
+                    );
+                }
+            });
+            it('should get the changed index in array when insert item in each slice', () => {
+                const memory = new Memory();
+                memory._numberOfFlatSlices = 20;
+
+                memory.create('test');
+                memory.switchTo('test');
+
+                const array: Array<string | object> = makeVersionable(['a', 'b']);
+                memory.attach(array);
+
+                for (let i = 0; i <= 10; i++) {
+                    memory.create(i.toString());
+                    memory.switchTo(i.toString());
+                    array.splice(-1, 0, makeVersionable({ id: i }));
+                }
+
+                const clone = [...array];
+
+                // undo
+                for (let i = 9; i >= 0; i--) {
+                    memory.switchTo(i.toString());
+                    const diff = memory.getChangesLocations((i + 1).toString(), i.toString());
+                    expect(diff).to.deep.equal(
+                        {
+                            add: [],
+                            move: [],
+                            remove: [clone[2 + i]],
+                            update: [[array, [2 + i]]],
+                        },
+                        'undo: ' + i,
+                    );
+                }
+                // redo
+                for (let i = 1; i <= 10; i++) {
+                    memory.switchTo(i.toString());
+                    const diff = memory.getChangesLocations((i - 1).toString(), i.toString());
+                    expect(diff).to.deep.equal(
+                        {
+                            add: [clone[1 + i]],
+                            move: [],
+                            remove: [],
+                            update: [[array, [1 + i]]],
+                        },
+                        'redo: ' + i,
+                    );
+                }
+            });
+            it('should get the changed index in array when insert item in each slice after a snapshot', () => {
+                const memory = new Memory();
+                memory._numberOfFlatSlices = 5;
+                memory._numberOfSlicePerSnapshot = 3;
+
+                memory.create('test');
+                memory.switchTo('test');
+
+                const array: Array<string | object> = makeVersionable(['a', 'b']);
+                memory.attach(array);
+
+                for (let i = 0; i <= 10; i++) {
+                    memory.create(i.toString());
+                    memory.switchTo(i.toString());
+                    array.splice(-1, 0, makeVersionable({ id: i }));
+                }
+
+                const clone = [...array];
+
+                // undo
+                for (let i = 9; i >= 0; i--) {
+                    memory.switchTo(i.toString());
+                    const diff = memory.getChangesLocations((i + 1).toString(), i.toString());
+                    expect(diff).to.deep.equal(
+                        {
+                            add: [],
+                            move: [],
+                            remove: [clone[2 + i]],
+                            update: [[array, [2 + i]]],
+                        },
+                        'undo: ' + i,
+                    );
+                }
+                // redo
+                for (let i = 1; i <= 10; i++) {
+                    memory.switchTo(i.toString());
+                    const diff = memory.getChangesLocations((i - 1).toString(), i.toString());
+                    expect(diff).to.deep.equal(
+                        {
+                            add: [clone[1 + i]],
+                            move: [],
+                            remove: [],
+                            update: [[array, [1 + i]]],
+                        },
+                        'redo: ' + i,
                     );
                 }
             });
