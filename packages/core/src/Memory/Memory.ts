@@ -130,7 +130,7 @@ export class MemorySlice {
     name: SliceKey;
     parent: MemorySlice;
     children: MemorySlice[] = [];
-    snapshotOrigin?: MemorySlice;
+    snapshotOrigin?: MemorySlice[];
     snapshot?: MemorySlice;
     data: Record<number, MemoryType> = {}; // registry of values
     linkedParentOfProxy: Record<number, proxyAttributePath> = {};
@@ -139,9 +139,6 @@ export class MemorySlice {
     constructor(name: SliceKey, parent?: MemorySlice) {
         this.name = name;
         this.parent = parent;
-    }
-    getPrevious(): MemorySlice {
-        return this.snapshotOrigin ? this.snapshotOrigin.parent : this.parent;
     }
 }
 
@@ -310,24 +307,22 @@ export class Memory {
             remove: [],
             update: [],
         };
-
         const ancestorKey = this._getCommonAncestor(from, to);
         const refs = this._getChangesPath(from, to, ancestorKey);
-        if (from === ancestorKey && from !== to) {
-            refs.shift();
-        }
-
         const removeFromUpdate = new Set<MemoryAllowedObjectType>();
 
-        let previous: MemorySlice;
-        let ref: MemorySlice;
-        while ((ref = refs.pop())) {
+        let reverse = true;
+        for (const ref of refs) {
+            if (reverse && ref.name === ancestorKey && from !== to) {
+                reverse = false;
+                continue;
+            }
             const linkedParentOfProxy = ref.linkedParentOfProxy;
             for (const ID in linkedParentOfProxy) {
                 const proxy = this._proxies[ID];
                 if (linkedParentOfProxy[ID].length) {
                     if (ref.ids.has(+ID)) {
-                        if (ref.parent === previous) {
+                        if (reverse) {
                             diff.remove.push(proxy);
                         } else {
                             diff.add.push(proxy);
@@ -337,19 +332,11 @@ export class Memory {
                         diff.move.push(proxy);
                     }
                 } else {
-                    if (ref.parent === previous) {
+                    if (reverse) {
                         diff.add.push(proxy);
                     } else {
                         diff.remove.push(proxy);
                     }
-                    removeFromUpdate.add(proxy);
-                }
-            }
-
-            if (ref.parent === previous) {
-                for (const ID of previous.ids) {
-                    const proxy = this._proxies[ID];
-                    diff.remove.push(proxy);
                     removeFromUpdate.add(proxy);
                 }
             }
@@ -415,9 +402,8 @@ export class Memory {
                     }
                 }
             });
-
-            previous = ref;
         }
+
         return diff;
     }
     /**
@@ -502,11 +488,18 @@ export class Memory {
      * @param withoutSnapshot
      */
     getPath(sliceKey: SliceKey, withoutSnapshot?: boolean): SliceKey[] {
-        const sliceKeys = [];
+        const sliceKeys: SliceKey[] = [];
         let ref = this._slices[sliceKey];
         while (ref && ref.name) {
-            sliceKeys.push(ref.name);
-            ref = withoutSnapshot ? ref.getPrevious() : ref.parent;
+            if (withoutSnapshot && ref.snapshotOrigin) {
+                for (const origin of ref.snapshotOrigin) {
+                    sliceKeys.push(origin.name);
+                    ref = origin;
+                }
+            } else {
+                sliceKeys.push(ref.name);
+            }
+            ref = ref.parent;
         }
         return sliceKeys;
     }
@@ -516,39 +509,39 @@ export class Memory {
      * destination slice.
      *
      * @param fromSliceKey
-     * @param unitSliceKey
+     * @param toSliceKey
      * @param newSliceKey
      */
-    snapshot(fromSliceKey: SliceKey, unitSliceKey: SliceKey, newSliceKey: SliceKey): void {
+    snapshot(fromSliceKey: SliceKey, toSliceKey: SliceKey, newSliceKey: SliceKey): void {
         const refs = this._slices;
-        const fromRref = refs[fromSliceKey];
-        const untilRref = refs[unitSliceKey];
+        const fromRef = refs[fromSliceKey];
+        const toRef = refs[toSliceKey];
 
-        const newRef = this._create(newSliceKey, fromRref.parent && fromRref.parent.name);
-        this._squashInto(fromSliceKey, unitSliceKey, newRef.name);
+        const newRef = this._create(newSliceKey, fromRef.parent && fromRef.parent.name);
+        const sliceKeys = this._squashInto(fromSliceKey, toSliceKey, newRef.name);
 
-        untilRref.children.forEach(child => {
+        toRef.children.forEach(child => {
             child.parent = newRef;
         });
-        newRef.children = untilRref.children;
-        untilRref.children = [];
-        untilRref.snapshot = newRef;
-        newRef.snapshotOrigin = untilRref;
+        newRef.children = toRef.children;
+        toRef.children = [];
+        toRef.snapshot = newRef;
+        newRef.snapshotOrigin = sliceKeys;
     }
     /**
      * Compress all changes between two parented memory slices and remove all
      * children memory slice.
      *
      * @param fromSliceKey
-     * @param unitSliceKey
+     * @param toSliceKey
      */
-    compress(fromSliceKey: SliceKey, unitSliceKey: SliceKey): boolean {
+    compress(fromSliceKey: SliceKey, toSliceKey: SliceKey): boolean {
         const refs = this._slices;
-        const fromRref = refs[fromSliceKey];
-        const untilRref = refs[unitSliceKey];
-        const toRemove = fromRref.children.slice().map(ref => ref.name);
-        fromRref.children = untilRref.children.splice(0);
-        this._squashInto(fromSliceKey, unitSliceKey, fromSliceKey);
+        const fromRef = refs[fromSliceKey];
+        const toRef = refs[toSliceKey];
+        const toRemove = fromRef.children.slice().map(ref => ref.name);
+        fromRef.children = toRef.children.splice(0);
+        this._squashInto(fromSliceKey, toSliceKey, fromSliceKey);
         let key: SliceKey;
         while ((key = toRemove.pop())) {
             this._remove(key);
@@ -707,41 +700,53 @@ export class Memory {
         toSliceKey: SliceKey,
         ancestorKey: SliceKey,
     ): MemorySlice[] {
-        const fromPath = [];
+        const fromPath: MemorySlice[] = [];
+        const ancestor = this._slices[ancestorKey];
         let ref = this._slices[fromSliceKey];
+
         while (ref) {
-            fromPath.push(ref);
-            if (ref.name === ancestorKey) {
+            if (ref.snapshotOrigin?.includes(ancestor)) {
+                fromPath.push(
+                    ...ref.snapshotOrigin.slice(0, ref.snapshotOrigin.indexOf(ancestor) + 1),
+                );
                 break;
             }
-            ref = ref.getPrevious();
+            fromPath.push(ref);
+            if (ref === ancestor) {
+                break;
+            }
+            ref = ref.parent;
         }
 
-        const toPath = [];
+        const toPath: MemorySlice[] = [];
         ref = this._slices[toSliceKey];
         while (ref) {
-            if (ref.name === ancestorKey) {
+            if (ref.snapshotOrigin?.includes(ancestor)) {
+                toPath.push(...ref.snapshotOrigin.slice(0, ref.snapshotOrigin.indexOf(ancestor)));
+                break;
+            }
+            if (ref === ancestor) {
                 break;
             }
             toPath.push(ref);
-            ref = ref.getPrevious();
+            ref = ref.parent;
         }
         toPath.reverse();
+
         return fromPath.concat(toPath);
     }
     private _getCommonAncestor(sliceKeyA: SliceKey, sliceKeyB: SliceKey): SliceKey {
-        const rootB = this._slices[sliceKeyB];
-        let refA = this._slices[sliceKeyA];
-        while (refA) {
-            let refB = rootB;
-            while (refB) {
-                if (refA.name === refB.name) {
-                    return refA.name;
-                }
-                refB = refB.getPrevious();
+        const pathA = this.getPath(sliceKeyA, true).reverse();
+        pathA.push(sliceKeyA);
+        const pathB = this.getPath(sliceKeyB, true).reverse();
+        pathB.push(sliceKeyB);
+        let key: SliceKey;
+        while ((key = pathA.pop())) {
+            if (pathB.includes(key)) {
+                return key;
             }
-            refA = refA.getPrevious();
         }
+        return '';
     }
     private _getProxyParentedPath(sliceKey: SliceKey, ID: VersionableID): proxyAttributePath {
         // bubbling up magic for proxyParents
@@ -876,19 +881,24 @@ export class Memory {
     }
     private _squashInto(
         fromSliceKey: SliceKey,
-        unitSliceKey: SliceKey,
+        toSliceKey: SliceKey,
         intoSliceKey: SliceKey,
-    ): void {
+    ): MemorySlice[] {
         const refs = this._slices;
-        const fromRref = refs[fromSliceKey];
-        const untilRref = refs[unitSliceKey];
+        const fromRef = refs[fromSliceKey];
+        const toRef = refs[toSliceKey];
         const intoRef = refs[intoSliceKey];
-
-        const references = [];
-        let ref = untilRref;
+        const references: MemorySlice[] = [];
+        let ref = toRef;
         while (ref) {
+            if (ref.snapshotOrigin?.includes(fromRef)) {
+                references.push(
+                    ...ref.snapshotOrigin.slice(0, ref.snapshotOrigin.indexOf(fromRef)),
+                );
+                break;
+            }
             references.push(ref);
-            if (ref === fromRref) {
+            if (ref === fromRef) {
                 break;
             }
             ref = ref.parent;
@@ -901,7 +911,8 @@ export class Memory {
         const intoInvalidCache = refs[intoSliceKey].invalidCache;
         const intoSlices = intoRef.data;
 
-        while ((ref = references.pop())) {
+        for (let index = references.length - 1; index >= 0; index--) {
+            const ref = references[index];
             const LinkedParentOfProxy = ref.linkedParentOfProxy;
             Object.keys(LinkedParentOfProxy).forEach(ID => {
                 intoLinkedParentOfProxy[ID] = LinkedParentOfProxy[ID].slice();
@@ -950,6 +961,7 @@ export class Memory {
                 }
             });
         }
+        return references;
     }
     private _autoSnapshot(): void {
         const refs = [];
@@ -960,13 +972,15 @@ export class Memory {
         }
         if (refs.length > this._numberOfFlatSlices + this._numberOfSlicePerSnapshot) {
             const fromSliceKey = refs[refs.length - 1].name;
-            const unitSliceKey = refs[refs.length - 1 - this._numberOfSlicePerSnapshot].name;
+            const toSliceKey = refs[refs.length - 1 - this._numberOfSlicePerSnapshot].name;
             const newSliceKey =
-                unitSliceKey +
+                toSliceKey +
                 '[snapshot from ' +
                 fromSliceKey.replace(regExpoSnapshotOrigin, '$1') +
                 ']';
-            this.snapshot(fromSliceKey, unitSliceKey, newSliceKey);
+            if (!this._slices[newSliceKey]) {
+                this.snapshot(fromSliceKey, toSliceKey, newSliceKey);
+            }
         }
     }
 }

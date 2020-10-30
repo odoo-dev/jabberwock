@@ -215,4 +215,1091 @@ describePlugin(History, testEditor => {
             });
         });
     });
+
+    describe('redo&redo', () => {
+        it('should undo&redo a insertText', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>123[]456</p>',
+                stepFunction: async (editor: JWEditor) => {
+                    editor.memory._numberOfFlatSlices = 20;
+                    await editor.execCommand('insertText', { text: 'a' });
+                    await editor.execCommand('insertText', { text: 'b' });
+                    await editor.execCommand('insertText', { text: 'c' });
+                    await editor.execCommand('insertText', { text: 'd' });
+                    await editor.execCommand('insertText', { text: 'e' });
+                    await editor.execCommand('insertText', { text: 'f' });
+                    await editor.execCommand('insertText', { text: 'g' });
+                    await editor.execCommand('insertText', { text: 'h' });
+
+                    const editable = document.querySelector('[contenteditable=true]');
+                    expect(editable.innerHTML).to.deep.equal(
+                        '<p>123abcdefgh456</p>',
+                        'after insertText',
+                    );
+                    await editor.execCommand('undo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123abcdefg456</p>', '1 undo');
+                    await editor.execCommand('undo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123abcdef456</p>', '2 undo');
+                    await editor.execCommand('undo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123abcde456</p>', '3 undo');
+                    await editor.execCommand('undo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123abcd456</p>', '4 undo');
+                    await editor.execCommand('undo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123abc456</p>', '5 undo');
+                    await editor.execCommand('undo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123ab456</p>', '6 undo');
+                    await editor.execCommand('undo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123a456</p>', '7 undo');
+                    await editor.execCommand('undo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123456</p>', '8 undo');
+
+                    await editor.execCommand('redo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123a456</p>', '1 redo');
+                    await editor.execCommand('redo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123ab456</p>', '2 redo');
+                    await editor.execCommand('redo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123abc456</p>', '3 redo');
+                    await editor.execCommand('redo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123abcd456</p>', '4 redo');
+                    await editor.execCommand('redo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123abcde456</p>', '5 redo');
+                    await editor.execCommand('redo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123abcdef456</p>', '6 redo');
+                    await editor.execCommand('redo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123abcdefg456</p>', '7 redo');
+                    await editor.execCommand('redo');
+                },
+                contentAfter: '<p>123abcdefgh[]456</p>',
+            });
+        });
+        it('should undo&redo a insertText with some memory snapshots', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>123[]456</p>',
+                stepFunction: async (editor: JWEditor) => {
+                    editor.memory._numberOfFlatSlices = 4;
+                    editor.memory._numberOfSlicePerSnapshot = 3;
+                    await editor.execCommand('insertText', { text: 'a' });
+                    await editor.execCommand('insertText', { text: 'b' });
+                    await editor.execCommand('insertText', { text: 'c' });
+                    await editor.execCommand('insertText', { text: 'd' });
+                    await editor.execCommand('insertText', { text: 'e' });
+                    await editor.execCommand('insertText', { text: 'f' });
+                    await editor.execCommand('insertText', { text: 'g' });
+                    await editor.execCommand('insertText', { text: 'h' });
+
+                    const editable = document.querySelector('[contenteditable=true]');
+                    expect(editable.innerHTML).to.deep.equal(
+                        '<p>123abcdefgh456</p>',
+                        'after insertText',
+                    );
+                    await editor.execCommand('undo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123abcdefg456</p>', '1 undo');
+                    await editor.execCommand('undo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123abcdef456</p>', '2 undo');
+                    await editor.execCommand('undo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123abcde456</p>', '3 undo');
+                    await editor.execCommand('undo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123abcd456</p>', '4 undo');
+                    await editor.execCommand('undo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123abc456</p>', '5 undo');
+                    await editor.execCommand('undo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123ab456</p>', '6 undo');
+                    await editor.execCommand('undo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123a456</p>', '7 undo');
+                    await editor.execCommand('undo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123456</p>', '8 undo');
+
+                    await editor.execCommand('redo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123a456</p>', '1 redo');
+                    await editor.execCommand('redo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123ab456</p>', '2 redo');
+                    await editor.execCommand('redo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123abc456</p>', '3 redo');
+                    await editor.execCommand('redo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123abcd456</p>', '4 redo');
+                    await editor.execCommand('redo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123abcde456</p>', '5 redo');
+                    await editor.execCommand('redo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123abcdef456</p>', '6 redo');
+                    await editor.execCommand('redo');
+                    expect(editable.innerHTML).to.deep.equal('<p>123abcdefg456</p>', '7 redo');
+                    await editor.execCommand('redo');
+                },
+                contentAfter: '<p>123abcdefgh[]456</p>',
+            });
+        });
+        it('should undo&redo an indented list', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore:
+                    /* eslint-disable prettier/prettier */
+                    '<ol>' +
+                        '<li>123</li>' +
+                        '<li style="list-style: none;">' +
+                            '<ul><li>[]456</li></ul>' +
+                        '</li>' +
+                        '<li value="2">789</li>' +
+                    '</ol>',
+                    /* eslint-enable prettier/prettier */
+                stepFunction: async (editor: JWEditor) => {
+                    editor.memory._numberOfFlatSlices = 20;
+                    await editor.execCommand('insertText', { text: 'a' });
+                    await editor.execCommand('insertText', { text: 'b' });
+                    await editor.execCommand('insertText', { text: 'c' });
+                    await editor.execCommand('insertText', { text: 'd' });
+                    await editor.execCommand('insertText', { text: 'e' });
+                    await editor.execCommand('insertText', { text: 'f' });
+                    await editor.execCommand('insertText', { text: 'g' });
+                    await editor.execCommand('insertText', { text: 'h' });
+
+                    await editor.execCommand('indent');
+                    await editor.execCommand('indent');
+                    await editor.execCommand('indent');
+                    await editor.execCommand('indent');
+                    await editor.execCommand('indent');
+
+                    await editor.execCommand('outdent');
+                    await editor.execCommand('outdent');
+                    await editor.execCommand('outdent');
+                    await editor.execCommand('outdent');
+
+                    const editable = document.querySelector('[contenteditable=true]');
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul><li>abcdefgh456</li></ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        'after indent&oudent',
+                    );
+
+                    // undo
+
+                    await editor.execCommand('undo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul><li>abcdefgh456</li></ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '1 undo',
+                    );
+
+                    await editor.execCommand('undo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul>' +
+                                                    '<li style="list-style: none;">' +
+                                                        '<ul><li>abcdefgh456</li></ul>' +
+                                                    '</li>' +
+                                                '</ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '2 undo',
+                    );
+
+                    await editor.execCommand('undo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul>' +
+                                                    '<li style="list-style: none;">' +
+                                                        '<ul>' +
+                                                            '<li style="list-style: none;">' +
+                                                                '<ul><li>abcdefgh456</li></ul>' +
+                                                            '</li>' +
+                                                        '</ul>' +
+                                                    '</li>' +
+                                                '</ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '3 undo',
+                    );
+
+                    await editor.execCommand('undo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul>' +
+                                                    '<li style="list-style: none;">' +
+                                                        '<ul>' +
+                                                            '<li style="list-style: none;">' +
+                                                                '<ul>' +
+                                                                    '<li style="list-style: none;">' +
+                                                                        '<ul><li>abcdefgh456</li></ul>' +
+                                                                    '</li>' +
+                                                                '</ul>' +
+                                                            '</li>' +
+                                                        '</ul>' +
+                                                    '</li>' +
+                                                '</ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '4 undo',
+                    );
+
+                    await editor.execCommand('undo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul>' +
+                                                    '<li style="list-style: none;">' +
+                                                        '<ul>' +
+                                                            '<li style="list-style: none;">' +
+                                                                '<ul><li>abcdefgh456</li></ul>' +
+                                                            '</li>' +
+                                                        '</ul>' +
+                                                    '</li>' +
+                                                '</ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '5 undo',
+                    );
+
+                    await editor.execCommand('undo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul>' +
+                                                    '<li style="list-style: none;">' +
+                                                        '<ul><li>abcdefgh456</li></ul>' +
+                                                    '</li>' +
+                                                '</ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '6 undo',
+                    );
+
+                    await editor.execCommand('undo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul><li>abcdefgh456</li></ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '7 undo',
+                    );
+
+                    await editor.execCommand('undo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul><li>abcdefgh456</li></ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '8 undo',
+                    );
+
+                    // redo
+
+                    await editor.execCommand('redo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul><li>abcdefgh456</li></ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '1 redo',
+                    );
+
+                    await editor.execCommand('redo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul>' +
+                                                    '<li style="list-style: none;">' +
+                                                        '<ul><li>abcdefgh456</li></ul>' +
+                                                    '</li>' +
+                                                '</ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '2 redo',
+                    );
+
+                    await editor.execCommand('redo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul>' +
+                                                    '<li style="list-style: none;">' +
+                                                        '<ul>' +
+                                                            '<li style="list-style: none;">' +
+                                                                '<ul><li>abcdefgh456</li></ul>' +
+                                                            '</li>' +
+                                                        '</ul>' +
+                                                    '</li>' +
+                                                '</ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '3 redo',
+                    );
+
+                    await editor.execCommand('redo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul>' +
+                                                    '<li style="list-style: none;">' +
+                                                        '<ul>' +
+                                                            '<li style="list-style: none;">' +
+                                                                '<ul>' +
+                                                                    '<li style="list-style: none;">' +
+                                                                        '<ul><li>abcdefgh456</li></ul>' +
+                                                                    '</li>' +
+                                                                '</ul>' +
+                                                            '</li>' +
+                                                        '</ul>' +
+                                                    '</li>' +
+                                                '</ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '4 redo',
+                    );
+
+                    await editor.execCommand('redo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul>' +
+                                                    '<li style="list-style: none;">' +
+                                                        '<ul>' +
+                                                            '<li style="list-style: none;">' +
+                                                                '<ul><li>abcdefgh456</li></ul>' +
+                                                            '</li>' +
+                                                        '</ul>' +
+                                                    '</li>' +
+                                                '</ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '5 redo',
+                    );
+
+                    await editor.execCommand('redo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul>' +
+                                                    '<li style="list-style: none;">' +
+                                                        '<ul><li>abcdefgh456</li></ul>' +
+                                                    '</li>' +
+                                                '</ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '6 redo',
+                    );
+
+                    await editor.execCommand('redo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul><li>abcdefgh456</li></ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '7 redo',
+                    );
+
+                    await editor.execCommand('redo');
+                },
+                contentAfter:
+                    /* eslint-disable prettier/prettier */
+                    '<ol>' +
+                        '<li>123</li>' +
+                        '<li style="list-style: none;">' +
+                            '<ul>' +
+                                '<li style="list-style: none;">' +
+                                    '<ul><li>abcdefgh[]456</li></ul>' +
+                                '</li>' +
+                            '</ul>' +
+                        '</li>' +
+                        '<li value="2">789</li>' +
+                    '</ol>',
+            });
+        });
+        it('should undo&redo an indented list with some memory snapshots', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore:
+                    /* eslint-disable prettier/prettier */
+                    '<ol>' +
+                        '<li>123</li>' +
+                        '<li style="list-style: none;">' +
+                            '<ul><li>[]456</li></ul>' +
+                        '</li>' +
+                        '<li value="2">789</li>' +
+                    '</ol>',
+                    /* eslint-enable prettier/prettier */
+                stepFunction: async (editor: JWEditor) => {
+                    editor.memory._numberOfFlatSlices = 4;
+                    editor.memory._numberOfSlicePerSnapshot = 3;
+                    await editor.execCommand('insertText', { text: 'a' });
+                    await editor.execCommand('insertText', { text: 'b' });
+                    await editor.execCommand('insertText', { text: 'c' });
+                    await editor.execCommand('insertText', { text: 'd' });
+                    await editor.execCommand('insertText', { text: 'e' });
+                    await editor.execCommand('insertText', { text: 'f' });
+                    await editor.execCommand('insertText', { text: 'g' });
+                    await editor.execCommand('insertText', { text: 'h' });
+
+                    await editor.execCommand('indent');
+                    await editor.execCommand('indent');
+                    await editor.execCommand('indent');
+                    await editor.execCommand('indent');
+                    await editor.execCommand('indent');
+
+                    await editor.execCommand('outdent');
+                    await editor.execCommand('outdent');
+                    await editor.execCommand('outdent');
+                    await editor.execCommand('outdent');
+
+                    const editable = document.querySelector('[contenteditable=true]');
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul><li>abcdefgh456</li></ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        'after indent&oudent',
+                    );
+
+                    // undo
+
+                    await editor.execCommand('undo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul><li>abcdefgh456</li></ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '1 undo',
+                    );
+
+                    await editor.execCommand('undo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul>' +
+                                                    '<li style="list-style: none;">' +
+                                                        '<ul><li>abcdefgh456</li></ul>' +
+                                                    '</li>' +
+                                                '</ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '2 undo',
+                    );
+
+                    await editor.execCommand('undo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul>' +
+                                                    '<li style="list-style: none;">' +
+                                                        '<ul>' +
+                                                            '<li style="list-style: none;">' +
+                                                                '<ul><li>abcdefgh456</li></ul>' +
+                                                            '</li>' +
+                                                        '</ul>' +
+                                                    '</li>' +
+                                                '</ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '3 undo',
+                    );
+
+                    await editor.execCommand('undo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul>' +
+                                                    '<li style="list-style: none;">' +
+                                                        '<ul>' +
+                                                            '<li style="list-style: none;">' +
+                                                                '<ul>' +
+                                                                    '<li style="list-style: none;">' +
+                                                                        '<ul><li>abcdefgh456</li></ul>' +
+                                                                    '</li>' +
+                                                                '</ul>' +
+                                                            '</li>' +
+                                                        '</ul>' +
+                                                    '</li>' +
+                                                '</ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '4 undo',
+                    );
+
+                    await editor.execCommand('undo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul>' +
+                                                    '<li style="list-style: none;">' +
+                                                        '<ul>' +
+                                                            '<li style="list-style: none;">' +
+                                                                '<ul><li>abcdefgh456</li></ul>' +
+                                                            '</li>' +
+                                                        '</ul>' +
+                                                    '</li>' +
+                                                '</ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '5 undo',
+                    );
+
+                    await editor.execCommand('undo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul>' +
+                                                    '<li style="list-style: none;">' +
+                                                        '<ul><li>abcdefgh456</li></ul>' +
+                                                    '</li>' +
+                                                '</ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '6 undo',
+                    );
+
+                    await editor.execCommand('undo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul><li>abcdefgh456</li></ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '7 undo',
+                    );
+
+                    await editor.execCommand('undo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul><li>abcdefgh456</li></ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '8 undo',
+                    );
+
+                    // redo
+
+                    await editor.execCommand('redo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul><li>abcdefgh456</li></ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '1 redo',
+                    );
+
+                    await editor.execCommand('redo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul>' +
+                                                    '<li style="list-style: none;">' +
+                                                        '<ul><li>abcdefgh456</li></ul>' +
+                                                    '</li>' +
+                                                '</ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '2 redo',
+                    );
+
+                    await editor.execCommand('redo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul>' +
+                                                    '<li style="list-style: none;">' +
+                                                        '<ul>' +
+                                                            '<li style="list-style: none;">' +
+                                                                '<ul><li>abcdefgh456</li></ul>' +
+                                                            '</li>' +
+                                                        '</ul>' +
+                                                    '</li>' +
+                                                '</ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '3 redo',
+                    );
+
+                    await editor.execCommand('redo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul>' +
+                                                    '<li style="list-style: none;">' +
+                                                        '<ul>' +
+                                                            '<li style="list-style: none;">' +
+                                                                '<ul>' +
+                                                                    '<li style="list-style: none;">' +
+                                                                        '<ul><li>abcdefgh456</li></ul>' +
+                                                                    '</li>' +
+                                                                '</ul>' +
+                                                            '</li>' +
+                                                        '</ul>' +
+                                                    '</li>' +
+                                                '</ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '4 redo',
+                    );
+
+                    await editor.execCommand('redo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul>' +
+                                                    '<li style="list-style: none;">' +
+                                                        '<ul>' +
+                                                            '<li style="list-style: none;">' +
+                                                                '<ul><li>abcdefgh456</li></ul>' +
+                                                            '</li>' +
+                                                        '</ul>' +
+                                                    '</li>' +
+                                                '</ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '5 redo',
+                    );
+
+                    await editor.execCommand('redo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul>' +
+                                                    '<li style="list-style: none;">' +
+                                                        '<ul><li>abcdefgh456</li></ul>' +
+                                                    '</li>' +
+                                                '</ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '6 redo',
+                    );
+
+                    await editor.execCommand('redo');
+
+                    expect(editable.innerHTML).to.deep.equal(
+                        /* eslint-disable prettier/prettier */
+                        '<ol>' +
+                            '<li>123</li>' +
+                            '<li style="list-style: none;">' +
+                                '<ul>' +
+                                    '<li style="list-style: none;">' +
+                                        '<ul>' +
+                                            '<li style="list-style: none;">' +
+                                                '<ul><li>abcdefgh456</li></ul>' +
+                                            '</li>' +
+                                        '</ul>' +
+                                    '</li>' +
+                                '</ul>' +
+                            '</li>' +
+                            '<li value="2">789</li>' +
+                        '</ol>',
+                        /* eslint-enable prettier/prettier */
+                        '7 redo',
+                    );
+
+                    await editor.execCommand('redo');
+                },
+                contentAfter:
+                    /* eslint-disable prettier/prettier */
+                    '<ol>' +
+                        '<li>123</li>' +
+                        '<li style="list-style: none;">' +
+                            '<ul>' +
+                                '<li style="list-style: none;">' +
+                                    '<ul><li>abcdefgh[]456</li></ul>' +
+                                '</li>' +
+                            '</ul>' +
+                        '</li>' +
+                        '<li value="2">789</li>' +
+                    '</ol>',
+            });
+        });
+    });
 });

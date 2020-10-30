@@ -544,10 +544,7 @@ export class JWEditor {
             this.memory.create(nextMemorySlice);
 
             // Send the commit message with a frozen memory.
-            const changesLocations = this.memory.getChangesLocations(
-                memorySlice,
-                this.memory.sliceKey,
-            );
+            const changesLocations = this.memory.getChangesLocations(origin, nextMemorySlice);
             await this.dispatcher.dispatch<CommitParams>('@commit', {
                 changesLocations: changesLocations,
                 commandNames: [...commandNames],
