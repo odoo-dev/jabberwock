@@ -8,7 +8,10 @@ import { isInstanceOf } from './utils';
  * @param offset
  */
 export function targetDeepest(container: Node, offset: number): [Node, number] {
-    while (container.hasChildNodes()) {
+    while (
+        container.hasChildNodes() ||
+        (isInstanceOf(container, Element) && container.shadowRoot?.hasChildNodes())
+    ) {
         let childNodes: NodeListOf<ChildNode>;
         if (isInstanceOf(container, Element) && container.shadowRoot) {
             childNodes = container.shadowRoot.childNodes;
