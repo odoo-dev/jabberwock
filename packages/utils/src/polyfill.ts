@@ -153,7 +153,7 @@ function caretPositionFromPointInShadowDom(
         }
     }
 
-    return node && { node, offset };
+    return (node && { node, offset }) || (element && { node: element, offset: 0 });
 }
 
 function getNearestCharOffset(x: number, y: number, text: Node): number {
