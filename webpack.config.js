@@ -3,6 +3,11 @@ const path = require('path');
 const glob = require('glob');
 /* eslint-enable @typescript-eslint/no-var-requires */
 
+const integrationDevPath = path.resolve(
+    __dirname,
+    'packages/bundle-odoo-website-editor/odoo-integration.ts',
+);
+
 const mainConfig = {
     mode: 'development',
     devtool: 'inline-source-map',
@@ -86,6 +91,7 @@ const entries = glob.sync(__dirname + '/examples/**/*.ts').reduce((acc, file) =>
     acc[fileKey] = file;
     return acc;
 }, {});
+entries['odoo-integration'] = integrationDevPath;
 
 const examplesConfig = {
     ...mainConfig,
@@ -96,5 +102,4 @@ const examplesConfig = {
         library: 'JWEditor',
     },
 };
-
 module.exports = examplesConfig;
