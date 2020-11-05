@@ -135,8 +135,8 @@ export interface DeleteWordAction {
 
 interface DeleteHardLineAction {
     type: 'deleteHardLine';
+    text: string;
     direction: Direction;
-    domSelection: DomSelectionDescription;
 }
 
 interface SelectAllAction {
@@ -1444,19 +1444,7 @@ export class EventNormalizer {
             const deleteHardLineAction: DeleteHardLineAction = {
                 type: 'deleteHardLine',
                 direction: direction,
-                domSelection: {
-                    anchorNode: characterMapping.previous.nodes[characterMapping.index],
-                    anchorOffset: characterMapping.previous.offsets[characterMapping.index],
-                    focusNode:
-                        characterMapping.previous.nodes[
-                            characterMapping.index + characterMapping.remove.length - 1
-                        ],
-                    focusOffset:
-                        characterMapping.previous.offsets[
-                            characterMapping.index + characterMapping.remove.length - 1
-                        ] + 1,
-                    direction: direction,
-                },
+                text: characterMapping.remove,
             };
             return deleteHardLineAction;
         }

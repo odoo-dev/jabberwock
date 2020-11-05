@@ -98,6 +98,7 @@ export class DomEditable<T extends JWPluginConfig = JWPluginConfig> extends JWPl
             }
             case 'insertParagraphBreak':
                 return ['insertParagraphBreak', {}];
+            case 'deleteHardLine': // deleteHardline can be simply handled by deleteWord.
             case 'deleteWord': {
                 const params: DeleteWordParams = {
                     direction: action.direction,
