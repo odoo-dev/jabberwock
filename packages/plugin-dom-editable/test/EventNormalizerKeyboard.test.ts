@@ -3658,13 +3658,7 @@ describe('utils', () => {
                                 {
                                     type: 'deleteHardLine',
                                     direction: Direction.BACKWARD,
-                                    domSelection: {
-                                        anchorNode: text,
-                                        anchorOffset: 0,
-                                        focusNode: text,
-                                        focusOffset: 10,
-                                        direction: Direction.BACKWARD,
-                                    },
+                                    text: p.textContent.substring(0, 10),
                                 },
                             ];
                         });
@@ -4825,13 +4819,7 @@ describe('utils', () => {
                                 {
                                     type: 'deleteHardLine',
                                     direction: Direction.FORWARD,
-                                    domSelection: {
-                                        anchorNode: text,
-                                        anchorOffset: 5,
-                                        focusNode: text,
-                                        focusOffset: 16,
-                                        direction: Direction.FORWARD,
-                                    },
+                                    text: p.textContent.substring(5, 16),
                                 },
                             ];
                         });
