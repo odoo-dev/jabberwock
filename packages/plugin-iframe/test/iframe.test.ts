@@ -19,6 +19,7 @@ import { Attributes } from '../../plugin-xml/src/Attributes';
 import { parseEditable } from '../../utils/src/configuration';
 import { Keymap, Platform } from '../../plugin-keymap/src/Keymap';
 import { JWPluginConfig, JWPlugin } from '../../core/src/JWPlugin';
+import { IframeNode } from '../src/IframeNode';
 
 function waitIframeLoading(): Promise<void> {
     return new Promise(r => {
@@ -427,6 +428,37 @@ describe('Iframe', async () => {
     });
 
     describe('render', async () => {
+        it('should render a simple iframe', async () => {
+            const editor = new JWEditor();
+            editor.load(Html);
+            editor.load(Char);
+            editor.load(LineBreak);
+            editor.load(Iframe);
+            editor.load(DomEditable);
+            editor.configure(DomLayout, {
+                location: [section, 'replace'],
+                components: [
+                    {
+                        id: 'editable',
+                        render: async (editor: JWEditor): Promise<VNode[]> => {
+                            const nodes = await parseEditable(editor, section, true);
+                            const iframe = new IframeNode();
+                            iframe.modifiers.get(Attributes).set('src', '/iframe-test');
+                            nodes[0].firstChild().after(iframe);
+                            return nodes;
+                        },
+                    },
+                ],
+                componentZones: [['editable', ['main']]],
+            });
+            await editor.start();
+            expect(document.querySelector('section').innerHTML).to.equal(
+                '<p>abc</p><iframe src="/iframe-test"></iframe><p>def</p>',
+            );
+            await waitIframeLoading();
+            expect(true).to.equal(true, 'Should trigger "load-iframe"');
+            await editor.stop();
+        });
         it('javascript inside the iframe has been killed', async () => {
             const editor = new JWEditor();
             editor.load(Html);
