@@ -7,7 +7,7 @@ import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { LineBreakNode } from '../../plugin-linebreak/src/LineBreakNode';
 import { List } from '../src/List';
 import { ListXmlDomParser } from '../src/ListXmlDomParser';
-import { ListItemXmlDomParser } from '../src/ListItemXmlDomParser';
+import { ListItemAttributes, ListItemXmlDomParser } from '../src/ListItemXmlDomParser';
 import { CharXmlDomParser } from '../../plugin-char/src/CharXmlDomParser';
 import { HeadingXmlDomParser } from '../../plugin-heading/src/HeadingXmlDomParser';
 import { LineBreakXmlDomParser } from '../../plugin-linebreak/src/LineBreakXmlDomParser';
@@ -840,6 +840,37 @@ describePlugin(List, testEditor => {
                     contentAfter: unformat(`
                         <ul>
                             <li style="list-style: cambodian;">
+                                <ul>
+                                    <li>a[b]c</li>
+                                </ul>
+                            </li>
+                        </ul>`),
+                });
+            });
+            it('should remove the list-style:none in VDom from the indented list', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: unformat(`
+                        <ul>
+                            <li>title</li>
+                            <li style="list-style: none;">
+                                <ul>
+                                    <li>a[b]c</li>
+                                </ul>
+                            </li>
+                        </ul>`),
+                    stepFunction: (editor: JWEditor) => {
+                        const p = editor.selection.anchor.parent;
+                        const containerLiAttribute = p.parent;
+                        expect(
+                            containerLiAttribute.modifiers
+                                .get(ListItemAttributes)
+                                .style.get('list-style'),
+                        ).to.equal(undefined);
+                    },
+                    contentAfter: unformat(`
+                        <ul>
+                            <li>title</li>
+                            <li style="list-style: none;">
                                 <ul>
                                     <li>a[b]c</li>
                                 </ul>
