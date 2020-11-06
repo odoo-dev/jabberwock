@@ -209,6 +209,19 @@ export class List<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         const targetedNodes = range.targetedNodes();
         const ancestors = targetedNodes.map(node => node.closest(ListNode));
         const targetedLists = ancestors.filter(list => !!list);
+
+        for (const list of targetedLists) {
+            // Some list-style either override the list type or are incompatible
+            // with some list types. Remove the list-style attributes so that
+            // the default style of the selected list applies correctly.
+            for (const node of list.children()) {
+                const attr = node.modifiers.find(ListItemAttributes);
+                if (attr) {
+                    attr.style.remove('list-style');
+                }
+            }
+        }
+
         if (
             targetedLists.length === targetedNodes.length &&
             targetedLists.every(list => list.listType === type)
