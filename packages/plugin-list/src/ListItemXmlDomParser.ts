@@ -71,6 +71,9 @@ export class ListItemXmlDomParser extends AbstractParser<Node> {
                             for (const child of parsedChild) {
                                 const attributes = itemModifiers.get(Attributes);
                                 attributes.remove('value');
+                                if (attributes.style.get('list-style') === 'none') {
+                                    attributes.style.remove('list-style');
+                                }
                                 child.modifiers.set(new ListItemAttributes(attributes));
                             }
                         }
