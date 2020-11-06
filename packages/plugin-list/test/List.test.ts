@@ -827,6 +827,26 @@ describePlugin(List, testEditor => {
                         </ul>`),
                 });
             });
+            it('should keep the list-style of indented list', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore: unformat(`
+                        <ul>
+                            <li style="list-style: cambodian;">
+                                <ul>
+                                    <li>a[b]c</li>
+                                </ul>
+                            </li>
+                        </ul>`),
+                    contentAfter: unformat(`
+                        <ul>
+                            <li style="list-style: cambodian;">
+                                <ul>
+                                    <li>a[b]c</li>
+                                </ul>
+                            </li>
+                        </ul>`),
+                });
+            });
         });
     });
     describe('toggleList', () => {
@@ -1148,6 +1168,19 @@ describePlugin(List, testEditor => {
                                         </ul>
                                     </li>
                                 </ul>`),
+                        });
+                    });
+                    it('should remove the list-style when change the list style', async () => {
+                        await testEditor(BasicEditor, {
+                            contentBefore: unformat(`
+                                <ul>
+                                    <li style="list-style: cambodian;">a[]</li>
+                                </ul>`),
+                            stepFunction: toggleChecklist,
+                            contentAfter: unformat(`
+                            <ul class="checklist">
+                                <li class="unchecked">a[]</li>
+                            </ul>`),
                         });
                     });
                 });
@@ -6381,6 +6414,20 @@ describePlugin(List, testEditor => {
                                     '<ul><li><div class="a">abc</div><div class="a">b</div><div class="a">[]<br></div></li></ul>',
                             });
                         });
+                        it('should keep the list-style when add li', async () => {
+                            await testEditor(BasicEditor, {
+                                contentBefore: unformat(`
+                                    <ul>
+                                        <li style="list-style: cambodian;">a[]</li>
+                                    </ul>`),
+                                stepFunction: insertParagraphBreak,
+                                contentAfter: unformat(`
+                                <ul>
+                                    <li style="list-style: cambodian;">a</li>
+                                    <li style="list-style: cambodian;">[]<br></li>
+                                </ul>`),
+                            });
+                        });
                     });
                 });
                 describe('Checklist', () => {
@@ -7116,6 +7163,25 @@ describePlugin(List, testEditor => {
             });
         });
         describe('outdent', () => {
+            describe('Regular list', () => {
+                it('should remove the list-style when outdent the list', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: unformat(`
+                            <ul>
+                                <li style="list-style: cambodian;">
+                                    <ul>
+                                        <li>a[b]c</li>
+                                    </ul>
+                                </li>
+                            </ul>`),
+                        stepFunction: outdentList,
+                        contentAfter: unformat(`
+                            <ul>
+                                <li>a[b]c</li>
+                            </ul>`),
+                    });
+                });
+            });
             describe('Checklist', () => {
                 it('should outdent a checklist', async () => {
                     await testEditor(BasicEditor, {
