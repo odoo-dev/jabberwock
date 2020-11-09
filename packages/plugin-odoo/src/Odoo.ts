@@ -29,7 +29,6 @@ import { SpanFormat } from '../../plugin-span/src/SpanFormat';
 import { OdooParallaxSpanXmlDomParser } from './OdooParallaxSpanXmlDomParser';
 import { isInPre, Pre } from '../../plugin-pre/src/Pre';
 import { isInBlockquote, Blockquote } from '../../plugin-blockquote/src/Blockquote';
-import { OdooTableDomObjectRenderer } from './OdooTableDomObjectRenderer';
 import { FontAwesomeNode } from '../../plugin-fontawesome/src/FontAwesomeNode';
 import { Core } from '../../core/src/Core';
 import { LinkFormatDomObjectModifierRenderer } from './LinkFormatDomObjectModifierRenderer';
@@ -186,7 +185,6 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
         renderers: [
             OdooImageDomObjectRenderer,
             OdooFontAwesomeDomObjectRenderer,
-            OdooTableDomObjectRenderer,
             LinkFormatDomObjectModifierRenderer,
         ],
         components: [
