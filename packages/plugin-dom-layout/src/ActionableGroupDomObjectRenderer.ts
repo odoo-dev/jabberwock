@@ -4,7 +4,6 @@ import {
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { NodeRenderer } from '../../plugin-renderer/src/NodeRenderer';
 import { ActionableGroupNode } from '../../plugin-layout/src/ActionableGroupNode';
-import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Predicate } from '../../core/src/VNodes/VNode';
 
 export class ActionableGroupDomObjectRenderer extends NodeRenderer<DomObject> {
@@ -42,7 +41,7 @@ export class ActionableGroupDomObjectRenderer extends NodeRenderer<DomObject> {
         const objectSelect: DomObject = {
             tag: 'JW-SELECT',
             children: [
-                { tag: 'JW-BUTTON', children: [{ text: '\u00A0' }] },
+                { tag: 'JW-BUTTON', children: [{ text: group.label || '\u00A0' }] },
                 { tag: 'JW-GROUP', children: group.children() },
             ],
             attach: (el: HTMLElement): void => {
@@ -81,15 +80,11 @@ export class ActionableGroupDomObjectRenderer extends NodeRenderer<DomObject> {
      * Update option rendering after the command if the value of visible
      * changed.
      *
-     * @param actionable
-     * @param element
      */
     protected _updateActionableGroups(): void {
-        for (const [actionable, element] of this.actionableGroupNodes) {
+        for (const [groupNode, element] of this.actionableGroupNodes) {
             const editor = this.engine.editor;
-            const invisible = actionable
-                .descendants(ActionableNode)
-                .every(n => n.visible && !n.visible(editor));
+            const invisible = !groupNode.visible(editor);
             const domInvisible = element.style.display === 'none';
             if (invisible !== domInvisible) {
                 if (invisible) {

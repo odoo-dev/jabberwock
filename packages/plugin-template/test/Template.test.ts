@@ -8,7 +8,7 @@ import { Parser } from '../../plugin-parser/src/Parser';
 import { Layout } from '../../plugin-layout/src/Layout';
 import { TagNode } from '../../core/src/VNodes/TagNode';
 import { Toolbar } from '../../plugin-toolbar/src/Toolbar';
-import { click, nextTickFrame } from '../../utils/src/testUtils';
+import { click } from '../../utils/src/testUtils';
 import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
 import { Html } from '../../plugin-html/src/Html';
 

@@ -24,6 +24,8 @@ import { TablePickerDomObjectRenderer } from './TablePickerDomObjectRenderer';
 import { TablePickerCellDomObjectRenderer } from './TablePickerCellDomObjectRenderer';
 import { TablePickerNode } from './TablePickerNode';
 import '../assets/tableUI.css';
+import { ActionableGroupNode } from '../../plugin-layout/src/ActionableGroupNode';
+import { SeparatorNode } from '../../core/src/VNodes/SeparatorNode';
 
 export interface TableConfig extends JWPluginConfig {
     minRowCount?: number;
@@ -74,8 +76,85 @@ export class Table<T extends TableConfig = TableConfig> extends JWPlugin<T> {
                     return [table];
                 },
             },
+            {
+                id: 'TableOptionsButton',
+                async render(): Promise<ActionableGroupNode[]> {
+                    const group = new ActionableGroupNode({
+                        name: 'tableOptions',
+                        label: 'Table options',
+                        visible: function isInTable(editor: JWEditor): boolean {
+                            return !!(
+                                editor.selection.anchor.ancestor(TableNode) &&
+                                editor.selection.focus.ancestor(TableNode)
+                            );
+                        },
+                    });
+                    group.append(
+                        new ActionableNode({
+                            name: 'addRowAboveButton',
+                            label: 'Insert row above',
+                            commandId: 'addRowAbove',
+                        }),
+                    );
+                    group.append(
+                        new ActionableNode({
+                            name: 'addRowBelowButton',
+                            label: 'Insert row bellow',
+                            commandId: 'addRowBelow',
+                        }),
+                    );
+                    group.append(
+                        new ActionableNode({
+                            name: 'addColumnBeforeButton',
+                            label: 'Insert column before',
+                            commandId: 'addColumnBefore',
+                        }),
+                    );
+                    group.append(
+                        new ActionableNode({
+                            name: 'addColumnAfterButton',
+                            label: 'Insert column after',
+                            commandId: 'addColumnAfter',
+                        }),
+                    );
+                    group.append(new SeparatorNode());
+                    group.append(
+                        new ActionableNode({
+                            name: 'deleteRowButton',
+                            label: 'Delete row',
+                            commandId: 'deleteRow',
+                        }),
+                    );
+                    group.append(
+                        new ActionableNode({
+                            name: 'deleteColumnButton',
+                            label: 'Delete column',
+                            commandId: 'deleteColumn',
+                        }),
+                    );
+                    group.append(
+                        new ActionableNode({
+                            name: 'deleteColumnButton',
+                            label: 'Delete column',
+                            commandId: 'deleteColumn',
+                        }),
+                    );
+                    group.append(new SeparatorNode());
+                    group.append(
+                        new ActionableNode({
+                            name: 'deleteTableButton',
+                            label: 'Delete Table',
+                            commandId: 'deleteTable',
+                        }),
+                    );
+                    return [group];
+                },
+            },
         ],
-        componentZones: [['TableButton', ['actionables']]],
+        componentZones: [
+            ['TableButton', ['actionables']],
+            ['TableOptionsButton', ['actionables']],
+        ],
     };
     commands = {
         insertTable: {

@@ -65,7 +65,6 @@ import { ZoneNode } from '../plugin-layout/src/ZoneNode';
 import { DividerNode } from '../plugin-divider/src/DividerNode';
 import { Attributes } from '../plugin-xml/src/Attributes';
 import { Strikethrough } from '../plugin-strikethrough/src/Strikethrough';
-import { ActionableNode } from '../plugin-layout/src/ActionableNode';
 import { ReactiveEditorInfo } from '../plugin-reactive-info/src/ReactiveEditorInfo';
 
 interface OdooWebsiteEditorOptions {
@@ -103,7 +102,7 @@ const defaultToolbarLayout = {
     ],
     list: ['UnorderedListButton', 'ChecklistButton'],
     link: ['OdooLinkToggleButton'],
-    table: ['TableButton'],
+    table: ['TableButton', 'TableOptionsButton'],
     media: ['OdooMediaButton'],
 };
 export class OdooWebsiteEditor extends JWEditor {
