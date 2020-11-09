@@ -272,6 +272,26 @@ describePlugin(Pre, testEditor => {
             });
         });
     });
+    describe('insertParagraphBreak', () => {
+        it('should insert a line break within the pre', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<pre>ab[]cd</pre>',
+                stepFunction: async editor => {
+                    await editor.execCommand('insertParagraphBreak');
+                },
+                contentAfter: '<pre>ab\n[]cd</pre>',
+            });
+        });
+        it('should insert a new paragraph after the pre', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<pre>abc[]</pre>',
+                stepFunction: async editor => {
+                    await editor.execCommand('insertParagraphBreak');
+                },
+                contentAfter: '<pre>abc</pre><p>[]<br></p>',
+            });
+        });
+    });
     describePlugin(Heading, testHeadingEditor => {
         describe('applyHeadingStyle', () => {
             it('should turn a pre with space and newlines into a paragraph', async () => {
