@@ -14,6 +14,7 @@ import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { isInTextualContext } from '../../utils/src/utils';
 import { VRange } from '../../core/src/VRange';
+import { InsertParagraphBreakParams } from '../../core/src/Core';
 
 export function isInPre(range: VRange): boolean {
     const startPre = !!range.start.closest(PreNode);
@@ -28,6 +29,10 @@ export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> 
     commands = {
         applyPreStyle: {
             handler: this.applyPreStyle,
+        },
+        insertParagraphBreak: {
+            selector: [PreNode],
+            handler: this.insertParagraphBreak,
         },
     };
     readonly loadables: Loadables<Parser & Renderer & Layout> = {
@@ -68,6 +73,29 @@ export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> 
             const pre = new PreNode();
             pre.modifiers = node.modifiers.clone();
             node.replaceWith(pre);
+        }
+    }
+    /**
+     * Insert a new paragraph after the pre, or a line break within it.
+     *
+     * @param params
+     */
+    async insertParagraphBreak(params: InsertParagraphBreakParams): Promise<void> {
+        const range = params.context.range;
+        if (!range.isCollapsed()) {
+            range.empty();
+        }
+        if (range.end.nextSibling()) {
+            // Insert paragraph break within a pre inserts a line break instead.
+            await params.context.execCommand('insertLineBreak');
+        } else {
+            // Insert paragraph break at the end of a pre inserts a new
+            // paragraph after it.
+            const blockquote = range.targetedNodes(PreNode)[0];
+            const duplicate = blockquote.splitAt(range.start);
+            const DefaultContainer = this.editor.configuration.defaults.Container;
+            const newContainer = new DefaultContainer();
+            duplicate.replaceWith(newContainer);
         }
     }
 }
