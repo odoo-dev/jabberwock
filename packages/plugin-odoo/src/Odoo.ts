@@ -33,6 +33,8 @@ import { OdooTableDomObjectRenderer } from './OdooTableDomObjectRenderer';
 import { FontAwesomeNode } from '../../plugin-fontawesome/src/FontAwesomeNode';
 import { Core } from '../../core/src/Core';
 import { LinkFormatDomObjectModifierRenderer } from './LinkFormatDomObjectModifierRenderer';
+import { OdooThemeColorDomObjectModifierRenderer } from './OdooThemeColorDomObjectModifierRenderer';
+import { OdooXmlDomParsingEngine } from './OdooXmlDomParsingEngine';
 
 export enum OdooPaddingClasses {
     NONE = 'padding-none',
@@ -182,8 +184,10 @@ export class Odoo<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
             OdooStructureXmlDomParser,
             OdooTranslationXmlDomParser,
             OdooParallaxSpanXmlDomParser,
+            OdooXmlDomParsingEngine,
         ],
         renderers: [
+            OdooThemeColorDomObjectModifierRenderer,
             OdooImageDomObjectRenderer,
             OdooFontAwesomeDomObjectRenderer,
             OdooTableDomObjectRenderer,
