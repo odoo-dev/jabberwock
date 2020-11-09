@@ -12,6 +12,7 @@ import { ParagraphNode } from '../../plugin-paragraph/src/ParagraphNode';
 import { PreNode } from '../../plugin-pre/src/PreNode';
 import { BlockquoteNode } from './BlockquoteNode';
 import { VRange } from '../../core/src/VRange';
+import { InsertParagraphBreakParams } from '../../core/src/Core';
 
 export function isInBlockquote(range: VRange): boolean {
     const startBlockquote = !!range.start.closest(BlockquoteNode);
@@ -26,6 +27,10 @@ export class Blockquote<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
     commands = {
         applyBlockquoteStyle: {
             handler: this.applyBlockquoteStyle,
+        },
+        insertParagraphBreak: {
+            selector: [BlockquoteNode],
+            handler: this.insertParagraphBreak,
         },
     };
     readonly loadables: Loadables<Parser & Layout> = {
@@ -70,6 +75,30 @@ export class Blockquote<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
             const blockquote = new BlockquoteNode();
             blockquote.modifiers = node.modifiers.clone();
             node.replaceWith(blockquote);
+        }
+    }
+    /**
+     * Insert a new paragraph after the blockquote, or a line break within it.
+     *
+     * @param params
+     */
+    async insertParagraphBreak(params: InsertParagraphBreakParams): Promise<void> {
+        const range = params.context.range;
+        if (!range.isCollapsed()) {
+            range.empty();
+        }
+        if (range.end.nextSibling()) {
+            // Insert paragraph break within a blockquote inserts a line break
+            // instead.
+            await params.context.execCommand('insertLineBreak');
+        } else {
+            // Insert paragraph break at the end of a blockquote inserts a new
+            // paragraph after it.
+            const blockquote = range.targetedNodes(BlockquoteNode)[0];
+            const duplicate = blockquote.splitAt(range.start);
+            const DefaultContainer = this.editor.configuration.defaults.Container;
+            const newContainer = new DefaultContainer();
+            duplicate.replaceWith(newContainer);
         }
     }
 }
