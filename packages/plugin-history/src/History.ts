@@ -98,7 +98,8 @@ export class History<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
     }
     private _registerMemoryKey(commitParams: CommitParams): void {
         const sliceKey = this.editor.memory.sliceKey;
-        if (!this._memoryKeys.includes(sliceKey)) {
+        const index = this._memoryKeys.indexOf(sliceKey);
+        if (index === -1) {
             const commands = commitParams.commandNames;
             if (commands.length === 1 && commands[0] === 'setSelection') {
                 return;
@@ -109,5 +110,6 @@ export class History<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
             this._memoryKeys.splice(this._memoryStep, Infinity, sliceKey);
             this._memoryCommands.splice(this._memoryStep, Infinity, [...commands]);
         }
+        this._memoryStep = index;
     }
 }
