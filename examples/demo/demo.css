@@ -3,6 +3,11 @@ body {
     height:100vh;
 }
 
+* {
+    border-top: 3px black solid;
+    margin: 0;
+}
+
 jw-editor {
     display: block;
     height: 100vh;

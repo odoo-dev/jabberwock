@@ -10,7 +10,13 @@ export class LineBreakXmlDomParser extends AbstractParser<Node> {
     engine: XmlDomParsingEngine;
 
     predicate = (item: Node): boolean => {
-        return item instanceof Element && nodeName(item) === 'BR';
+        return (
+            (item instanceof Element && nodeName(item) === 'BR') ||
+            (item instanceof Text &&
+                item.textContent === '\u200B' &&
+                !item.nextSibling &&
+                (!item.previousSibling || nodeName(item.previousSibling) === 'BR'))
+        );
     };
 
     async parse(item: Element): Promise<LineBreakNode[]> {

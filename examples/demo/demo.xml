@@ -17,37 +17,6 @@ neologisms such as "galumphing" and "chortle".
 
 <h1>Table examples</h1>
 
-<table class="mondrian" cellspacing=0>
-  <tbody>
-    <tr style="">
-      <td style="border: 4px solid black; margin: 0; background-color: #3c4681;" colspan="2" rowspan="2"><br></td>
-      <td width="50%" height="5%" style="border: 4px solid black; margin: 0; background-color: #d42627;" colspan="4"><br></td>
-      <td style="border: 4px solid black; margin: 0;" rowspan="4"><br></td>
-    </tr>
-    <tr>
-      <td style="border: 4px solid black; margin: 0; background-color: #fcd202;" colspan="2" rowspan="2"><br></td>
-      <td style="border: 4px solid black; margin: 0;" width="15%" colspan="2" rowspan="2"><br></td>
-    </tr>
-    <tr>
-      <td style="border: 4px solid black; margin: 0;" width="25%" rowspan="3"><br></td>
-      <td style="border: 4px solid black; margin: 0;" width="8%" height="40%"><br></td>
-    </tr>
-    <tr>
-      <td width="15%" style="border: 4px solid black; margin: 0; background-color: #3c4681;" colspan="2" rowspan="2"><br></td>
-      <td style="border: 4px solid black; margin: 0; background-color: #d42627;" colspan="3"><br></td>
-    </tr>
-    <tr>
-      <td style="border: 4px solid black; margin: 0;" colspan="2" rowspan="2"><br></td>
-      <td style="border: 4px solid black; margin: 0; background-color: #3c4681;
-      vertical-align: bottom; text-align: right; color: #7166ab;" colspan="2" rowspan="2"><sub><i>© Piet
-      Mondrian</i></sub></td>
-    </tr>
-    <tr>
-      <td height="5%" style="border: 4px solid black; margin: 0; background-color: #fcd202;" colspan="3"><br></td>
-    </tr>
-  </tbody>
-</table>
-
 <p><br></p>
 
 <table>
@@ -132,7 +101,14 @@ neologisms such as "galumphing" and "chortle".
       </li>
       <li style="list-style: none;">
         <ol>
-            <li>1.2.1</li>
+            <li>A 2 br<br><br></li>
+            <li>A br + char<br>&#8203;</li>
+            <li>B 3 br<br><br><br></li>
+            <li>B 2 br + char<br><br>&#8203;</li>
+            <li><p class="toto">P B 3 br<br><br><br></p></li>
+            <li><p class="toto">P B 2 br + char<br><br>&#8203;</p></li>
+            <li>B 4 br<br><br><br><br></li>
+            <li>B 3 br + char<br><br><br>&#8203;</li>
             <li>1.2.2</li>
             <li>1.2.3</li>
             <li style="list-style: none;">
