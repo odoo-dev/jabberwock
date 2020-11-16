@@ -8,6 +8,7 @@ import { Format } from '../../core/src/Format';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 import { CssStyle } from '../../plugin-xml/src/CssStyle';
 import { Modifiers } from '../../core/src/Modifiers';
+import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
 
 export interface ColorParams extends CommandParams {
     color?: string; // css-valid color name
@@ -62,7 +63,7 @@ export class Color<T extends ColorConfig = ColorConfig> extends JWPlugin<T> {
                 [this.styleName]: color,
             });
         } else {
-            let selectedNodes = range.selectedNodes();
+            let selectedNodes = range.selectedNodes(node => !(node instanceof ZoneNode));
             selectedNodes = selectedNodes.filter(node => !selectedNodes.includes(node.parent));
             // Color the highest ancestor.
             for (const node of selectedNodes) {
