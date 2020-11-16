@@ -358,7 +358,7 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
                 const mods = [modifier];
                 while (
                     (nextUnit = renderingUnits[nextUnitIndex + 1]) &&
-                    lastUnit[0].parent === nextUnit[0].parent &&
+                    lastUnit[0].parentVNode === nextUnit[0].parentVNode &&
                     nextUnit[1].length &&
                     this._modifierIsSameAs(cache, modifier, nextUnit[1]?.[0])
                 ) {
@@ -435,7 +435,8 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
                         (!renderingUnit[1].length &&
                             currentRenderer === renderingUnit[2] &&
                             (!siblings.length ||
-                                siblings[siblings.length - 1].parent === renderingUnit[0].parent)))
+                                siblings[siblings.length - 1].parentVNode ===
+                                    renderingUnit[0].parentVNode)))
                 ) {
                     nextUnitIndex++;
                     siblings.push(renderingUnit[0]);
@@ -491,7 +492,7 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
             if (selected.has(node)) {
                 continue;
             }
-            const parent = node.parent;
+            const parent = node.parentVNode;
             if (parent) {
                 const markers: VNode[] = [];
                 parent.childVNodes.forEach(sibling => {

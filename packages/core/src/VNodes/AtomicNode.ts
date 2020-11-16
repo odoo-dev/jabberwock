@@ -1,7 +1,6 @@
 import { AbstractNode } from './AbstractNode';
 import { VNode, Predicate } from './VNode';
 import { AtomicityError } from '../../../utils/src/errors';
-import { ContainerNode } from './ContainerNode';
 
 /**
  * This class provides typing overrides for multiple VNode methods which are
@@ -9,7 +8,6 @@ import { ContainerNode } from './ContainerNode';
  */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 export class AtomicNode extends AbstractNode {
-    parent: ContainerNode;
     get childVNodes(): VNode[] {
         return [];
     }
