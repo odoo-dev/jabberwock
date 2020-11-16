@@ -13,6 +13,7 @@ import JWEditor from '../../packages/core/src/JWEditor';
 import '../../packages/plugin-toolbar/assets/Toolbar.css';
 import layout from './layout.xml';
 import '../utils/fontawesomeAssets';
+import '../../packages/bundle-odoo-website-editor/odooFields.css';
 
 const target = document.getElementById('contentToEdit');
 target.style.paddingTop = '40px';

@@ -23,21 +23,6 @@ jw-editable {
     height: 100vh;
 }
 
-.jw-odoo-field:hover {
-    outline: 1px #875A7B solid;
-}
-.jw-odoo-field.jw-focus, .js-odoo-field-parent-selected {
-    outline: 1px #875A7B solid;
-}
-.jw-odoo-field-invalid {
-    outline: 1px red solid !important;
-}
-.jw-odoo-field-empty {
-    display: inline-block;
-    background-color: #875A7B;
-    width: 5px;
-}
-
 .supported {
     color: green;
 }

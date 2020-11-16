@@ -48,6 +48,7 @@ import { Shadow } from '../plugin-shadow/src/Shadow';
 import { FontAwesome } from '../plugin-fontawesome/src/FontAwesome';
 import { ModeDefinition } from '../core/src/Mode';
 import './odooLayout.css';
+import './odooFields.css';
 import { Textarea } from '../plugin-textarea/src/Textarea';
 import { FollowRange } from '../plugin-dom-follow-range/src/FollowRange';
 import { Input } from '../plugin-input/src/Input';
