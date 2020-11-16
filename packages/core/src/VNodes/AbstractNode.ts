@@ -56,7 +56,23 @@ export abstract class AbstractNode extends EventMixin {
      * Can be overridden with a `Mode`.
      */
     breakable = true;
-    parent: ContainerNode;
+    /**
+     * First tangible parent of the VNode.
+     */
+    get parent(): ContainerNode {
+        let parent = this.parentVNode;
+        while (parent && !parent.tangible) {
+            parent = parent.parentVNode;
+        }
+        return parent;
+    }
+    /**
+     * Direct parent of the VNode.
+     */
+    parentVNode: ContainerNode;
+    /**
+     * All children VNodes.
+     */
     childVNodes: VNode[];
     _modifiers: Modifiers;
     /**
@@ -192,8 +208,18 @@ export abstract class AbstractNode extends EventMixin {
      * @param vNode
      */
     isBefore(vNode: VNode): boolean {
-        const thisPath = [this as VNode, ...this.ancestors()];
-        const nodePath = [vNode, ...vNode.ancestors()];
+        const thisPath = [this as VNode];
+        let parent = this.parentVNode;
+        while (parent) {
+            thisPath.push(parent);
+            parent = parent.parentVNode;
+        }
+        const nodePath = [vNode];
+        parent = vNode.parentVNode;
+        while (parent) {
+            nodePath.push(parent);
+            parent = parent.parentVNode;
+        }
         // Find the last distinct ancestors in the path to the root.
         let thisAncestor: VNode;
         let nodeAncestor: VNode;
@@ -203,8 +229,8 @@ export abstract class AbstractNode extends EventMixin {
         } while (thisAncestor && nodeAncestor && thisAncestor === nodeAncestor);
 
         if (thisAncestor && nodeAncestor) {
-            const thisParent = thisAncestor.parent;
-            const nodeParent = nodeAncestor.parent;
+            const thisParent = thisAncestor.parentVNode;
+            const nodeParent = nodeAncestor.parentVNode;
             if (thisParent && thisParent === nodeParent) {
                 // Compare the indices of both ancestors in their shared parent.
                 const thisIndex = thisParent.childVNodes.indexOf(thisAncestor);
@@ -250,17 +276,17 @@ export abstract class AbstractNode extends EventMixin {
         }
     }
     /**
-     * Return the first ancestor of this VNode that satisfies the given
-     * predicate.
+     * Return the first tangible ancestor of this VNode that satisfies the
+     * given predicate.
      *
      * @param [predicate]
      */
     ancestor<T extends VNode>(predicate?: Predicate<T>): T;
-    ancestor(predicate?: Predicate): VNode;
-    ancestor(predicate?: Predicate): VNode {
-        let ancestor = this.parent;
-        while (ancestor && !ancestor.test(predicate)) {
-            ancestor = ancestor.parent;
+    ancestor(predicate?: Predicate): ContainerNode;
+    ancestor(predicate?: Predicate): ContainerNode {
+        let ancestor = this.parentVNode;
+        while (ancestor && (!ancestor.tangible || (predicate && !ancestor.test(predicate)))) {
+            ancestor = ancestor.parentVNode;
         }
         return ancestor;
     }
@@ -272,15 +298,15 @@ export abstract class AbstractNode extends EventMixin {
      * @param [predicate]
      */
     ancestors<T extends VNode>(predicate?: Predicate<T>): T[];
-    ancestors(predicate?: Predicate): VNode[];
-    ancestors(predicate?: Predicate): VNode[] {
-        const ancestors: VNode[] = [];
-        let parent = this.parent;
-        while (parent) {
-            if (parent.test(predicate)) {
-                ancestors.push(parent);
+    ancestors(predicate?: Predicate): ContainerNode[];
+    ancestors(predicate?: Predicate): ContainerNode[] {
+        const ancestors: ContainerNode[] = [];
+        let ancestor = this.parentVNode;
+        while (ancestor) {
+            if (ancestor.tangible && (!predicate || ancestor.test(predicate))) {
+                ancestors.push(ancestor);
             }
-            parent = parent.parent;
+            ancestor = ancestor.parentVNode;
         }
         return ancestors;
     }
@@ -290,18 +316,18 @@ export abstract class AbstractNode extends EventMixin {
      * @param node
      */
     commonAncestor<T extends VNode>(node: VNode, predicate?: Predicate<T>): T;
-    commonAncestor(node: VNode, predicate?: Predicate): VNode;
-    commonAncestor(node: VNode, predicate?: Predicate): VNode {
-        if (!this.parent) {
-            return;
-        } else if (this.parent === node.parent && this.parent.test(predicate)) {
-            return this.parent;
+    commonAncestor(node: VNode, predicate?: Predicate): ContainerNode;
+    commonAncestor(node: VNode, predicate?: Predicate): ContainerNode {
+        const thisPath = this.ancestors(predicate);
+        if (this !== node && this instanceof ContainerNode) {
+            thisPath.unshift(this);
         }
-        const thisPath = [this as VNode, ...this.ancestors(predicate)];
-        const nodePath = [node, ...node.ancestors(predicate)];
-        let commonAncestor: VNode;
-        while (thisPath[thisPath.length - 1] === nodePath.pop()) {
-            commonAncestor = thisPath.pop();
+        let commonAncestor = node as ContainerNode;
+        while (
+            (commonAncestor && !thisPath.includes(commonAncestor)) ||
+            (predicate && !commonAncestor.test(predicate))
+        ) {
+            commonAncestor = commonAncestor.parentVNode;
         }
         return commonAncestor;
     }
@@ -363,11 +389,24 @@ export abstract class AbstractNode extends EventMixin {
     previousSibling<T extends VNode>(predicate?: Predicate<T>): T;
     previousSibling(predicate?: Predicate): VNode;
     previousSibling(predicate?: Predicate): VNode {
-        if (!this.parent) return;
-        const index = this.parent.childVNodes.indexOf(this as VNode);
-        let sibling = this.parent.childVNodes[index - 1];
+        let node = this as VNode;
+        let sibling: VNode;
+        while (!sibling && node) {
+            const parentVNode = node.parentVNode;
+            if (!parentVNode) return;
+            const childVNodes = parentVNode.childVNodes;
+            const index = childVNodes.indexOf(node);
+            sibling = childVNodes[index - 1];
+            // Can climb up the not tangible container.
+            node = !sibling && !parentVNode.tangible && parentVNode;
+        }
+        if (sibling instanceof ContainerNode && !sibling.tangible && sibling.hasChildren()) {
+            // Ignore the not tangible container.
+            sibling = sibling.lastChild();
+        }
         // Skip ignored siblings and those failing the predicate test.
         while (sibling && !(sibling.tangible && sibling.test(predicate))) {
+            // Do not give the predicate to limit the stack of calls.
             sibling = sibling.previousSibling();
         }
         return sibling;
@@ -381,11 +420,24 @@ export abstract class AbstractNode extends EventMixin {
     nextSibling<T extends VNode>(predicate?: Predicate<T>): T;
     nextSibling(predicate?: Predicate): VNode;
     nextSibling(predicate?: Predicate): VNode {
-        if (!this.parent) return;
-        const index = this.parent.childVNodes.indexOf(this as VNode);
-        let sibling = this.parent.childVNodes[index + 1];
+        let node = this as VNode;
+        let sibling: VNode;
+        while (!sibling && node) {
+            const parentVNode = node.parentVNode;
+            if (!parentVNode) return;
+            const childVNodes = parentVNode.childVNodes;
+            const index = childVNodes.indexOf(node);
+            sibling = index !== -1 && childVNodes[index + 1];
+            // Can climb up the not tangible container.
+            node = !sibling && !parentVNode.tangible && parentVNode;
+        }
+        if (sibling instanceof ContainerNode && !sibling.tangible && sibling.hasChildren()) {
+            // Ignore the not tangible container.
+            sibling = sibling.firstChild();
+        }
         // Skip ignored siblings and those failing the predicate test.
         while (sibling && !(sibling.tangible && sibling.test(predicate))) {
+            // Do not give the predicate to limit the stack of calls.
             sibling = sibling.nextSibling();
         }
         return sibling;
@@ -405,10 +457,11 @@ export abstract class AbstractNode extends EventMixin {
             // The previous node is the last leaf of the previous sibling.
             previous = previous.lastLeaf();
         } else {
-            // If it has no previous sibling then climb up to the parent.
+            // If it has no siblings either then climb up to the closest parent
+            // which has a next sibiling.
             previous = this.parent;
         }
-        while (previous && !previous.test(predicate)) {
+        while (previous && (!previous.tangible || (predicate && !previous.test(predicate)))) {
             previous = previous.previous();
         }
         return previous;
@@ -438,7 +491,7 @@ export abstract class AbstractNode extends EventMixin {
             }
             next = ancestor && ancestor.nextSibling();
         }
-        while (next && !next.test(predicate)) {
+        while (next && (!next.tangible || (predicate && !next.test(predicate)))) {
             next = next.next();
         }
         return next;
@@ -522,10 +575,10 @@ export abstract class AbstractNode extends EventMixin {
      * @param node
      */
     before(node: VNode): void {
-        if (!this.parent) {
+        if (!this.parentVNode) {
             throw new Error('Cannot insert a VNode before a VNode with no parent.');
         }
-        this.parent.insertBefore(node, this as VNode);
+        this.parentVNode.insertBefore(node, this as VNode);
     }
     /**
      * Insert the given VNode after this VNode.
@@ -533,10 +586,10 @@ export abstract class AbstractNode extends EventMixin {
      * @param node
      */
     after(node: VNode): void {
-        if (!this.parent) {
+        if (!this.parentVNode) {
             throw new Error('Cannot insert a VNode after a VNode with no parent.');
         }
-        this.parent.insertAfter(node, this as VNode);
+        this.parentVNode.insertAfter(node, this as VNode);
     }
     /**
      * Wrap this node in the given node by inserting the given node at this
@@ -552,8 +605,9 @@ export abstract class AbstractNode extends EventMixin {
      * Remove this node.
      */
     remove(): void {
-        if (this.parent) {
-            this.parent.removeChild(this as VNode);
+        const parent = this.parent || this.parentVNode;
+        if (parent) {
+            parent.removeChild(this as VNode);
         }
     }
     /**
@@ -574,7 +628,8 @@ export abstract class AbstractNode extends EventMixin {
     //--------------------------------------------------------------------------
 
     /**
-     * Return the children of this VNode which satisfy the given predicate.
+     * Return the tangible children of this VNode which satisfy the given
+     * predicate.
      */
     abstract children<T extends VNode>(predicate?: Predicate<T>): T[];
     abstract children(predicate?: Predicate): VNode[];
@@ -721,8 +776,8 @@ export abstract class AbstractNode extends EventMixin {
      */
     async trigger<A>(eventName: string, args?: A): Promise<void> {
         super.trigger(eventName, args);
-        if (this.parent) {
-            await this.parent.trigger(eventName, args);
+        if (this.parentVNode) {
+            await this.parentVNode.trigger(eventName, args);
         }
     }
 

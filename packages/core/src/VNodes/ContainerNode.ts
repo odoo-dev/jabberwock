@@ -20,18 +20,32 @@ export class ContainerNode extends AbstractNode {
     children(predicate?: Predicate): VNode[];
     children(predicate?: Predicate): VNode[] {
         const children: VNode[] = [];
-        this.childVNodes.forEach(child => {
-            if (child.tangible && (!predicate || child.test(predicate))) {
-                children.push(child);
+        const stack = [...this.childVNodes];
+        while (stack.length) {
+            const node = stack.shift();
+            if (node.tangible) {
+                if (!predicate || node.test(predicate)) {
+                    children.push(node);
+                }
+            } else if (node instanceof ContainerNode) {
+                stack.unshift(...node.childVNodes);
             }
-        });
+        }
         return children;
     }
     /**
      * See {@link AbstractNode.hasChildren}.
      */
     hasChildren(): boolean {
-        return !!this.childVNodes.find(child => child.tangible);
+        const stack = [...this.childVNodes];
+        for (const child of stack) {
+            if (child.tangible) {
+                return true;
+            } else if (child instanceof ContainerNode) {
+                stack.push(...child.childVNodes);
+            }
+        }
+        return false;
     }
     /**
      * See {@link AbstractNode.nthChild}.
@@ -46,6 +60,9 @@ export class ContainerNode extends AbstractNode {
     firstChild(predicate?: Predicate): VNode;
     firstChild(predicate?: Predicate): VNode {
         let child = this.childVNodes[0];
+        while (child instanceof ContainerNode && !child.tangible && child.childVNodes.length) {
+            child = child.childVNodes[0];
+        }
         while (child && !(child.tangible && (!predicate || child.test(predicate)))) {
             child = child.nextSibling();
         }
@@ -58,6 +75,9 @@ export class ContainerNode extends AbstractNode {
     lastChild(predicate?: Predicate): VNode;
     lastChild(predicate?: Predicate): VNode {
         let child = this.childVNodes[this.childVNodes.length - 1];
+        while (child instanceof ContainerNode && !child.tangible && child.childVNodes.length) {
+            child = child.childVNodes[child.childVNodes.length - 1];
+        }
         while (child && !(child.tangible && (!predicate || child.test(predicate)))) {
             child = child.previousSibling();
         }
@@ -182,26 +202,34 @@ export class ContainerNode extends AbstractNode {
      * See {@link AbstractNode.insertBefore}.
      */
     insertBefore(node: VNode, reference: VNode): void {
-        const index = this.childVNodes.indexOf(reference);
-        if (index < 0) {
-            throw new ChildError(this, node);
-        }
-        this._insertAtIndex(node, index);
-        if (node.tangible) {
-            this.trigger('childList');
+        const parentVNode = reference.parentVNode;
+        if (parentVNode !== this) {
+            this._ensureChild(parentVNode);
+            parentVNode.insertBefore(node, reference);
+        } else {
+            this._ensureChild(reference);
+            const index = this.childVNodes.indexOf(reference);
+            this._insertAtIndex(node, index);
+            if (node.tangible) {
+                this.trigger('childList');
+            }
         }
     }
     /**
      * See {@link AbstractNode.insertAfter}.
      */
     insertAfter(node: VNode, reference: VNode): void {
-        const index = this.childVNodes.indexOf(reference);
-        if (index < 0) {
-            throw new ChildError(this, node);
-        }
-        this._insertAtIndex(node, index + 1);
-        if (node.tangible) {
-            this.trigger('childList');
+        const parentVNode = reference.parentVNode;
+        if (parentVNode !== this) {
+            this._ensureChild(parentVNode);
+            parentVNode.insertAfter(node, reference);
+        } else {
+            this._ensureChild(reference);
+            const index = this.childVNodes.indexOf(reference);
+            this._insertAtIndex(node, index + 1);
+            if (node.tangible) {
+                this.trigger('childList');
+            }
         }
     }
     /**
@@ -216,25 +244,32 @@ export class ContainerNode extends AbstractNode {
      * See {@link AbstractNode.removeChild}.
      */
     removeChild(child: VNode): void {
-        const index = this.childVNodes.indexOf(child);
-        if (index < 0) {
-            throw new ChildError(this, child);
+        const parentVNode = child.parentVNode;
+        if (parentVNode !== this) {
+            this._ensureChild(parentVNode);
+            parentVNode.removeChild(child);
+        } else {
+            this._ensureChild(child);
+            const index = this.childVNodes.indexOf(child);
+            this._removeAtIndex(index);
         }
-        this._removeAtIndex(index);
     }
     /**
      * See {@link AbstractNode.splitAt}.
      */
     splitAt(child: VNode): this {
-        if (child.parent !== this) {
-            throw new ChildError(this, child);
+        this._ensureChild(child);
+        while (child.parentVNode !== this) {
+            // If the child is in not tangible container.
+            const parentVNode = child.parentVNode;
+            child = parentVNode.splitAt(child);
         }
         const duplicate = this.clone();
         const index = this.childVNodes.indexOf(child);
         const children = this.childVNodes.splice(index);
         duplicate.childVNodes.push(...children);
         for (const child of children) {
-            child.parent = duplicate;
+            child.parentVNode = duplicate;
         }
         this.after(duplicate);
         return duplicate;
@@ -318,16 +353,29 @@ export class ContainerNode extends AbstractNode {
      *
      * @param child
      * @param index The index at which the insertion must take place within this
-     * VNode's parent, holding marker nodes into account.
+     * VNode's parentVNode, holding marker nodes into account.
      */
     _insertAtIndex(child: VNode, index: number): void {
-        // TODO: checking `this.parent` is a hack so it will go directly to
-        // `else` when parsing.
-        if (this.parent && !this.mayContainContainers && child instanceof ContainerNode) {
-            if (!this.parent) {
+        // TODO: FIX: remove `this.parentVNode` is a hack so it will go
+        // directly to `else` when parsing. But it's false to have a div in a p
+        // when whe parse the DOM.
+        if (
+            this.parentVNode &&
+            !this.mayContainContainers &&
+            child instanceof ContainerNode &&
+            (child.tangible || child.children(ContainerNode).length)
+        ) {
+            if (!this.parentVNode) {
                 console.warn(
                     `Cannot insert a container within a ${this.name}. ` +
                         'This container having no parent, can also not be split.',
+                );
+                return;
+            }
+            if (!this.breakable) {
+                console.warn(
+                    `Cannot insert a container within a ${this.name}. ` +
+                        'This container is not breakable.',
                 );
                 return;
             }
@@ -345,19 +393,20 @@ export class ContainerNode extends AbstractNode {
                 this.replaceWith(child);
             }
         } else {
-            if (child.parent) {
-                const currentIndex = child.parent.childVNodes.indexOf(child);
-                if (index && child.parent === this && currentIndex < index) {
+            const parentVNode = child.parentVNode;
+            if (parentVNode) {
+                const currentIndex = parentVNode.childVNodes.indexOf(child);
+                if (index && parentVNode === this && currentIndex < index) {
                     index--;
                 }
-                child.parent.removeChild(child);
+                parentVNode.removeChild(child);
             }
             this.childVNodes.splice(index, 0, child);
-            child.parent = this;
+            child.parentVNode = this;
         }
     }
     /**
-     * Remove the nth child from this node.
+     * Remove the direct nth child from this node.
      *
      * @param index The index of the child to remove including marker nodes.
      */
@@ -367,6 +416,21 @@ export class ContainerNode extends AbstractNode {
             this.trigger('childList');
         }
         child.modifiers.off('update');
-        child.parent = undefined;
+        child.parentVNode = undefined;
+    }
+    /**
+     * Throw a child error if the node is not a children (or a children of an
+     * not tangible child)
+     *
+     * @param child
+     */
+    private _ensureChild(child: VNode): void {
+        let parentVNode = child.parentVNode;
+        while (parentVNode && parentVNode !== this && !parentVNode.tangible) {
+            parentVNode = parentVNode.parentVNode;
+        }
+        if (parentVNode !== this) {
+            throw new ChildError(this, child);
+        }
     }
 }

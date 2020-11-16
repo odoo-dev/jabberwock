@@ -230,6 +230,7 @@ describe('Plugin: DevTools', () => {
                 '<devtools-tr><devtools-td>breakable</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>htmlTag</devtools-td><devtools-td>"TEST-CONTAINER"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>mayContainContainers</devtools-td><devtools-td>true</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>parentVNode</devtools-td><devtools-td>ZoneNode: main</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>tangible</devtools-td><devtools-td>true</devtools-td></devtools-tr>' +
                 '</devtools-tbody>' +
                 '</devtools-table>' +
