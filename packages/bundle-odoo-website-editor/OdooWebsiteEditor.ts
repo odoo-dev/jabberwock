@@ -82,6 +82,7 @@ interface OdooWebsiteEditorOptions {
         templateConfigurations: Record<TemplateName, TemplateConfiguration>;
     };
     themes?: ThemeComponent[];
+    wrapMain?: boolean;
     toolbarLayout?: ToolbarLayout;
     mode?: ModeDefinition;
     plugins?: [typeof JWPlugin, JWPluginConfig?][];
@@ -110,6 +111,11 @@ const defaultToolbarLayout = {
 export class OdooWebsiteEditor extends JWEditor {
     constructor(options: OdooWebsiteEditorOptions) {
         super();
+
+        if (typeof options.wrapMain === 'undefined') {
+            options.wrapMain = true;
+        }
+
         class CustomPlugin extends JWPlugin {
             commands = Object.assign(options.customCommands || {});
         }
@@ -238,14 +244,22 @@ export class OdooWebsiteEditor extends JWEditor {
                 {
                     id: 'main',
                     render: async (): Promise<VNode[]> => {
-                        const div = new DividerNode();
-                        div.modifiers.get(Attributes).set('contentEditable', 'true');
-                        div.modifiers.get(Attributes).classList.add('note-editable', 'o_editable');
-                        div.modifiers.get(Attributes).style.set('width', '100%');
-                        const zone = new ZoneNode({ managedZones: ['editable'] });
-                        zone.editable = true;
-                        div.append(zone);
-                        return [div];
+                        if (options.wrapMain) {
+                            const div = new DividerNode();
+                            div.modifiers.get(Attributes).set('contentEditable', 'true');
+                            div.modifiers
+                                .get(Attributes)
+                                .classList.add('note-editable', 'o_editable');
+                            div.modifiers.get(Attributes).style.set('width', '100%');
+                            const zone = new ZoneNode({ managedZones: ['editable'] });
+                            zone.editable = true;
+                            div.append(zone);
+                            return [div];
+                        } else {
+                            const zone = new ZoneNode({ managedZones: ['editable'] });
+                            zone.editable = true;
+                            return [zone];
+                        }
                     },
                 },
                 {
