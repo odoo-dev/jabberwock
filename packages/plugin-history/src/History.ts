@@ -43,7 +43,7 @@ export class History<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
                         label: 'History redo',
                         commandId: 'redo',
                         enabled: this.canRedo.bind(this),
-                        modifiers: [new Attributes({ class: 'fa fa-redo fa-fw' })],
+                        modifiers: [new Attributes({ class: 'fa fa-rotate-right fa-fw' })],
                     });
                     return [button];
                 },
