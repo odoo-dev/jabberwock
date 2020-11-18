@@ -2,11 +2,121 @@
     <head>
         <title>Jabberwock Editor</title>
         <link rel="shortcut icon" href="#" />
+        <style>
+            div {border: 1px solid black; margin-top: 50px;}
+            div:focus {background: chartreuse;}
+        </style>
     </head>
     <body>
+        <p id="aaa" style="font-size: 40px; top: 0; position: fixed; background: burlywood;">5</p>
+        <div id="a" contenteditable="true"><p>Prevent ==> Fabien est là, et il test le correcteur du gsm.</p></div>
+        <div id="b" contenteditable="true"><p>Prevent + change ==> Fabien est là, et il test le correcteur du gsm.</p></div>
+        <div id="c" contenteditable="true"><p>Prevent + timeout/change ==> Fabien est là, et il test le correcteur du gsm.</p></div>
+        <div id="d" contenteditable="true"><p>Prevent + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p></div>
+        <div id="e" contenteditable="true"><p>Input + change ==> Fabien est là, et il test le correcteur du gsm.</p></div>
+        <div id="f" contenteditable="true"><p>Input + timeout/change ==> Fabien est là, et il test le correcteur du gsm.</p></div>
+        <div id="g" contenteditable="true"><p>Input + select ==> Fabien est là, et il test le correcteur du gsm.</p></div>
+        <div id="h" contenteditable="true"><p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p></div>
+
+        <script>
+            const replace = 'Fabien est là, et il test le correcteur du gsm.';
+            let i = 1000;
+            function count() {
+                i--;
+                document.getElementById('aaa').innerHTML = i%5;
+                return i%5;
+            }
+
+            document.getElementById('a').addEventListener('keydown', event => {
+                if (count()) return;
+                event.preventDefault();
+            });
+            document.getElementById('b').addEventListener('keydown', event => {
+                if (count()) return;
+                event.preventDefault();
+                const p = event.target.firstElementChild;
+                const text = p.firstChild;
+                text.textContent = replace;
+                if (p.nextElementSibling) p.nextElementSibling.remove();
+            });
+            document.getElementById('c').addEventListener('keydown', event => {
+                if (count()) return;
+                event.preventDefault();
+                const p = event.target.firstElementChild;
+                const text = p.firstChild;
+                setTimeout(() => {
+                    text.textContent = replace;
+                    if (p.nextElementSibling) p.nextElementSibling.remove();
+                });
+            });
+            document.getElementById('d').addEventListener('keydown', event => {
+                if (count()) return;
+                event.preventDefault();
+                const p = event.target.firstElementChild;
+                const text = p.firstChild;
+                setTimeout(() => {
+                    text.textContent = replace;
+                    if (p.nextElementSibling) p.nextElementSibling.remove();
+                    range(event);
+                });
+            });
+
+            document.getElementById('e').addEventListener('input', event => {
+                if (count()) return;
+                event.preventDefault();
+                const p = event.target.firstElementChild;
+                const text = p.firstChild;
+                text.textContent = replace;
+                if (p.nextElementSibling) p.nextElementSibling.remove();
+            });
+            document.getElementById('f').addEventListener('input', event => {
+                if (count()) return;
+                event.preventDefault();
+                const p = event.target.firstElementChild;
+                const text = p.firstChild;
+                setTimeout(() => {
+                    text.textContent = replace;
+                    if (p.nextElementSibling) p.nextElementSibling.remove();
+                    range(event);
+                });
+            });
+            document.getElementById('g').addEventListener('input', event => {
+                if (count()) return;
+                event.preventDefault();
+                const p = event.target.firstElementChild;
+                const text = p.firstChild;
+                text.textContent = replace;
+                if (p.nextElementSibling) p.nextElementSibling.remove();
+                range(event);
+            });
+            document.getElementById('h').addEventListener('input', event => {
+                if (count()) return;
+                event.preventDefault();
+                const p = event.target.firstElementChild;
+                const text = p.firstChild;
+                setTimeout(() => {
+                    text.textContent = replace;
+                    if (p.nextElementSibling) p.nextElementSibling.remove();
+                    range(event);
+                });
+            });
+
+            function range (event) {
+                const p = event.target.firstElementChild;
+                const text = p.firstChild;
+                const domSelection = document.getSelection();
+                const domRange = document.createRange();
+                domRange.setStart(text, text.textContent.length - 2);
+                domRange.collapse(true);
+                domSelection.removeAllRanges();
+                domSelection.addRange(domRange);
+            }
+            
+        </script>
+
         <section id="contentToEdit">Content in section to edit</section>
         <!-- The following file is created by webpack in the config file -->
         <!-- The path generated is "/<filename>.js" -->
-        <script type="text/javascript" src="demo.js" charset="UTF-8"></script>
+        <!-- <script type="text/javascript" src="demo.js" charset="UTF-8"></script> -->
     </body>
 </html>
