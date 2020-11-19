@@ -1,4 +1,4 @@
-import { VNode, RelativePosition, Predicate, isLeaf } from './VNode';
+import { VNode, RelativePosition, Predicate } from './VNode';
 import {
     Constructor,
     nodeLength,
@@ -12,6 +12,7 @@ import { EventMixin } from '../../../utils/src/EventMixin';
 import { Modifier } from '../Modifier';
 import { markAsDiffRoot } from '../Memory/Memory';
 import { makeVersionable } from '../Memory/Versionable';
+import { withoutIntangibles } from '../Walker';
 
 export interface AbstractNodeParams {
     modifiers?: Modifiers | Array<Modifier | Constructor<Modifier>>;
@@ -60,11 +61,7 @@ export abstract class AbstractNode extends EventMixin {
      * First tangible parent of the VNode.
      */
     get parent(): ContainerNode {
-        let parent = this.parentVNode;
-        while (parent && !parent.tangible) {
-            parent = parent.parentVNode;
-        }
-        return parent;
+        return withoutIntangibles.parent(this as VNode);
     }
     /**
      * Direct parent of the VNode.
@@ -182,78 +179,22 @@ export abstract class AbstractNode extends EventMixin {
         return this.children().length;
     }
     /**
-     * Test this node against the given predicate.
-     *
-     * If the predicate is falsy, return true. If the predicate is a constructor
-     * of a VNode class, return whether this node is an instance of that class.
-     * If the predicate is a standard function, return the result of this
-     * function when called with the node as parameter.
-     *
-     *
-     * @param predicate The predicate to test this node against.
+     * See {@link Walker.testPredicate}.
      */
     test(predicate?: Predicate): boolean {
-        if (!predicate) {
-            return true;
-        } else if (AbstractNode.isConstructor(predicate)) {
-            return this instanceof predicate;
-        } else {
-            return predicate(this as VNode);
-        }
+        return withoutIntangibles.test(this as VNode, predicate);
     }
     /**
-     * Return true if this VNode comes before the given VNode in the pre-order
-     * traversal.
-     *
-     * @param vNode
+     * See {@link Walker.isBefore}.
      */
     isBefore(vNode: VNode): boolean {
-        const thisPath = [this as VNode];
-        let parent = this.parentVNode;
-        while (parent) {
-            thisPath.push(parent);
-            parent = parent.parentVNode;
-        }
-        const nodePath = [vNode];
-        parent = vNode.parentVNode;
-        while (parent) {
-            nodePath.push(parent);
-            parent = parent.parentVNode;
-        }
-        // Find the last distinct ancestors in the path to the root.
-        let thisAncestor: VNode;
-        let nodeAncestor: VNode;
-        do {
-            thisAncestor = thisPath.pop();
-            nodeAncestor = nodePath.pop();
-        } while (thisAncestor && nodeAncestor && thisAncestor === nodeAncestor);
-
-        if (thisAncestor && nodeAncestor) {
-            const thisParent = thisAncestor.parentVNode;
-            const nodeParent = nodeAncestor.parentVNode;
-            if (thisParent && thisParent === nodeParent) {
-                // Compare the indices of both ancestors in their shared parent.
-                const thisIndex = thisParent.childVNodes.indexOf(thisAncestor);
-                const nodeIndex = nodeParent.childVNodes.indexOf(nodeAncestor);
-                return thisIndex < nodeIndex;
-            } else {
-                // The very first ancestor of both nodes are different so
-                // they actually come from two different trees altogether.
-                return false;
-            }
-        } else {
-            // One of the nodes was in the ancestors path of the other.
-            return !thisAncestor && !!nodeAncestor;
-        }
+        return withoutIntangibles.isBefore(this as VNode, vNode);
     }
     /**
-     * Return true if this VNode comes after the given VNode in the pre-order
-     * traversal.
-     *
-     * @param vNode
+     * See {@link Walker.isAfter}.
      */
     isAfter(vNode: VNode): boolean {
-        return vNode.isBefore(this as VNode);
+        return withoutIntangibles.isAfter(this as VNode, vNode);
     }
 
     //--------------------------------------------------------------------------
@@ -261,308 +202,116 @@ export abstract class AbstractNode extends EventMixin {
     //--------------------------------------------------------------------------
 
     /**
-     * Return the closest node from this node that matches the given predicate.
-     * Start with this node then go up the ancestors tree until finding a match.
-     *
-     * @param predicate
+     * See {@link Walker.closest}.
      */
     closest<T extends VNode>(predicate: Predicate<T>): T;
     closest(predicate: Predicate): VNode;
     closest(predicate: Predicate): VNode {
-        if (this.test(predicate)) {
-            return this as VNode;
-        } else {
-            return this.ancestor(predicate);
-        }
+        return withoutIntangibles.closest(this as VNode, predicate);
     }
     /**
-     * Return the first tangible ancestor of this VNode that satisfies the
-     * given predicate.
-     *
-     * @param [predicate]
+     * See {@link Walker.ancestor}.
      */
     ancestor<T extends VNode>(predicate?: Predicate<T>): T;
     ancestor(predicate?: Predicate): ContainerNode;
     ancestor(predicate?: Predicate): ContainerNode {
-        let ancestor = this.parentVNode;
-        while (ancestor && (!ancestor.tangible || (predicate && !ancestor.test(predicate)))) {
-            ancestor = ancestor.parentVNode;
-        }
-        return ancestor;
+        return withoutIntangibles.ancestor(this as VNode, predicate);
     }
     /**
-     * Return all ancestors of the current node that satisfy the given
-     * predicate. If no predicate is given return all the ancestors of the
-     * current node.
-     *
-     * @param [predicate]
+     * See {@link Walker.ancestors}.
      */
     ancestors<T extends VNode>(predicate?: Predicate<T>): T[];
     ancestors(predicate?: Predicate): ContainerNode[];
     ancestors(predicate?: Predicate): ContainerNode[] {
-        const ancestors: ContainerNode[] = [];
-        let ancestor = this.parentVNode;
-        while (ancestor) {
-            if (ancestor.tangible && (!predicate || ancestor.test(predicate))) {
-                ancestors.push(ancestor);
-            }
-            ancestor = ancestor.parentVNode;
-        }
-        return ancestors;
+        return withoutIntangibles.ancestors(this as VNode, predicate);
     }
     /**
-     * Return the lowest common ancestor between this VNode and the given one.
-     *
-     * @param node
+     * See {@link Walker.commonAncestor}.
      */
     commonAncestor<T extends VNode>(node: VNode, predicate?: Predicate<T>): T;
     commonAncestor(node: VNode, predicate?: Predicate): ContainerNode;
     commonAncestor(node: VNode, predicate?: Predicate): ContainerNode {
-        const thisPath = this.ancestors(predicate);
-        if (this !== node && this instanceof ContainerNode) {
-            thisPath.unshift(this);
-        }
-        let commonAncestor = node as ContainerNode;
-        while (
-            (commonAncestor && !thisPath.includes(commonAncestor)) ||
-            (predicate && !commonAncestor.test(predicate))
-        ) {
-            commonAncestor = commonAncestor.parentVNode;
-        }
-        return commonAncestor;
+        return withoutIntangibles.commonAncestor(this as VNode, node, predicate);
     }
     /**
-     * Return the siblings of this VNode which satisfy the given predicate.
-     *
-     * @param [predicate]
+     * See {@link Walker.siblings}.
      */
     siblings<T extends VNode>(predicate?: Predicate<T>): T[];
     siblings(predicate?: Predicate): VNode[];
     siblings(predicate?: Predicate): VNode[] {
-        const siblings: VNode[] = [];
-        let sibling: VNode = this.previousSibling();
-        while (sibling) {
-            if (sibling.test(predicate)) {
-                siblings.unshift(sibling);
-            }
-            sibling = sibling.previousSibling();
-        }
-        sibling = this.nextSibling();
-        while (sibling) {
-            if (sibling.test(predicate)) {
-                siblings.push(sibling);
-            }
-            sibling = sibling.nextSibling();
-        }
-        return siblings;
+        return withoutIntangibles.siblings(this as VNode, predicate);
     }
     /**
-     * Return the nodes adjacent to this VNode that satisfy the given predicate.
-     * Note: include this VNode within the return value, in order of appearance
-     * (if it satisfies the given predicate).
+     * See {@link Walker.adjacents}.
      */
     adjacents<T extends VNode>(predicate?: Predicate<T>): T[];
     adjacents(predicate?: Predicate): VNode[];
     adjacents(predicate?: Predicate): VNode[] {
-        const adjacents: VNode[] = [];
-        let sibling: VNode = this.previousSibling();
-        while (sibling && sibling.test(predicate)) {
-            adjacents.unshift(sibling);
-            sibling = sibling.previousSibling();
-        }
-        if (this.test(predicate)) {
-            adjacents.push(this as VNode);
-        }
-        sibling = this.nextSibling();
-        while (sibling && sibling.test(predicate)) {
-            adjacents.push(sibling);
-            sibling = sibling.nextSibling();
-        }
-        return adjacents;
+        return withoutIntangibles.adjacents(this as VNode, predicate);
     }
     /**
-     * Return the previous sibling of this VNode that satisfies the predicate.
-     * If no predicate is given, return the previous sibling of this VNode.
-     *
-     * @param [predicate]
+     * See {@link Walker.previousSibling}.
      */
     previousSibling<T extends VNode>(predicate?: Predicate<T>): T;
     previousSibling(predicate?: Predicate): VNode;
     previousSibling(predicate?: Predicate): VNode {
-        let node = this as VNode;
-        let sibling: VNode;
-        while (!sibling && node) {
-            const parentVNode = node.parentVNode;
-            if (!parentVNode) return;
-            const childVNodes = parentVNode.childVNodes;
-            const index = childVNodes.indexOf(node);
-            sibling = childVNodes[index - 1];
-            // Can climb up the not tangible container.
-            node = !sibling && !parentVNode.tangible && parentVNode;
-        }
-        if (sibling instanceof ContainerNode && !sibling.tangible && sibling.hasChildren()) {
-            // Ignore the not tangible container.
-            sibling = sibling.lastChild();
-        }
-        // Skip ignored siblings and those failing the predicate test.
-        while (sibling && !(sibling.tangible && sibling.test(predicate))) {
-            // Do not give the predicate to limit the stack of calls.
-            sibling = sibling.previousSibling();
-        }
-        return sibling;
+        return withoutIntangibles.previousSibling(this as VNode, predicate);
     }
     /**
-     * Return the next sibling of this VNode that satisfies the given predicate.
-     * If no predicate is given, return the next sibling of this VNode.
-     *
-     * @param [predicate]
+     * See {@link Walker.nextSibling}.
      */
     nextSibling<T extends VNode>(predicate?: Predicate<T>): T;
     nextSibling(predicate?: Predicate): VNode;
     nextSibling(predicate?: Predicate): VNode {
-        let node = this as VNode;
-        let sibling: VNode;
-        while (!sibling && node) {
-            const parentVNode = node.parentVNode;
-            if (!parentVNode) return;
-            const childVNodes = parentVNode.childVNodes;
-            const index = childVNodes.indexOf(node);
-            sibling = index !== -1 && childVNodes[index + 1];
-            // Can climb up the not tangible container.
-            node = !sibling && !parentVNode.tangible && parentVNode;
-        }
-        if (sibling instanceof ContainerNode && !sibling.tangible && sibling.hasChildren()) {
-            // Ignore the not tangible container.
-            sibling = sibling.firstChild();
-        }
-        // Skip ignored siblings and those failing the predicate test.
-        while (sibling && !(sibling.tangible && sibling.test(predicate))) {
-            // Do not give the predicate to limit the stack of calls.
-            sibling = sibling.nextSibling();
-        }
-        return sibling;
+        return withoutIntangibles.nextSibling(this as VNode, predicate);
     }
     /**
-     * Return the previous node in a depth-first pre-order traversal of the
-     * tree that satisfies the given predicate. If no predicate is given return
-     * the previous node in a depth-first pre-order traversal of the tree.
-     *
-     * @param [predicate]
+     * See {@link Walker.previous}.
      */
     previous<T extends VNode>(predicate?: Predicate<T>): T;
     previous(predicate?: Predicate): VNode;
     previous(predicate?: Predicate): VNode {
-        let previous = this.previousSibling();
-        if (previous) {
-            // The previous node is the last leaf of the previous sibling.
-            previous = previous.lastLeaf();
-        } else {
-            // If it has no siblings either then climb up to the closest parent
-            // which has a next sibiling.
-            previous = this.parent;
-        }
-        while (previous && (!previous.tangible || (predicate && !previous.test(predicate)))) {
-            previous = previous.previous();
-        }
-        return previous;
+        return withoutIntangibles.previous(this as VNode, predicate);
     }
     /**
-     * Return the next node in a depth-first pre-order traversal of the tree
-     * that satisfies the given predicate. If no predicate is given return the
-     * next node in a depth-first pre-order traversal of the tree.
-     *
-     * @param [predicate]
+     * See {@link Walker.next}.
      */
     next<T extends VNode>(predicate?: Predicate<T>): T;
     next(predicate?: Predicate): VNode;
     next(predicate?: Predicate): VNode {
-        // The node after node is its first child.
-        let next = this.firstChild();
-        if (!next) {
-            // If it has no children then it is its next sibling.
-            next = this.nextSibling();
-        }
-        if (!next) {
-            // If it has no siblings either then climb up to the closest parent
-            // which has a next sibiling.
-            let ancestor = this.parent;
-            while (ancestor && !ancestor.nextSibling()) {
-                ancestor = ancestor.parent;
-            }
-            next = ancestor && ancestor.nextSibling();
-        }
-        while (next && (!next.tangible || (predicate && !next.test(predicate)))) {
-            next = next.next();
-        }
-        return next;
+        return withoutIntangibles.next(this as VNode, predicate);
     }
     /**
-     * Return the previous leaf in a depth-first pre-order traversal of the
-     * tree that satisfies the given predicate. If no predicate is given return
-     * the previous leaf in a depth-first pre-order traversal of the tree.
-     *
-     * @param [predicate]
+     * See {@link Walker.previousLeaf}.
      */
     previousLeaf<T extends VNode>(predicate?: Predicate<T>): T;
     previousLeaf(predicate?: Predicate): VNode;
     previousLeaf(predicate?: Predicate): VNode {
-        return this.previous((node: VNode): boolean => {
-            return isLeaf(node) && node.test(predicate);
-        });
+        return withoutIntangibles.previousLeaf(this as VNode, predicate);
     }
     /**
-     * Return the next leaf in a depth-first pre-order traversal of the tree
-     * that satisfies the given predicate. If no predicate is given return the
-     * next leaf in a depth-first pre-order traversal of the tree.
-     *
-     * @param [predicate]
+     * See {@link Walker.nextLeaf}.
      */
     nextLeaf<T extends VNode>(predicate?: Predicate<T>): T;
     nextLeaf(predicate?: Predicate): VNode;
     nextLeaf(predicate?: Predicate): VNode {
-        return this.next((node: VNode): boolean => {
-            return isLeaf(node) && node.test(predicate);
-        });
+        return withoutIntangibles.nextLeaf(this as VNode, predicate);
     }
     /**
-     * Return all previous siblings of the current node that satisfy the given
-     * predicate. If no predicate is given return all the previous siblings of
-     * the current node.
-     *
-     * @param [predicate]
+     * See {@link Walker.previousSiblings}.
      */
     previousSiblings<T extends VNode>(predicate?: Predicate<T>): T[];
     previousSiblings(predicate?: Predicate): VNode[];
     previousSiblings(predicate?: Predicate): VNode[] {
-        const previousSiblings: VNode[] = [];
-        let sibling = this.previousSibling();
-        while (sibling) {
-            if (sibling.test(predicate)) {
-                previousSiblings.push(sibling);
-            }
-            sibling = sibling.previousSibling();
-        }
-        return previousSiblings;
+        return withoutIntangibles.previousSiblings(this as VNode, predicate);
     }
     /**
-     * Return all next siblings of the current node that satisfy the given
-     * predicate. If no predicate is given return all the next siblings of the
-     * current node.
-     *
-     * @param [predicate]
+     * See {@link Walker.nextSiblings}.
      */
     nextSiblings<T extends VNode>(predicate?: Predicate<T>): T[];
     nextSiblings(predicate?: Predicate): VNode[];
     nextSiblings(predicate?: Predicate): VNode[] {
-        const nextSiblings: VNode[] = [];
-        let sibling = this.nextSibling();
-        while (sibling) {
-            if (sibling.test(predicate)) {
-                nextSiblings.push(sibling);
-            }
-            sibling = sibling.nextSibling();
-        }
-        return nextSiblings;
+        return withoutIntangibles.nextSiblings(this as VNode, predicate);
     }
 
     //--------------------------------------------------------------------------
@@ -624,91 +373,86 @@ export abstract class AbstractNode extends EventMixin {
     }
 
     //--------------------------------------------------------------------------
-    // Browsing children. To be implemented by the concrete subclass.
+    // Browsing children.
     //--------------------------------------------------------------------------
 
     /**
-     * Return the tangible children of this VNode which satisfy the given
-     * predicate.
+     * See {@link Walker.children}.
      */
-    abstract children<T extends VNode>(predicate?: Predicate<T>): T[];
-    abstract children(predicate?: Predicate): VNode[];
+    children<T extends VNode>(predicate?: Predicate<T>): T[];
+    children(predicate?: Predicate): VNode[];
+    children(predicate?: Predicate): VNode[] {
+        return withoutIntangibles.children(this as VNode, predicate);
+    }
     /**
-     * Return true if this VNode has children.
+     * See {@link Walker.hasChildren}.
      */
-    abstract hasChildren(): boolean;
+    hasChildren(): boolean {
+        return withoutIntangibles.hasChildren(this);
+    }
     /**
-     * Return the nth child of this node. The given `n` argument is the 1-based
-     * index of the position of the child inside this node, excluding markers.
-     *
-     * Examples:
-     * nthChild(1) returns the first (1st) child.
-     * nthChild(2) returns the second (2nd) child.
-     * nthChild(3) returns the second (3rd) child.
-     * nthChild(4) returns the second (4th) child.
-     * ...
-     *
-     * @param n
+     * See {@link Walker.nthChild}.
      */
-    abstract nthChild(n: number): VNode;
+    nthChild(n: number): VNode {
+        return withoutIntangibles.nthChild(this, n);
+    }
     /**
-     * Return the first child of this VNode that satisfies the given predicate.
-     * If no predicate is given, return the first child of this VNode.
-     *
-     * @param [predicate]
+     * See {@link Walker.firstChild}.
      */
-    abstract firstChild<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract firstChild(predicate?: Predicate): VNode;
+    firstChild<T extends VNode>(predicate?: Predicate<T>): T;
+    firstChild(predicate?: Predicate): VNode;
+    firstChild(predicate?: Predicate): VNode {
+        return withoutIntangibles.firstChild(this as VNode, predicate);
+    }
     /**
-     * Return the last child of this VNode that satisfies the given predicate.
-     * If no predicate is given, return the last child of this VNode.
-     *
-     * @param [predicate]
+     * See {@link Walker.lastChild}.
      */
-    abstract lastChild<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract lastChild(predicate?: Predicate): VNode;
+    lastChild<T extends VNode>(predicate?: Predicate<T>): T;
+    lastChild(predicate?: Predicate): VNode;
+    lastChild(predicate?: Predicate): VNode {
+        return withoutIntangibles.lastChild(this as VNode, predicate);
+    }
     /**
-     * Return the first leaf of this VNode that satisfies the given predicate.
-     * If no predicate is given, return the first leaf of this VNode.
-     *
-     * @param [predicate]
+     * See {@link Walker.firstLeaf}.
      */
-    abstract firstLeaf<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract firstLeaf(predicate?: Predicate): VNode;
+    firstLeaf<T extends VNode>(predicate?: Predicate<T>): T;
+    firstLeaf(predicate?: Predicate): VNode;
+    firstLeaf(predicate?: Predicate): VNode {
+        return withoutIntangibles.firstLeaf(this as VNode, predicate);
+    }
     /**
-     * Return the last leaf of this VNode that satisfies the given predicate.
-     * If no predicate is given, return the last leaf of this VNode.
-     *
-     * @param [predicate]
+     * See {@link Walker.lastLeaf}.
      */
-    abstract lastLeaf<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract lastLeaf(predicate?: Predicate): VNode;
+    lastLeaf<T extends VNode>(predicate?: Predicate<T>): T;
+    lastLeaf(predicate?: Predicate): VNode;
+    lastLeaf(predicate?: Predicate): VNode {
+        return withoutIntangibles.lastLeaf(this as VNode, predicate);
+    }
     /**
-     * Return all descendants of the current node that satisfy the given
-     * predicate. If no predicate is given return all the ancestors of the
-     * current node.
-     *
-     * @param [predicate]
+     * See {@link Walker.descendants}.
      */
-    abstract descendants<T extends VNode>(predicate?: Predicate<T>): T[];
-    abstract descendants(predicate?: Predicate): VNode[];
-    /**
-     * Return the first descendant of this VNode that satisfies the predicate.
-     * If no predicate is given, return the first descendant of this VNode.
-     *
-     * @param [predicate]
-     */
-    abstract firstDescendant<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract firstDescendant(predicate?: Predicate): VNode;
-    /**
-     * Return the last descendant of this VNode that satisfies the predicate.
-     * If no predicate is given, return the last descendant of this VNode.
-     *
-     * @param [predicate]
-     */
-    abstract lastDescendant<T extends VNode>(predicate?: Predicate<T>): T;
-    abstract lastDescendant(predicate?: Predicate): VNode;
+    descendants<T extends VNode>(predicate?: Predicate<T>): T[];
+    descendants(predicate?: Predicate): VNode[];
+    descendants(predicate?: Predicate): VNode[] {
+        return withoutIntangibles.descendants(this as VNode, predicate);
+    }
 
+    /**
+     * See {@link Walker.firstDescendant}.
+     */
+    firstDescendant<T extends VNode>(predicate?: Predicate<T>): T;
+    firstDescendant(predicate?: Predicate): VNode;
+    firstDescendant(predicate?: Predicate): VNode {
+        return withoutIntangibles.firstDescendant(this as VNode, predicate);
+    }
+    /**
+     * See {@link Walker.lastDescendant}.
+     */
+    lastDescendant<T extends VNode>(predicate?: Predicate<T>): T;
+    lastDescendant(predicate?: Predicate): VNode;
+    lastDescendant(predicate?: Predicate): VNode {
+        return withoutIntangibles.lastDescendant(this as VNode, predicate);
+    }
     //--------------------------------------------------------------------------
     // Updating children. To be implemented by the concrete subclass.
     //--------------------------------------------------------------------------

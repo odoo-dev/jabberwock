@@ -29,7 +29,7 @@ describe('core', () => {
         describe('VNodes', () => {
             describe('TagNode', () => {
                 describe('constructor', () => {
-                    it('should create an unknown element', async () => {
+                    it('should create an unknown element', () => {
                         for (let i = 1; i <= 6; i++) {
                             const vNode = new TagNode({ htmlTag: 'UNKNOWN-ELEMENT' });
                             expect(vNode instanceof AtomicNode).to.equal(false);
@@ -516,6 +516,38 @@ describe('core', () => {
                 });
                 describe('commonAncestor', () => {
                     it('should return the common ancestor', async () => {
+                        expect(a.commonAncestor(a)).to.equal(root, 'a commonAncestor a');
+                        expect(a.commonAncestor(b)).to.equal(root, 'a commonAncestor b');
+                        expect(b.commonAncestor(a)).to.equal(root, 'b commonAncestor a');
+                        expect(d.commonAncestor(e)).to.equal(p, 'd commonAncestor e');
+                        expect(f.commonAncestor(e)).to.equal(pp, 'f commonAncestor e');
+                        expect(e.commonAncestor(f)).to.equal(pp, 'e commonAncestor f');
+                        expect(f.commonAncestor(e, TagNode)).to.equal(
+                            pp,
+                            'f commonAncestor e for TagNode',
+                        );
+                        expect(e.commonAncestor(f, TagNode)).to.equal(
+                            pp,
+                            'e commonAncestor f for TagNode',
+                        );
+                        expect(pp.commonAncestor(e, TagNode)).to.equal(
+                            pp,
+                            'pp commonAncestor e for TagNode',
+                        );
+                        expect(e.commonAncestor(pp, TagNode)).to.equal(
+                            pp,
+                            'e commonAncestor pp for TagNode',
+                        );
+                        expect(p.commonAncestor(e, TagNode)).to.equal(
+                            p,
+                            'p commonAncestor e for TagNode',
+                        );
+                        expect(e.commonAncestor(p, TagNode)).to.equal(
+                            p,
+                            'e commonAncestor p for TagNode',
+                        );
+                    });
+                    it('should return the common ancestor (2)', async () => {
                         /*
                          * <root>                     root
                          *     a                      a
@@ -726,7 +758,7 @@ describe('core', () => {
                         expect(b.adjacents()).to.deep.equal([b], 'siblings without the markers');
                         expect(root.adjacents()).to.deep.equal([root]);
                     });
-                    it('should return the adjacent nodes', async () => {
+                    it('should return the adjacent nodes (2)', async () => {
                         const container = new ContainerNode();
                         const a = new CharNode({ char: 'a' });
                         container.append(a);
@@ -1116,7 +1148,7 @@ describe('core', () => {
                     });
                 });
                 describe('previousSiblings', () => {
-                    it('should return the previousSiblings', async () => {
+                    it('should return the previousSiblings', () => {
                         expect(h1.previousSiblings()).to.deep.equal(
                             [a],
                             'h1.previousSiblings = [a]',
@@ -1131,7 +1163,28 @@ describe('core', () => {
                         );
                         expect(f.previousSiblings()).to.deep.equal([e], 'f.previousSiblings = [e]');
                     });
-                    it('should return the previousSiblings with predicate without result', async () => {
+                    it('should return the previousSiblings (not tangible container)', () => {
+                        const root = new FragmentNode();
+                        const a = new CharNode({ char: 'a' });
+                        root.append(a);
+                        const not1 = new NotTangible();
+                        root.append(not1);
+                        const h1 = new TagNode({ htmlTag: 'H1' });
+                        not1.append(h1);
+                        const not3 = new NotTangible();
+                        not1.append(not3);
+                        const c = new CharNode({ char: 'c' });
+                        not3.append(c);
+                        const d = new CharNode({ char: 'd' });
+                        not3.append(d);
+                        const e = new CharNode({ char: 'e' });
+                        not3.append(e);
+                        const p = new TagNode({ htmlTag: 'P' });
+                        not1.append(p);
+
+                        expect(p.previousSiblings()).to.deep.equal([e, d, c, h1, a]);
+                    });
+                    it('should return the previousSiblings with predicate without result', () => {
                         expect(root.previousSiblings()).to.deep.equal([]);
                         expect(d.previousSiblings()).to.deep.equal([]);
                         expect(
@@ -1145,7 +1198,7 @@ describe('core', () => {
                             }),
                         ).to.deep.equal([]);
                     });
-                    it('should return the previousSiblings with predicate', async () => {
+                    it('should return the previousSiblings with predicate', () => {
                         expect(
                             p.previousSiblings(vNode => {
                                 return vNode instanceof CharNode;
@@ -1154,12 +1207,32 @@ describe('core', () => {
                     });
                 });
                 describe('nextSiblings', () => {
-                    it('should return the nextSiblings', async () => {
+                    it('should return the nextSiblings', () => {
                         expect(h1.nextSiblings()).to.deep.equal([c, p], 'h1.nextSiblings = [c, p]');
                         expect(d.nextSiblings()).to.deep.equal([pp], 'd.nextSiblings = [pp]');
                         expect(e.nextSiblings()).to.deep.equal([f], 'e.nextSiblings = [f]');
                     });
-                    it('should return the nextSiblings with predicate without result', async () => {
+                    it('should return the nextSiblings (not tangible container)', () => {
+                        const root = new FragmentNode();
+                        const not1 = new NotTangible();
+                        root.append(not1);
+                        const p = new TagNode({ htmlTag: 'P' });
+                        not1.append(p);
+                        const h1 = new TagNode({ htmlTag: 'H1' });
+                        not1.append(h1);
+                        const not3 = new NotTangible();
+                        not1.append(not3);
+                        const c = new CharNode({ char: 'c' });
+                        not3.append(c);
+                        const d = new CharNode({ char: 'd' });
+                        not3.append(d);
+                        const e = new CharNode({ char: 'e' });
+                        not3.append(e);
+                        const a = new CharNode({ char: 'a' });
+                        root.append(a);
+                        expect(p.nextSiblings()).to.deep.equal([h1, c, d, e, a]);
+                    });
+                    it('should return the nextSiblings with predicate without result', () => {
                         expect(root.nextSiblings()).to.deep.equal([]);
                         expect(pp.nextSiblings()).to.deep.equal([]);
                         expect(
@@ -1173,7 +1246,7 @@ describe('core', () => {
                             }),
                         ).to.deep.equal([]);
                     });
-                    it('should return the nextSiblings with predicate', async () => {
+                    it('should return the nextSiblings with predicate', () => {
                         expect(
                             p.previousSiblings(vNode => {
                                 return vNode instanceof CharNode;
@@ -1225,7 +1298,7 @@ describe('core', () => {
                             },
                         });
                     });
-                    it('should get a list of all ancestors (without not tangible) of the node', async () => {
+                    it('should get a list of all ancestors (without not tangible) of the node', () => {
                         expect(h1.ancestors()).to.deep.equal([root], 'h1.ancestors = [root]');
                         expect(not1.ancestors()).to.deep.equal([root], 'not1.ancestors = [root]');
                         expect(d.ancestors()).to.deep.equal([p, root], 'd.ancestors = [p, root]');
@@ -1272,7 +1345,7 @@ describe('core', () => {
                             },
                         });
                     });
-                    it('should get a list of all descendants (without not tangible) of the node', async () => {
+                    it('should get a list of all descendants (without not tangible) of the node', () => {
                         expect(pp.descendants()).to.deep.equal([e, f], 'pp.descendants = [e, f]');
                         expect(root.descendants()).to.deep.equal(
                             [a, h1, b, c, p, d, pp, e, f],
@@ -1281,21 +1354,21 @@ describe('core', () => {
                     });
                 });
                 describe('append', () => {
-                    it('should append a node', async () => {
+                    it('should append a node', () => {
                         const s = new TagNode({ htmlTag: 'SECTION' });
                         const a = new CharNode({ char: 'a' });
                         const d = new TagNode({ htmlTag: 'DIV' });
                         s.append(a, d);
                         expect(s.childVNodes).to.deep.equal([a, d]);
                     });
-                    it.skip('should not append a container in when may not contain containers', async () => {
+                    it.skip('should not append a container in when may not contain containers', () => {
                         const p = new ParagraphNode();
                         const a = new CharNode({ char: 'a' });
                         const d = new TagNode({ htmlTag: 'DIV' });
                         p.append(a, d);
                         expect(p.childVNodes).to.deep.equal([a]);
                     });
-                    it('should append a container in when may not contain containers with parent', async () => {
+                    it('should append a container in when may not contain containers with parent', () => {
                         const s = new TagNode({ htmlTag: 'SECTION' });
                         const p = new ParagraphNode();
                         s.append(p);
@@ -1307,7 +1380,7 @@ describe('core', () => {
                             'TagNode',
                         ]);
                     });
-                    it('should append a node in not tangible container', async () => {
+                    it('should append a node in not tangible container', () => {
                         const s = new NotTangible();
                         const a = new CharNode({ char: 'a' });
                         const d = new TagNode({ htmlTag: 'DIV' });
@@ -1316,7 +1389,7 @@ describe('core', () => {
                     });
                 });
                 describe('before', () => {
-                    it('should insert before node', async () => {
+                    it('should insert before node', () => {
                         const root = new ContainerNode();
                         const a = new CharNode({ char: 'a' });
                         root.append(a);
@@ -1326,7 +1399,7 @@ describe('core', () => {
                         a.before(c);
                         expect(a.siblings()).to.deep.equal([b, c]);
                     });
-                    it.skip('should not insert container before node in when may not contain containers', async () => {
+                    it.skip('should not insert container before node in when may not contain containers', () => {
                         const p = new ParagraphNode();
                         const a = new CharNode({ char: 'a' });
                         const b = new CharNode({ char: 'b' });
@@ -1335,7 +1408,7 @@ describe('core', () => {
                         b.before(div);
                         expect(p.childVNodes).to.deep.equal([a, b]);
                     });
-                    it('should insert a not tangible container before node in when may not contain containers', async () => {
+                    it('should insert a not tangible container before node in when may not contain containers', () => {
                         const p = new ParagraphNode();
                         const a = new CharNode({ char: 'a' });
                         const b = new CharNode({ char: 'b' });
@@ -1344,7 +1417,7 @@ describe('core', () => {
                         b.before(not);
                         expect(p.childVNodes).to.deep.equal([a, not, b]);
                     });
-                    it('should insert container before node in when may not contain containers with parent', async () => {
+                    it('should insert container before node in when may not contain containers with parent', () => {
                         const s = new TagNode({ htmlTag: 'SECTION' });
                         const p = new ParagraphNode();
                         s.append(p);
@@ -1360,7 +1433,7 @@ describe('core', () => {
                             'ParagraphNode',
                         ]);
                     });
-                    it('should insert a not tangible container before node in when may not contain containers with parent', async () => {
+                    it('should insert a not tangible container before node in when may not contain containers with parent', () => {
                         const s = new TagNode({ htmlTag: 'SECTION' });
                         const p = new ParagraphNode();
                         s.append(p);
@@ -1372,14 +1445,14 @@ describe('core', () => {
                         expect(p.childVNodes).to.deep.equal([a, not, b]);
                         expect(s.childVNodes).to.deep.equal([p]);
                     });
-                    it('should throw if no parent', async () => {
+                    it('should throw if no parent', () => {
                         const root = new ContainerNode();
                         const a = new CharNode({ char: 'a' });
                         expect(() => {
                             root.before(a);
                         }).to.throw();
                     });
-                    it('should insert before node in not tangible container', async () => {
+                    it('should insert before node in not tangible container', () => {
                         const root = new ContainerNode();
                         const not = new NotTangible();
                         root.append(not);
@@ -1396,7 +1469,7 @@ describe('core', () => {
                     });
                 });
                 describe('after', () => {
-                    it('should insert after node in not tangible container', async () => {
+                    it('should insert after node in not tangible container', () => {
                         const root = new ContainerNode();
                         const not = new NotTangible();
                         root.append(not);
@@ -1411,7 +1484,7 @@ describe('core', () => {
                         expect(root.children()).to.deep.equal([a, c, b]);
                         expect(root.childVNodes).to.deep.equal([not]);
                     });
-                    it('should insert after node', async () => {
+                    it('should insert after node', () => {
                         const root = new ContainerNode();
                         const a = new CharNode({ char: 'a' });
                         root.append(a);
@@ -1421,7 +1494,7 @@ describe('core', () => {
                         a.after(c);
                         expect(a.siblings()).to.deep.equal([c, b]);
                     });
-                    it('should move a node after another', async () => {
+                    it('should move a node after another', () => {
                         const root = new ContainerNode();
                         const a = new CharNode({ char: 'a' });
                         root.append(a);
@@ -1432,7 +1505,7 @@ describe('core', () => {
                         b.after(a);
                         expect(a.siblings()).to.deep.equal([b, c]);
                     });
-                    it('should throw if no parent', async () => {
+                    it('should throw if no parent', () => {
                         const root = new ContainerNode();
                         const a = new CharNode({ char: 'a' });
                         expect(() => {
@@ -1441,7 +1514,7 @@ describe('core', () => {
                     });
                 });
                 describe('insertBefore', () => {
-                    it('should insert insert before node', async () => {
+                    it('should insert insert before node', () => {
                         const root = new ContainerNode();
                         const a = new CharNode({ char: 'a' });
                         root.append(a);
@@ -1451,12 +1524,12 @@ describe('core', () => {
                         root.insertBefore(c, a);
                         expect(a.siblings()).to.deep.equal([b, c]);
                     });
-                    it('should throw when try to insert before unknown node', async () => {
+                    it('should throw when try to insert before unknown node', () => {
                         expect(() => {
                             root.insertBefore(c, new CharNode({ char: 'd' }));
                         }).to.throw(ChildError);
                     });
-                    it('should insert before node in not tangible container', async () => {
+                    it('should insert before node in not tangible container', () => {
                         const root = new ContainerNode();
                         const not = new NotTangible();
                         root.append(not);
@@ -1473,7 +1546,7 @@ describe('core', () => {
                     });
                 });
                 describe('insertAfter', () => {
-                    it('should insert before node in not tangible container', async () => {
+                    it('should insert before node in not tangible container', () => {
                         const root = new ContainerNode();
                         const not = new NotTangible();
                         root.append(not);
@@ -1488,7 +1561,7 @@ describe('core', () => {
                         expect(root.children()).to.deep.equal([a, c, b]);
                         expect(root.childVNodes).to.deep.equal([not]);
                     });
-                    it('should insert insert after node', async () => {
+                    it('should insert insert after node', () => {
                         const root = new ContainerNode();
                         const a = new CharNode({ char: 'a' });
                         root.append(a);
@@ -1498,7 +1571,7 @@ describe('core', () => {
                         root.insertAfter(c, a);
                         expect(a.siblings()).to.deep.equal([c, b]);
                     });
-                    it('should throw when try to insert after unknown node', async () => {
+                    it('should throw when try to insert after unknown node', () => {
                         expect(() => {
                             root.insertAfter(c, new CharNode({ char: 'd' }));
                         }).to.throw(ChildError);
@@ -1520,7 +1593,7 @@ describe('core', () => {
                     });
                 });
                 describe('remove', () => {
-                    it('should remove node itself', async () => {
+                    it('should remove node itself', () => {
                         const root = new ContainerNode();
                         const a = new CharNode({ char: 'a' });
                         root.append(a);
@@ -1532,7 +1605,7 @@ describe('core', () => {
                         b.remove();
                         expect(a.siblings()).to.deep.equal([c]);
                     });
-                    it('should remove node itself in not tangible container', async () => {
+                    it('should remove node itself in not tangible container', () => {
                         const root = new ContainerNode();
                         const a = new CharNode({ char: 'a' });
                         root.append(a);
@@ -1548,7 +1621,7 @@ describe('core', () => {
                         expect(root.children()).to.deep.equal([a, c]);
                         expect(root.childVNodes).to.deep.equal([a, not]);
                     });
-                    it('should remove node itself in not tangible container (last one)', async () => {
+                    it('should remove node itself in not tangible container (last one)', () => {
                         const root = new ContainerNode();
                         const a = new CharNode({ char: 'a' });
                         root.append(a);
@@ -1563,7 +1636,7 @@ describe('core', () => {
                     });
                 });
                 describe('removeChild', () => {
-                    it('should remove a child', async () => {
+                    it('should remove a child', () => {
                         const root = new ContainerNode();
                         const a = new CharNode({ char: 'a' });
                         root.append(a);
@@ -1575,7 +1648,7 @@ describe('core', () => {
                         root.removeChild(b);
                         expect(a.siblings()).to.deep.equal([c]);
                     });
-                    it('should remove a child in not tangible container', async () => {
+                    it('should remove a child in not tangible container', () => {
                         const root = new ContainerNode();
                         const a = new CharNode({ char: 'a' });
                         root.append(a);
@@ -1591,7 +1664,7 @@ describe('core', () => {
                         expect(root.children()).to.deep.equal([a, c]);
                         expect(root.childVNodes).to.deep.equal([a, not]);
                     });
-                    it('should remove a child in not tangible container (last one)', async () => {
+                    it('should remove a child in not tangible container (last one)', () => {
                         const root = new ContainerNode();
                         const a = new CharNode({ char: 'a' });
                         root.append(a);
@@ -1604,14 +1677,14 @@ describe('core', () => {
                         expect(root.children()).to.deep.equal([a]);
                         expect(root.childVNodes).to.deep.equal([a, not]);
                     });
-                    it('should throw when try to remove a unknown node', async () => {
+                    it('should throw when try to remove a unknown node', () => {
                         expect(() => {
                             root.removeChild(new CharNode({ char: 'd' }));
                         }).to.throw(ChildError);
                     });
                 });
                 describe('splitAt', () => {
-                    it('should split a paragraph', async () => {
+                    it('should split a paragraph', () => {
                         const root = new FragmentNode();
                         const p = new TagNode({ htmlTag: 'P' });
                         root.append(p);
@@ -1625,7 +1698,7 @@ describe('core', () => {
                         expect(p.children()).to.deep.equal([a]);
                         expect(p.nextSibling().children()).to.deep.equal([b, c]);
                     });
-                    it('should split a paragraph with not tangible containers', async () => {
+                    it('should split a paragraph with not tangible containers', () => {
                         /**
                          * FragmentNode
                          * TagNode
@@ -1674,7 +1747,7 @@ describe('core', () => {
                             'f',
                         ]);
                     });
-                    it('should split a paragraph with markers', async () => {
+                    it('should split a paragraph with markers', () => {
                         const root = new FragmentNode();
                         const p = new TagNode({ htmlTag: 'P' });
                         root.append(p);
