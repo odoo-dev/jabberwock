@@ -294,6 +294,16 @@ describePlugin(Heading, testEditor => {
                 contentAfter: '<h1>abc</h1><p>[]<br></p>',
             });
         });
+        it('should insert a new paragraph after the heading and not preserve modifiers', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<h1><u>abc[]</u></h1>',
+                stepFunction: async editor => {
+                    await editor.execCommand('insertParagraphBreak');
+                    await editor.execCommand('insertText', { text: 'a' });
+                },
+                contentAfter: '<h1><u>abc</u></h1><p>a[]</p>',
+            });
+        });
         it('should insert a line break at the end of the heading if the heading is not breakable', async () => {
             await testEditor(BasicEditor, {
                 beforeStart: editor => {

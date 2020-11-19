@@ -163,6 +163,7 @@ export class Heading<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin
         const duplicate = heading.splitAt(range.start);
         const newContainer = new ParagraphNode();
         duplicate.replaceWith(newContainer);
+        range.modifiers = undefined;
     }
 
     //--------------------------------------------------------------------------

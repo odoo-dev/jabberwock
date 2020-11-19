@@ -291,6 +291,16 @@ describePlugin(Pre, testEditor => {
                 contentAfter: '<pre>abc</pre><p>[]<br></p>',
             });
         });
+        it('should insert a new paragraph after the pre and not preserve modifiers', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<pre><u>abc[]</u></pre>',
+                stepFunction: async editor => {
+                    await editor.execCommand('insertParagraphBreak');
+                    await editor.execCommand('insertText', { text: 'a' });
+                },
+                contentAfter: '<pre><u>abc</u></pre><p>a[]</p>',
+            });
+        });
     });
     describePlugin(Heading, testHeadingEditor => {
         describe('applyHeadingStyle', () => {

@@ -96,6 +96,7 @@ export class Pre<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> 
             const DefaultContainer = this.editor.configuration.defaults.Container;
             const newContainer = new DefaultContainer();
             duplicate.replaceWith(newContainer);
+            range.modifiers = undefined;
         }
     }
 }

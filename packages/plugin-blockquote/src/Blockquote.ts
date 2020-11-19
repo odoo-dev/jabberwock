@@ -99,6 +99,7 @@ export class Blockquote<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
             const DefaultContainer = this.editor.configuration.defaults.Container;
             const newContainer = new DefaultContainer();
             duplicate.replaceWith(newContainer);
+            range.modifiers = undefined;
         }
     }
 }
