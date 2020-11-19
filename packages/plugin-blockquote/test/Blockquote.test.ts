@@ -77,5 +77,15 @@ describePlugin(Blockquote, testEditor => {
                 contentAfter: '<blockquote>abc</blockquote><p>[]<br></p>',
             });
         });
+        it('should insert a new paragraph after the blockquote and not preserve modifiers', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<blockquote><u>abc[]</u></blockquote>',
+                stepFunction: async editor => {
+                    await editor.execCommand('insertParagraphBreak');
+                    await editor.execCommand('insertText', { text: 'a' });
+                },
+                contentAfter: '<blockquote><u>abc</u></blockquote><p>a[]</p>',
+            });
+        });
     });
 });
