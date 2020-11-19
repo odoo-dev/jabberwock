@@ -67,6 +67,7 @@ import { DividerNode } from '../plugin-divider/src/DividerNode';
 import { Attributes } from '../plugin-xml/src/Attributes';
 import { Strikethrough } from '../plugin-strikethrough/src/Strikethrough';
 import { ReactiveEditorInfo } from '../plugin-reactive-info/src/ReactiveEditorInfo';
+import { Quote } from '../plugin-quote/src/Quote';
 
 interface OdooWebsiteEditorOptions {
     source: HTMLElement;
@@ -135,6 +136,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 [Span],
                 [Bold],
                 [Italic],
+                [Quote],
                 [Underline],
                 [Strikethrough],
                 [Input],
