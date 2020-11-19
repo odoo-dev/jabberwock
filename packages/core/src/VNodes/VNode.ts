@@ -17,13 +17,3 @@ export type Predicate<T = VNode | boolean> = T extends VNode
     : (node: VNode) => boolean;
 
 export type Point = [VNode, RelativePosition];
-
-/**
- * Return true if the given node is a leaf in the VDocument, that is a node that
- * has no children.
- *
- * @param node node to check
- */
-export function isLeaf(node: VNode): boolean {
-    return !node.hasChildren();
-}
