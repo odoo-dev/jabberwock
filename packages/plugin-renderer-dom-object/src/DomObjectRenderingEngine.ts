@@ -269,8 +269,8 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
      */
     async renderChildren(node: VNode): Promise<Array<DomObject | VNode>> {
         const children: Array<DomObject | VNode> = node.children();
-        if (!children.length && this.editor.mode.is(node, RuleProperty.ALLOW_EMPTY) !== true) {
-            children.push({ tag: 'BR' });
+        if (!children.length && !this.editor.mode.is(node, RuleProperty.ALLOW_EMPTY)) {
+            return [{ tag: 'BR' }];
         }
         return children;
     }

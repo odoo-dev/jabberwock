@@ -8,6 +8,9 @@ export class ContainerNode extends AbstractNode {
     // Set to false if the container is not allowed to have other containers as
     // children.
     mayContainContainers = true;
+    // By default if setted to null, a <br> are added if the node is editable.
+    // This proprety can be overrited by the mode/rules.
+    allowEmpty: boolean | void;
 
     //--------------------------------------------------------------------------
     // Updating
