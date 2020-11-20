@@ -107,7 +107,7 @@ describe('Theme', () => {
     it('should use the default theme', async () => {
         await editor.start();
         expect(container.innerHTML).to.equal(
-            '<jw-editor><div class="row"><div class="col"><article><br></article></div></div></jw-editor>',
+            '<jw-editor><div class="row"><div class="col"><article></article></div></div></jw-editor>',
         );
     });
     it('should use a selected theme', async () => {
@@ -129,14 +129,14 @@ describe('Theme', () => {
         editor.configure(config);
         await editor.start();
         expect(container.innerHTML).to.equal(
-            '<jw-editor><section id="second"><article><br></article></section></jw-editor>',
+            '<jw-editor><section id="second"><article></article></section></jw-editor>',
         );
     });
     it('should change the theme', async () => {
         await editor.start();
         await editor.execCommand('changeTheme', { theme: 'third' });
         expect(container.innerHTML).to.equal(
-            '<jw-editor><table><tr><td>1</td><td><article><br></article></td><td>2</td></tr></table></jw-editor>',
+            '<jw-editor><table><tr><td>1</td><td><article></article></td><td>2</td></tr></table></jw-editor>',
         );
     });
     it('should change the theme 3x', async () => {
@@ -145,7 +145,7 @@ describe('Theme', () => {
         await editor.execCommand('changeTheme', { theme: 'second' });
         await editor.execCommand('changeTheme', { theme: 'third' });
         expect(container.innerHTML).to.equal(
-            '<jw-editor><table><tr><td>1</td><td><article><br></article></td><td>2</td></tr></table></jw-editor>',
+            '<jw-editor><table><tr><td>1</td><td><article></article></td><td>2</td></tr></table></jw-editor>',
         );
     });
     it('should change the theme with the toolbar', async () => {
@@ -163,7 +163,7 @@ describe('Theme', () => {
                             '<jw-button name="theme-third" aria-pressed="false">Super theme</jw-button>',
                         '</jw-group>',
                     '</jw-toolbar>',
-                    '<div class="row"><div class="col"><article><br></article></div></div>',
+                    '<div class="row"><div class="col"><article></article></div></div>',
                 '</jw-editor>',
             ].join(''),
         );
@@ -181,7 +181,7 @@ describe('Theme', () => {
                             '<jw-button name="theme-third" aria-pressed="true" class="pressed">Super theme</jw-button>',
                         '</jw-group>',
                     '</jw-toolbar>',
-                    '<table><tr><td>1</td><td><article><br></article></td><td>2</td></tr></table>',
+                    '<table><tr><td>1</td><td><article></article></td><td>2</td></tr></table>',
                 '</jw-editor>',
             ].join(''),
         );
@@ -219,7 +219,7 @@ describe('Theme', () => {
         await editor.start();
         await editor.execCommand('changeTheme', { theme: 'domy' });
         expect(container.innerHTML).to.equal(
-            '<jw-editor><section><div>abc<article><br></article>def</div></section></jw-editor>',
+            '<jw-editor><section><div>abc<article></article>def</div></section></jw-editor>',
         );
     });
 });

@@ -322,7 +322,7 @@ describe('Template', () => {
                                 '</jw-select>',
                         '</jw-group>',
                     '</jw-toolbar>',
-                    '<article><br></article>',
+                    '<article></article>',
                 '</jw-editor>',
             ].join(''),
         );
@@ -402,7 +402,7 @@ describe('Template', () => {
                             '</jw-select>'+
                         '</jw-group>'+
                     '</jw-toolbar>',
-                    '<article><br></article>',
+                    '<article></article>',
                 '</jw-editor>',
             ].join(''),
         );

@@ -12,6 +12,7 @@ export class ZoneNode extends ContainerNode {
     hidden: Record<number, boolean>;
     editable = false;
     breakable = false;
+    allowEmpty = true;
     managedZones: ZoneIdentifier[];
 
     constructor(params: ZoneNodeParams) {

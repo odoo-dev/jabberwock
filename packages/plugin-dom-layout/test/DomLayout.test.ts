@@ -317,12 +317,12 @@ describe('DomLayout', () => {
         });
         it('should add 2 templates after & after the target (use VNode)', async () => {
             const a = new TagNode({ htmlTag: 'a-a' });
-            a.append(new TagNode({ htmlTag: 'p' }));
+            a.append(new ParagraphNode());
             a.append(new ZoneNode({ managedZones: ['main'] }));
             a.append(new ZoneNode({ managedZones: ['default'] }));
 
             const b = new TagNode({ htmlTag: 'b-b' });
-            b.append(new TagNode({ htmlTag: 'p' }));
+            b.append(new ParagraphNode());
 
             const editor = new JWEditor();
             editor.load(Char);
@@ -344,7 +344,7 @@ describe('DomLayout', () => {
             });
             await editor.start();
             expect(container.innerHTML).to.equal(
-                '<div class="editable"></div><a-a><p><br></p></a-a><b-b><p><br></p></b-b>',
+                '<div class="editable"></div><a-a><p></p></a-a><b-b><p></p></b-b>',
             );
             await editor.stop();
             expect(container.innerHTML).to.equal('<div class="editable"></div>');
@@ -661,7 +661,7 @@ describe('DomLayout', () => {
                 id: 'test',
                 async render(): Promise<VNode[]> {
                     const element = new TagNode({ htmlTag: 'jw-test' });
-                    element.append(new TagNode({ htmlTag: 'p' }));
+                    element.append(new ParagraphNode());
                     return [element];
                 },
             };
@@ -676,7 +676,7 @@ describe('DomLayout', () => {
             editor.load(Plugin);
             await editor.start();
             expect(container.innerHTML).to.equal(
-                '<jw-editor><jw-test><p><br></p></jw-test></jw-editor>',
+                '<jw-editor><jw-test><p></p></jw-test></jw-editor>',
             );
             await editor.stop();
             expect(container.innerHTML).to.equal('<div class="editable"></div>');
@@ -686,7 +686,7 @@ describe('DomLayout', () => {
                 id: 'test',
                 async render(): Promise<VNode[]> {
                     const element = new TagNode({ htmlTag: 'jw-test' });
-                    element.append(new TagNode({ htmlTag: 'p' }));
+                    element.append(new ParagraphNode());
                     return [element];
                 },
             };
@@ -701,7 +701,7 @@ describe('DomLayout', () => {
             editor.load(Plugin);
             await editor.start();
             expect(container.innerHTML).to.equal(
-                '<jw-editor><jw-test><p><br></p></jw-test></jw-editor>',
+                '<jw-editor><jw-test><p></p></jw-test></jw-editor>',
             );
             await editor.stop();
             expect(container.innerHTML).to.equal('<div class="editable"></div>');
@@ -796,7 +796,7 @@ describe('DomLayout', () => {
         });
         it('node inside the layout should return the vNodes', async () => {
             const element = new TagNode({ htmlTag: 'jw-test' });
-            const pNode = new TagNode({ htmlTag: 'p' });
+            const pNode = new ParagraphNode();
             element.append(pNode);
             const Component: ComponentDefinition = {
                 id: 'test',
@@ -830,12 +830,12 @@ describe('DomLayout', () => {
             editor.configure(DomLayout, { location: [target, 'replace'] });
             await editor.start();
             const engine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
-            expect(engine.getDomNodes(new TagNode({ htmlTag: 'p' }))).to.deep.equal([]);
+            expect(engine.getDomNodes(new ParagraphNode())).to.deep.equal([]);
             await editor.stop();
         });
         it('node inside the layout should return the DOM nodes', async () => {
             const element = new TagNode({ htmlTag: 'jw-test' });
-            const pNode = new TagNode({ htmlTag: 'p' });
+            const pNode = new ParagraphNode();
             element.append(pNode);
             const Component: ComponentDefinition = {
                 id: 'test',
@@ -862,7 +862,7 @@ describe('DomLayout', () => {
         });
         it('should return the icon DOM nodes', async () => {
             const element = new TagNode({ htmlTag: 'jw-test' });
-            const pNode = new TagNode({ htmlTag: 'p' });
+            const pNode = new ParagraphNode();
             element.append(pNode);
             const fa = new FontAwesomeNode({
                 htmlTag: 'I',
@@ -1512,7 +1512,7 @@ describe('DomLayout', () => {
                 document.getSelection().removeAllRanges();
 
                 const element = new TagNode({ htmlTag: 'div' });
-                const p = new TagNode({ htmlTag: 'p' });
+                const p = new ParagraphNode();
 
                 await editor.execCommand(() => {
                     element.append(p);
@@ -2148,7 +2148,7 @@ describe('DomLayout', () => {
                 await editor.start();
 
                 expect(container.innerHTML).to.equal(
-                    '<div class="a"><br></div><p>abc</p><p>def</p><div class="b"></div>',
+                    '<div class="a"></div><p>abc</p><p>def</p><div class="b"></div>',
                     'Test before changes',
                 );
 
@@ -2161,12 +2161,12 @@ describe('DomLayout', () => {
                 await editor.execCommand(() => {
                     div.after(area);
                     expect(container.innerHTML).to.equal(
-                        '<div class="a"><br></div><p>abc</p><p>def</p><div class="b"></div>',
+                        '<div class="a"></div><p>abc</p><p>def</p><div class="b"></div>',
                     );
                 });
 
                 expect(container.innerHTML).to.equal(
-                    '<div class="a"><br></div><p>abc</p><p>def</p><div class="b"></div><area>',
+                    '<div class="a"></div><p>abc</p><p>def</p><div class="b"></div><area>',
                 );
 
                 expect(mutationNumber).to.equal(1, 'add <area>');
@@ -2374,7 +2374,7 @@ describe('DomLayout', () => {
                 await editor.start();
 
                 expect(container.innerHTML).to.equal(
-                    '<div class="a"><br></div><p>abc</p><p>def</p><div class="b"></div>',
+                    '<div class="a"></div><p>abc</p><p>def</p><div class="b"></div>',
                     'Test before changes',
                 );
 
@@ -2390,12 +2390,12 @@ describe('DomLayout', () => {
                 await editor.execCommand(() => {
                     p.after(area);
                     expect(container.innerHTML).to.equal(
-                        '<div class="a"><br></div><p>abc</p><p>def</p>',
+                        '<div class="a"></div><p>abc</p><p>def</p>',
                     );
                 });
 
                 expect(container.innerHTML).to.equal(
-                    '<div class="a"><br></div><p>abc</p><p>def</p><div class="b"></div><area>',
+                    '<div class="a"></div><p>abc</p><p>def</p><div class="b"></div><area>',
                 );
 
                 expect(mutationNumber).to.equal(2, 're-insert <div>, insert <area>');
@@ -2453,7 +2453,7 @@ describe('DomLayout', () => {
                 });
 
                 expect(container.innerHTML).to.equal(
-                    '<div class="a"><br></div><area><p>abc</p><p>def</p><div class="b"></div>',
+                    '<div class="a"></div><area><p>abc</p><p>def</p><div class="b"></div>',
                 );
 
                 expect(mutationNumber).to.equal(2, 're-insert <div>, insert <area>');
@@ -3416,7 +3416,7 @@ describe('DomLayout', () => {
                 const p = div.firstChild();
                 const f = p.children()[5];
                 const e = p.children()[4];
-                const newP = new TagNode({ htmlTag: 'P' });
+                const newP = new ParagraphNode();
 
                 mutationNumber = 0;
                 await editor.execCommand(() => {
@@ -4337,7 +4337,7 @@ describe('DomLayout', () => {
                 });
 
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><p>ab<custom><br></custom>c</p><p>def</p></jw-editor>',
+                    '<jw-editor><p>ab<custom></custom>c</p><p>def</p></jw-editor>',
                 );
 
                 expect(container.querySelector('p') === pDom).to.equal(true, 'Use same <P>');
@@ -5320,7 +5320,7 @@ describe('DomLayout', () => {
                 await editor.start();
 
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><section><article><br></article></section></jw-editor>',
+                    '<jw-editor><section><article></article></section></jw-editor>',
                     'after start',
                 );
 
@@ -5329,7 +5329,7 @@ describe('DomLayout', () => {
                     custom.layout = 1;
                 });
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><head>a</head><content><article><br></article></content><foot>b</foot></div></jw-editor>',
+                    '<jw-editor><div><head>a</head><content><article></article></content><foot>b</foot></div></jw-editor>',
                     'first change',
                 );
                 expect(mutationNumber).to.equal(3, 'add {div}, move {article}, remove {section}');
@@ -5339,7 +5339,7 @@ describe('DomLayout', () => {
                     custom.layout = 0;
                 });
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><section><article><br></article></section></jw-editor>',
+                    '<jw-editor><section><article></article></section></jw-editor>',
                     'second change',
                 );
                 expect(mutationNumber).to.equal(
@@ -5352,7 +5352,7 @@ describe('DomLayout', () => {
                     custom.layout = 1;
                 });
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><head>a</head><content><article><br></article></content><foot>b</foot></div></jw-editor>',
+                    '<jw-editor><div><head>a</head><content><article></article></content><foot>b</foot></div></jw-editor>',
                     'third change',
                 );
                 expect(mutationNumber).to.equal(
@@ -5901,7 +5901,7 @@ describe('DomLayout', () => {
 
                 mutationNumber = 0;
                 await editor.execCommand(() => {
-                    const p2 = new TagNode({ htmlTag: 'P' });
+                    const p2 = new ParagraphNode();
                     const attributes2 = new Attributes();
                     attributes2.set('class', 'aaa');
                     p2.modifiers.prepend(attributes2);
@@ -5910,7 +5910,7 @@ describe('DomLayout', () => {
                 });
 
                 expect(container.innerHTML).to.equal(
-                    '<jw-editor><div><p class="aaa"><br></p><p>2</p><p>3</p></div></jw-editor>',
+                    '<jw-editor><div><p class="aaa"></p><p>2</p><p>3</p></div></jw-editor>',
                 );
 
                 expect(mutationNumber).to.equal(3, 'remove <p>, add <p>, add style');

@@ -109,7 +109,22 @@ export class JWEditor {
     modes: Record<ModeIdentifier, Mode> = {
         default: new Mode({
             id: 'default',
-            rules: [],
+            rules: [
+                {
+                    selector: [
+                        (node: VNode): boolean =>
+                            node instanceof ContainerNode &&
+                            (node.allowEmpty === true ||
+                                (node.allowEmpty !== false &&
+                                    !this.mode.is(node, RuleProperty.EDITABLE))),
+                    ],
+                    properties: {
+                        allowEmpty: {
+                            value: true,
+                        },
+                    },
+                },
+            ],
         }),
     };
     mode: Mode = this.modes.default;

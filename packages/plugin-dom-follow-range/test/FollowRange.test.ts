@@ -92,7 +92,7 @@ describe('FollowRange', async () => {
                 '<jw-editor>',
                 '<jw-follow-range style="display: none;">',
                 '<div><area></div>',
-                '<section><br></section>',
+                '<section></section>',
                 '</jw-follow-range>',
                 '<main></main>',
                 '</jw-editor>',
@@ -136,7 +136,7 @@ describe('FollowRange', async () => {
             [
                 '<jw-editor>',
                 '<jw-follow-range style="display: none;">',
-                '<section><br></section>',
+                '<section></section>',
                 '</jw-follow-range>',
                 '<main></main>',
                 '</jw-editor>',
