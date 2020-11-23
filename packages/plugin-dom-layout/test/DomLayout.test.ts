@@ -4667,6 +4667,7 @@ describe('DomLayout', () => {
                 class CustomNode extends ContainerNode {
                     sectionAttr = 1;
                     divAttr = 1;
+                    divAttr2 = '';
                 }
                 const custom = new CustomNode();
                 const customChild = new CustomNode();
@@ -4688,6 +4689,7 @@ describe('DomLayout', () => {
                                     ],
                                     attributes: {
                                         attr: node.divAttr.toString(),
+                                        'empty-str-attr': node.divAttr2.toString(),
                                     },
                                 },
                                 ...node.children(),
@@ -4724,8 +4726,8 @@ describe('DomLayout', () => {
                 });
 
                 expect(container.querySelector('section').outerHTML).to.equal(
-                    '<section attr="2"><div attr="1">abc</div>' +
-                        '<section attr="1"><div attr="1">abc</div></section>' +
+                    '<section attr="2"><div attr="1" empty-str-attr="">abc</div>' +
+                        '<section attr="1"><div attr="1" empty-str-attr="">abc</div></section>' +
                         '</section>',
                 );
 
