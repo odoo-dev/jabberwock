@@ -16,7 +16,42 @@
         <div id="e" contenteditable="true"><p>Input + change ==> Fabien est là, et il test le correcteur du gsm.</p></div>
         <div id="f" contenteditable="true"><p>Input + timeout/change ==> Fabien est là, et il test le correcteur du gsm.</p></div>
         <div id="g" contenteditable="true"><p>Input + select ==> Fabien est là, et il test le correcteur du gsm.</p></div>
-        <div id="h" contenteditable="true"><p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p></div>
+        <div id="h" contenteditable="true">
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+        </div>
+        <div id="i" contenteditable="true">
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+            <p>Input + timeout/change + select ==> Fabien est là, et il test le correcteur du gsm.</p>
+        </div>
 
         <script>
             const replace = 'Fabien est là, et il test le correcteur du gsm.';
@@ -34,29 +69,26 @@
             document.getElementById('b').addEventListener('keydown', event => {
                 if (count()) return;
                 event.preventDefault();
-                const p = event.target.firstElementChild;
+                const p = event.target.lastElementChild;
                 const text = p.firstChild;
                 text.textContent = replace;
-                if (p.nextElementSibling) p.nextElementSibling.remove();
             });
             document.getElementById('c').addEventListener('keydown', event => {
                 if (count()) return;
                 event.preventDefault();
-                const p = event.target.firstElementChild;
+                const p = event.target.lastElementChild;
                 const text = p.firstChild;
                 setTimeout(() => {
                     text.textContent = replace;
-                    if (p.nextElementSibling) p.nextElementSibling.remove();
                 });
             });
             document.getElementById('d').addEventListener('keydown', event => {
                 if (count()) return;
                 event.preventDefault();
-                const p = event.target.firstElementChild;
+                const p = event.target.lastElementChild;
                 const text = p.firstChild;
                 setTimeout(() => {
                     text.textContent = replace;
-                    if (p.nextElementSibling) p.nextElementSibling.remove();
                     range(event);
                 });
             });
@@ -64,45 +96,59 @@
             document.getElementById('e').addEventListener('input', event => {
                 if (count()) return;
                 event.preventDefault();
-                const p = event.target.firstElementChild;
+                const p = event.target.lastElementChild;
                 const text = p.firstChild;
                 text.textContent = replace;
-                if (p.nextElementSibling) p.nextElementSibling.remove();
             });
             document.getElementById('f').addEventListener('input', event => {
                 if (count()) return;
                 event.preventDefault();
-                const p = event.target.firstElementChild;
+                const p = event.target.lastElementChild;
                 const text = p.firstChild;
                 setTimeout(() => {
                     text.textContent = replace;
-                    if (p.nextElementSibling) p.nextElementSibling.remove();
                     range(event);
                 });
             });
             document.getElementById('g').addEventListener('input', event => {
                 if (count()) return;
                 event.preventDefault();
-                const p = event.target.firstElementChild;
+                const p = event.target.lastElementChild;
                 const text = p.firstChild;
                 text.textContent = replace;
-                if (p.nextElementSibling) p.nextElementSibling.remove();
                 range(event);
             });
             document.getElementById('h').addEventListener('input', event => {
                 if (count()) return;
                 event.preventDefault();
-                const p = event.target.firstElementChild;
+                const p = event.target.lastElementChild;
                 const text = p.firstChild;
                 setTimeout(() => {
                     text.textContent = replace;
-                    if (p.nextElementSibling) p.nextElementSibling.remove();
+                    range(event);
+                });
+            });
+            document.getElementById('i').addEventListener('input', event => {
+                if (count()) return;
+                event.preventDefault();
+                const p = event.target.lastElementChild;
+                const text = p.firstChild;
+                setTimeout(() => {
+                    text.textContent = replace;
                     range(event);
                 });
             });
 
             function range (event) {
-                const p = event.target.firstElementChild;
+                const p = event.target.lastElementChild;
+                p.setAttribute('contenteditable', 'true');
+
+                const input = document.createElement('input');
+                input.style.position = 'absolute';
+                input.style.zIndex = '-1000';
+                p.appendChild(input);
+                input.focus();
+
                 const text = p.firstChild;
                 const domSelection = document.getSelection();
                 const domRange = document.createRange();
@@ -110,6 +156,10 @@
                 domRange.collapse(true);
                 domSelection.removeAllRanges();
                 domSelection.addRange(domRange);
+
+                p.focus();
+                input.remove();
+                p.removeAttribute('contenteditable');
             }
             
         </script>
