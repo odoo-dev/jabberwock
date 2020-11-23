@@ -1028,7 +1028,7 @@ export class DomReconciliationEngine {
             const oldAttributes: DomObjectAttributes = old?.object.attributes || {};
 
             for (const name in oldAttributes) {
-                if (!newAttributes[name]) {
+                if (typeof newAttributes[name] === 'undefined') {
                     hasChanged = true;
                     if (name === 'style') {
                         for (const key in oldAttributes[name]) {
