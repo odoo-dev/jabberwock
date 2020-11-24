@@ -95,21 +95,44 @@ export class Modifiers extends EventMixin {
      * @see Array.find
      * @param modifier
      */
-    find<T extends Modifier>(callback: (modifier: T) => boolean): T;
-    find<T extends Modifier>(modifier: T | Constructor<T>): T;
-    find<T extends Modifier>(modifier: ((modifier: T) => boolean) | T | Constructor<T>): T {
+    find<T extends typeof Modifier>(
+        predicate: (modifier: InstanceType<T>) => boolean,
+    ): InstanceType<T>;
+    find<T extends typeof Modifier>(modifier: InstanceType<T> | T): InstanceType<T>;
+    find<T extends typeof Modifier>(
+        modifier: ((modifier: InstanceType<T>) => boolean) | T | T,
+    ): InstanceType<T> {
+        let predicate: (mod: Modifier) => boolean;
+        let recurse: boolean;
         if (!this._contents) {
             return;
         } else if (modifier instanceof Modifier) {
             // `modifier` is an instance of `Modifier` -> find it in the array.
-            return this._contents.find(instance => instance === modifier) as T;
+            predicate = (mod): boolean => mod === modifier;
+            recurse = modifier.constructor.cascading;
         } else if (isConstructor<typeof Modifier>(modifier, Modifier)) {
             // `modifier` is a `Modifier` class -> find its first instance in
             // the array.
-            return this._contents.find(mod => mod.constructor.name === modifier.name) as T;
+            predicate = (mod): boolean => mod.constructor.name === modifier.name;
+            recurse = modifier.cascading;
         } else if (modifier instanceof Function) {
             // `modifier` is a callback -> call `find` natively on the array.
-            return this._contents.find(modifier) as T;
+            predicate = modifier;
+            recurse = true;
+        }
+        for (const mod of this._contents) {
+            if (predicate(mod)) {
+                return mod as InstanceType<T>;
+            } else if (recurse) {
+                // Only cascading submodifiers can apply to the item so only
+                // these are checked.
+                const subModifier = mod.modifiers?.find(
+                    m => m.constructor.cascading && predicate(m),
+                );
+                if (subModifier) {
+                    return subModifier as InstanceType<T>;
+                }
+            }
         }
     }
     /**
@@ -120,10 +143,10 @@ export class Modifiers extends EventMixin {
      *
      * @param modifier
      */
-    get<T extends Modifier>(modifier: T | Constructor<T>): T {
+    get<T extends typeof Modifier>(modifier: InstanceType<T> | T): InstanceType<T> {
         let found = this.find(modifier);
         if (!found && isConstructor<typeof Modifier>(modifier, Modifier)) {
-            found = new modifier();
+            found = new modifier() as InstanceType<T>;
             this.append(found);
         }
         return found;
@@ -150,7 +173,7 @@ export class Modifiers extends EventMixin {
     ): T[] {
         if (!this._contents) {
             return [];
-        } else if (isConstructor<typeof Modifier>(modifier, Modifier)) {
+        } else if (isConstructor<Constructor<Modifier>>(modifier, Modifier)) {
             // `modifier` is a `Modifier` class -> return all instances of it in
             // the array.
             return this._contents.filter(m => m instanceof modifier) as T[];
