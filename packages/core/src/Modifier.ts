@@ -2,6 +2,7 @@ import { Constructor } from '../../utils/src/utils';
 import { VNode } from './VNodes/VNode';
 import { EventMixin } from '../../utils/src/EventMixin';
 import { makeVersionable } from './Memory/Versionable';
+import { Modifiers } from './Modifiers';
 
 export enum ModifierLevel {
     LOW,
@@ -15,15 +16,18 @@ export type ModifierPredicate<T = Modifier | boolean> = T extends Modifier
 
 interface ModifierConstructor {
     new <T extends Constructor<Modifier>>(...args: ConstructorParameters<T>): this;
+    cascading: boolean;
 }
 export interface Modifier {
     constructor: ModifierConstructor & this;
 }
 export class Modifier extends EventMixin {
+    static cascading = false;
     preserveAfterNode = true; // True to preserve modifier after the node that holds it.
     preserveAfterParagraphBreak = true; // True to preserve modifier after a paragraph break.
     preserveAfterLineBreak = true; // True to preserve modifier after a line break.
     level = ModifierLevel.MEDIUM;
+    modifiers?: Modifiers;
 
     constructor() {
         super();

@@ -9,7 +9,6 @@ import { XmlDomParsingEngine } from '../../plugin-xml/src/XmlDomParsingEngine';
 import { BoldFormat } from '../../plugin-bold/src/BoldFormat';
 import { ItalicFormat } from '../../plugin-italic/src/ItalicFormat';
 import { Inline } from '../../plugin-inline/src/Inline';
-import { Constructor } from '../../utils/src/utils';
 import { Format } from '../../core/src/Format';
 import { UnderlineFormat } from '../../plugin-underline/src/UnderlineFormat';
 import { Modifiers } from '../../core/src/Modifiers';
@@ -21,7 +20,7 @@ const insertText = async function(editor: JWEditor, text: string, select = false
         select,
     });
 };
-const toggleFormat = async (editor: JWEditor, FormatClass: Constructor<Format>): Promise<void> => {
+const toggleFormat = async (editor: JWEditor, FormatClass: typeof Format): Promise<void> => {
     await editor.execCommand<Inline>('toggleFormat', {
         FormatClass: FormatClass,
     });

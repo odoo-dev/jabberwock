@@ -1,5 +1,5 @@
 import { VNode } from '../../core/src/VNodes/VNode';
-import { isConstructor } from '../../utils/src/utils';
+import { Constructor, isConstructor } from '../../utils/src/utils';
 import JWEditor from '../../core/src/JWEditor';
 import { Modifier } from '../../core/src/Modifier';
 import { ModifierRenderer, ModifierRendererConstructor } from './ModifierRenderer';
@@ -203,7 +203,7 @@ export class RenderingEngine<T> {
             nextRendererIndex++;
         } while (
             nextRenderer.predicate &&
-            !(isConstructor(nextRenderer.predicate, Modifier)
+            !(isConstructor<Constructor<Modifier>>(nextRenderer.predicate, Modifier)
                 ? modifier instanceof nextRenderer.predicate
                 : nextRenderer.predicate(modifier))
         );

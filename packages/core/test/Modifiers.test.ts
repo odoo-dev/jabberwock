@@ -1,5 +1,5 @@
 import { Modifiers } from '../src/Modifiers';
-import { Modifier } from '../src/Modifier';
+import { CascadingMixin, Modifier } from '../src/Modifier';
 import { expect } from 'chai';
 
 function id<T>(x: T): T {
@@ -218,6 +218,43 @@ describe('core', () => {
             it('should not find a modifier if there are no modifiers', () => {
                 const modifiers = new Modifiers();
                 expect(modifiers.find(Modifier)).to.be.undefined;
+            });
+            it('should find a modifier of a modifier if it has a cascading effect', () => {
+                const modifiers = new Modifiers();
+                const m1 = new Modifier();
+                const subModifiers = new Modifiers();
+                m1.modifiers = subModifiers;
+                class CascadingModifier extends Modifier {
+                    static cascading = true;
+                }
+                const cascadingModifier = new CascadingModifier();
+                subModifiers.append(cascadingModifier);
+                modifiers.append(m1);
+                // find by class
+                expect(modifiers.find(CascadingModifier)).to.equal(cascadingModifier);
+                // find by instance
+                expect(modifiers.find(cascadingModifier)).to.equal(cascadingModifier);
+                // find by predicate
+                expect(modifiers.find(modifier => modifier === cascadingModifier)).to.equal(
+                    cascadingModifier,
+                );
+            });
+            it('should not find a modifier of a modifier if it does not have a cascading effect', () => {
+                const modifiers = new Modifiers();
+                const m1 = new Modifier();
+                const subModifiers = new Modifiers();
+                m1.modifiers = subModifiers;
+                class NotCascadingModifier extends Modifier {}
+                const notCascadingModifier = new NotCascadingModifier();
+                subModifiers.append(notCascadingModifier);
+                modifiers.append(m1);
+                // find by class
+                expect(modifiers.find(NotCascadingModifier)).to.be.undefined;
+                // find by instance
+                expect(modifiers.find(notCascadingModifier)).to.be.undefined;
+                // find by predicate
+                expect(modifiers.find(modifier => modifier === notCascadingModifier)).to.be
+                    .undefined;
             });
         });
         describe('get()', () => {

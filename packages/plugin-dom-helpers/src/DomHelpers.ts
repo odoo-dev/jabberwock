@@ -25,7 +25,7 @@ import {
 
 export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Parser];
-    private _specializedAttributes: Map<AbstractParser<Node>, Constructor<Attributes>> = new Map();
+    private _specializedAttributes: Map<AbstractParser<Node>, typeof Attributes> = new Map();
 
     async start(): Promise<void> {
         await super.start();
@@ -504,7 +504,7 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         div.innerHTML = html;
         return parser.parse('dom/html', ...div.childNodes);
     }
-    private _getAttributesConstructor(node: Node): Constructor<Attributes> {
+    private _getAttributesConstructor(node: Node): typeof Attributes {
         for (const [parser, Attributes] of this._specializedAttributes) {
             if (parser.predicate(node)) {
                 return Attributes;

@@ -525,9 +525,7 @@ export class VRange {
     private _updateModifiers(): void {
         let nodeToCopyModifiers: VNode;
         if (this.isCollapsed()) {
-            nodeToCopyModifiers =
-                this.start.previousSibling() ||
-                this.start.nextSibling();
+            nodeToCopyModifiers = this.start.previousSibling() || this.start.nextSibling();
         } else {
             nodeToCopyModifiers = this.start.nextSibling();
         }

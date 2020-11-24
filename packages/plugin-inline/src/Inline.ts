@@ -16,7 +16,7 @@ import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { VRange } from '../../core/src/VRange';
 
 export interface FormatParams extends CommandParams {
-    FormatClass: Constructor<Format>;
+    FormatClass: typeof Format;
 }
 export type RemoveFormatParams = CommandParams;
 
@@ -107,7 +107,7 @@ export class Inline<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<
             }
         }
     }
-    isAllFormat(FormatClass: Constructor<Modifier>, range = this.editor.selection.range): boolean {
+    isAllFormat(FormatClass: typeof Modifier, range = this.editor.selection.range): boolean {
         if (range.isCollapsed()) {
             return !!range.modifiers?.find(FormatClass);
         } else {
