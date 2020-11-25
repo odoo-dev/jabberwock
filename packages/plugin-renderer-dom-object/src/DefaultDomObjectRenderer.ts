@@ -37,6 +37,10 @@ export class DefaultDomObjectRenderer extends NodeRenderer<DomObject> {
                     children: await this.engine.renderChildren(node),
                 };
             }
+        } else if (node.hasChildren()) {
+            domObject = {
+                children: await this.engine.renderChildren(node),
+            };
         } else {
             domObject = { children: [] };
         }

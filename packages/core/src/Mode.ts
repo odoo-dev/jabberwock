@@ -1,5 +1,6 @@
 import { Predicate, VNode } from './VNodes/VNode';
 import { ContextManager, ContextualEntry } from './ContextManager';
+import { withIntangibles } from './Walker';
 
 export interface ModeRule {
     selector: Predicate[];
@@ -57,7 +58,7 @@ export class Mode {
      * @param property
      */
     is(node: VNode, property: RuleProperty): boolean {
-        const hierarchy = [node, ...node.ancestors()];
+        const hierarchy = [node, ...withIntangibles.ancestors(node)];
         const entries = this._entries[property] || [];
         const result = ContextManager.getRankedMatches(hierarchy, entries);
         // For each result from a non-cascading rule property, keep only the

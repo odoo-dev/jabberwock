@@ -2,12 +2,13 @@ import { OwlComponent } from '../../../plugin-owl/src/OwlComponent';
 import { VNode } from '../../../core/src/VNodes/VNode';
 import { AtomicNode } from '../../../core/src/VNodes/AtomicNode';
 import { ContainerNode } from '../../../core/src/VNodes/ContainerNode';
+import { withIntangibles } from '../../../core/src/Walker';
 
 interface InfoState {
     currentTab: string;
 }
 export class InfoComponent extends OwlComponent<{}> {
-    aboutMeProps = ['id', 'name', 'length', 'atomic', 'modifiers'];
+    aboutMeProps = ['id', 'name', 'length', 'atomic', 'tangible', 'modifiers'];
     familyProps = ['parent', 'children', 'siblings'];
     customPropsBlacklist = this.aboutMeProps.concat(this.familyProps).concat(['childVNodes']);
     state: InfoState = {
@@ -109,10 +110,10 @@ export class InfoComponent extends OwlComponent<{}> {
     //--------------------------------------------------------------------------
 
     _repr(vNode: VNode): string {
-        const nextSibling = vNode.nextSibling();
-        const prevSibling = vNode.previousSibling();
+        const nextSibling = withIntangibles.nextSibling(vNode);
+        const prevSibling = withIntangibles.previousSibling(vNode);
         const position = nextSibling ? 'BEFORE' : prevSibling ? 'AFTER' : 'INSIDE';
-        const reference = nextSibling || prevSibling || vNode.parent;
+        const reference = nextSibling || prevSibling || vNode.parentVNode;
         if (reference) {
             return `${position} ${reference.id} (${reference.name})`;
         } else {

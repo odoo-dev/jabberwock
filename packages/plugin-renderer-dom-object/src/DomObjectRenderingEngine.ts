@@ -268,11 +268,11 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
      * @overwrite
      */
     async renderChildren(node: VNode): Promise<Array<DomObject | VNode>> {
-        const children: Array<DomObject | VNode> = node.children();
+        const children = node.children();
         if (!children.length && !this.editor.mode.is(node, RuleProperty.ALLOW_EMPTY)) {
             return [{ tag: 'BR' }];
         }
-        return children;
+        return [...node.childVNodes];
     }
     /**
      * Render a placeholder for the given child node.
@@ -367,6 +367,7 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
                     lastUnit = renderingUnits[nextUnitIndex];
                     newRenderingUnits.push([lastUnit[0], lastUnit[1].slice(1), lastUnit[2]]);
                 }
+
                 // Render wrapped nodes.
                 const promises = this._renderBatched(cache, newRenderingUnits);
                 const nodes: VNode[] = newRenderingUnits.map(u => u[0]);
@@ -486,7 +487,6 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
         // Consecutive char nodes are rendered in same time.
         const renderingUnits: RenderingBatchUnit[] = [];
         const setNodes = new Set(nodes); // Use set for perf.
-
         const selected = new Set<VNode>();
         for (const node of nodes) {
             if (selected.has(node)) {
@@ -498,12 +498,7 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
                 parent.childVNodes.forEach(sibling => {
                     // Filter and sort the nodes.
                     if (setNodes.has(sibling)) {
-                        if (sibling.tangible) {
-                            renderingUnits.push(this._createUnit(cache, sibling, rendered));
-                        } else {
-                            // Not tangible node are add after other nodes (don't cut text node).
-                            markers.push(sibling);
-                        }
+                        renderingUnits.push(this._createUnit(cache, sibling, rendered));
                         selected.add(sibling);
                     } else if (sibling.tangible) {
                         renderingUnits.push(null);

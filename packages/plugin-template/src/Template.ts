@@ -11,6 +11,7 @@ import { ActionableGroupNode } from '../../plugin-layout/src/ActionableGroupNode
 import { ActionableNode } from '../../plugin-layout/src/ActionableNode';
 import { TemplateThumbnailSelectorNode } from './TemplateThumbnailSelectorNode';
 import { DomLayout } from '../../plugin-dom-layout/src/DomLayout';
+import { withIntangibles } from '../../core/src/Walker';
 
 export type TemplateName = string;
 
@@ -115,8 +116,8 @@ export class Template<T extends TemplateConfig = TemplateConfig> extends JWPlugi
         for (const templateName in templateConfigurations) {
             const config = templateConfigurations[templateName];
             for (const engine of Object.values(layout.engines)) {
-                const zones = engine.root
-                    .descendants(ZoneNode)
+                const zones = withIntangibles
+                    .descendants(engine.root, ZoneNode)
                     .filter(zone => zone.managedZones.includes(config.zoneId));
                 if (zones.length && !zones.find(zone => zone.firstChild())) {
                     templateToSelect.add(templateName);

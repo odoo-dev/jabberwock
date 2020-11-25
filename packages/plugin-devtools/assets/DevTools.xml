@@ -44,7 +44,7 @@
             <t t-call="treeChildren"/>
         </t>
         <t t-else="">
-            <devtools-nodename t-if="!props.vNode.tangible"
+            <devtools-nodename t-if="!props.vNode.tangible &amp;&amp; !props.vNode.hasChildren()"
                 t-on-click="onClickNode" t-on-dblclick="onDblClickNode"
                 class="selectable-line inline marker-node" t-att-class="{
                     selected: props.selectedID == props.vNode.id,

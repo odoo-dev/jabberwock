@@ -21,6 +21,7 @@ import { ActionableGroupDomObjectRenderer } from './ActionableGroupDomObjectRend
 import { LabelDomObjectRenderer } from './LabelDomObjectRenderer';
 import { SeparatorDomObjectRenderer } from './SeparatorDomObjectRenderer';
 import { nodeName, isInstanceOf } from '../../utils/src/utils';
+import { withIntangibles } from '../../core/src/Walker';
 
 const FocusAndBlurEvents = ['selectionchange', 'blur', 'focus', 'mousedown', 'touchstart'];
 
@@ -194,7 +195,10 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
         return (
             node &&
             this.editor.isInEditable(node) &&
-            !!node.ancestor(node => node instanceof ZoneNode && node.managedZones.includes('main'))
+            !!withIntangibles.ancestor(
+                node,
+                node => node instanceof ZoneNode && node.managedZones.includes('main'),
+            )
         );
     }
 

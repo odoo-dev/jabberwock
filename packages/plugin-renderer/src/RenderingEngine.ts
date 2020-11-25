@@ -97,7 +97,7 @@ export class RenderingEngine<T> {
             nodes.filter(node => !cache.renderingPromises.get(node)),
         );
         await Promise.all(promises); // wait the newest promises
-        await Promise.all(nodes.map(node => cache.renderingPromises.get(node))); // wait indifidual promise
+        await Promise.all(nodes.map(node => cache.renderingPromises.get(node))); // wait individual promise
         return cache;
     }
     /**

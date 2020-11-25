@@ -3,6 +3,7 @@ import JWEditor from '../../core/src/JWEditor';
 import { ZoneIdentifier, ZoneNode } from './ZoneNode';
 import { VersionableArray } from '../../core/src/Memory/VersionableArray';
 import { VersionableObject } from '../../core/src/Memory/VersionableObject';
+import { withIntangibles } from '../../core/src/Walker';
 
 export type ComponentId = string;
 export type LayoutEngineId = string;
@@ -31,9 +32,9 @@ export abstract class LayoutEngine {
      * Automatically intanciate the components in available zones.
      */
     async start(): Promise<void> {
-        let allZones = [this.root, ...this.root.descendants(ZoneNode)];
+        let allZones = [this.root, ...withIntangibles.descendants(this.root, ZoneNode)];
         await this.fillZones(allZones);
-        allZones = [this.root, ...this.root.descendants(ZoneNode)];
+        allZones = [this.root, ...withIntangibles.descendants(this.root, ZoneNode)];
         if (!allZones.find(zone => zone.managedZones.includes('default'))) {
             // Add into the default zone if no valid zone could be found.
             throw new Error('Please define a "default" zone in your template.');
@@ -47,7 +48,7 @@ export abstract class LayoutEngine {
     async stop(): Promise<void> {
         for (const id in this.components) {
             for (const node of this.components[id]) {
-                const zone = node.ancestor(ZoneNode);
+                const zone = withIntangibles.ancestor(node, ZoneNode);
                 if (zone) {
                     zone.hide(node);
                 }
@@ -90,7 +91,7 @@ export abstract class LayoutEngine {
      * @param props
      */
     async prepend(componentId: ComponentId, zoneId: ZoneIdentifier, props?: {}): Promise<VNode[]> {
-        const allZones = [this.root, ...this.root.descendants(ZoneNode)];
+        const allZones = [this.root, ...withIntangibles.descendants(this.root, ZoneNode)];
         let matchingZones = allZones.filter(node => node.managedZones.includes(zoneId));
         if (!matchingZones.length) {
             matchingZones = allZones.filter(zone => zone.managedZones.includes('default'));
@@ -113,7 +114,7 @@ export abstract class LayoutEngine {
      * @param zoneId
      */
     async append(componentId: ComponentId, zoneId: ZoneIdentifier, props?: {}): Promise<VNode[]> {
-        const allZones = [this.root, ...this.root.descendants(ZoneNode)];
+        const allZones = [this.root, ...withIntangibles.descendants(this.root, ZoneNode)];
         let matchingZones = allZones.filter(node => node.managedZones.includes(zoneId));
         if (!matchingZones.length) {
             matchingZones = allZones.filter(zone => zone.managedZones.includes('default'));
@@ -142,7 +143,8 @@ export abstract class LayoutEngine {
             // filter by zone if needed
             if (
                 !zoneId ||
-                component.ancestor(
+                withIntangibles.ancestor(
+                    component,
                     ancestor =>
                         ancestor instanceof ZoneNode && ancestor.managedZones.includes(zoneId),
                 )
@@ -150,7 +152,7 @@ export abstract class LayoutEngine {
                 // Remove all instances in the zone children.
                 this._clear(component);
                 // Remove the instance.
-                const zone = component.ancestor(ZoneNode);
+                const zone = withIntangibles.ancestor(component, ZoneNode);
                 if (zone && !zones.includes(zone)) {
                     zones.push(zone);
                 }
@@ -160,8 +162,8 @@ export abstract class LayoutEngine {
         return zones;
     }
     async clear(zoneId: ZoneIdentifier): Promise<ZoneNode[]> {
-        const zones = this.root
-            .descendants(ZoneNode)
+        const zones = withIntangibles
+            .descendants(this.root, ZoneNode)
             .filter(zone => zone.managedZones.includes(zoneId));
         for (const zone of zones) {
             this._clear(zone);
@@ -180,7 +182,7 @@ export abstract class LayoutEngine {
             console.warn('No component to show. Prepend or append it in a zone first.');
         } else {
             for (const component of components) {
-                const zone = component.ancestor(ZoneNode);
+                const zone = withIntangibles.ancestor(component, ZoneNode);
                 zone.show(component);
             }
         }
@@ -198,7 +200,7 @@ export abstract class LayoutEngine {
             console.warn('No component to hide. Prepend or append it in a zone first.');
         } else {
             for (const component of components) {
-                const zone = component.ancestor(ZoneNode);
+                const zone = withIntangibles.ancestor(component, ZoneNode);
                 zone.hide(component);
             }
         }
@@ -231,7 +233,7 @@ export abstract class LayoutEngine {
         const stack = [...nodes];
         while (stack.length) {
             const node = stack.pop();
-            const zones = node.descendants(ZoneNode);
+            const zones = withIntangibles.descendants(node, ZoneNode);
             if (node instanceof ZoneNode) {
                 zones.push(node);
             }
@@ -250,7 +252,10 @@ export abstract class LayoutEngine {
                     // Excluding the ones that are contained within the given node.
                     // Avoid loop with child in itself.
                     matchingZones = matchingZones.filter(
-                        zone => !zone.closest(ancestor => components.includes(ancestor)),
+                        zone =>
+                            !withIntangibles.closest(zone, ancestor =>
+                                components.includes(ancestor),
+                            ),
                     );
                 }
                 if (matchingZones.length) {
@@ -296,7 +301,7 @@ export abstract class LayoutEngine {
         return newComponents;
     }
     private _clear(component: VNode): void {
-        const zones = component.descendants(ZoneNode);
+        const zones = withIntangibles.descendants(component, ZoneNode);
         if (component instanceof ZoneNode) {
             zones.push(component);
         }
