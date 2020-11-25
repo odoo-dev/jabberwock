@@ -8,6 +8,7 @@ import {
     DomObjectAttributes,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { Modifier } from '../../core/src/Modifier';
+import { withIntangibles } from '../../core/src/Walker';
 
 //--------------------------------------------------------------------------
 // Internal objects
@@ -150,7 +151,8 @@ export class DomReconciliationEngine {
                     oldIds.size > 1
                 ) {
                     // If the rendering change, we must check if we redraw the parent.
-                    const ancestorWithRendering = node.ancestor(
+                    const ancestorWithRendering = withIntangibles.ancestor(
+                        node,
                         ancestor => !!this._fromItem.get(ancestor),
                     );
                     if (!updatedNodes.includes(ancestorWithRendering)) {
@@ -993,7 +995,7 @@ export class DomReconciliationEngine {
                 } else if (!domObject) {
                     if (oldChildId) {
                         childId = oldChildId;
-                    } else {
+                    } else if (child.tangible) {
                         console.error('No rendering for the node(' + child.id + '): ' + child.name);
                     }
                 } else {
@@ -1336,11 +1338,11 @@ export class DomReconciliationEngine {
                         currentRatio = 1;
                     }
                 } else if (objectA.dom) {
-                    if (itemB.dom.length && !objectB.tag && !objectB.text) {
+                    if (objectB.dom) {
                         currentRatio = 1;
                     }
                 } else if (objectA.children) {
-                    if (itemB.children && !objectB.text && !objectB.tag) {
+                    if (objectB.children && !objectB.text && !objectB.tag) {
                         currentRatio = 1;
                     }
                 }

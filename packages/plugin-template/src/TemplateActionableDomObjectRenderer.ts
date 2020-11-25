@@ -11,12 +11,14 @@ import {
 } from '../../plugin-dom-layout/src/ActionableDomObjectRenderer';
 import { TemplateThumbnailSelectorNode } from './TemplateThumbnailSelectorNode';
 import { RenderingEngineWorker } from '../../plugin-renderer/src/RenderingEngineCache';
+import { withIntangibles } from '../../core/src/Walker';
 
 export class TemplateActionableDomObjectRenderer extends ActionableDomObjectRenderer {
     static id = DomObjectRenderingEngine.id;
     engine: DomObjectRenderingEngine;
     predicate = (node: VNode): boolean =>
-        node instanceof ActionableNode && !!node.ancestor(TemplateThumbnailSelectorNode);
+        node instanceof ActionableNode &&
+        !!withIntangibles.ancestor(node, TemplateThumbnailSelectorNode);
 
     async render(
         node: ActionableNode,

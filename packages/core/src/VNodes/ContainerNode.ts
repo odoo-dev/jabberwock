@@ -10,7 +10,7 @@ export class ContainerNode extends AbstractNode {
     mayContainContainers = true;
     // By default if setted to null, a <br> are added if the node is editable.
     // This proprety can be overrited by the mode/rules.
-    allowEmpty: boolean | void;
+    allowEmpty: boolean | undefined;
 
     //--------------------------------------------------------------------------
     // Updating

@@ -22,6 +22,7 @@ import { QWeb } from '@odoo/owl';
 import { parseEditable } from '../../utils/src/configuration';
 import { Html } from '../../plugin-html/src/Html';
 import { LineBreak } from '../../plugin-linebreak/src/LineBreak';
+import { withIntangibles } from '../../core/src/Walker';
 
 let wrapper: HTMLElement;
 async function openDevTools(): Promise<void> {
@@ -217,6 +218,7 @@ describe('Plugin: DevTools', () => {
                 '"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>length</devtools-td><devtools-td>4</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>atomic</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>tangible</devtools-td><devtools-td>true</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>modifiers</devtools-td><devtools-td>[ Attributes: { style: "display: block;", contenteditable: "true" } ]</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>total length</devtools-td><devtools-td>23</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>text content</devtools-td><devtools-td>' +
@@ -227,17 +229,17 @@ describe('Plugin: DevTools', () => {
                 '<devtools-infotitle>📖 My Properties</devtools-infotitle>' +
                 '<devtools-table>' +
                 '<devtools-tbody>' +
+                '<devtools-tr><devtools-td>allowEmpty</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>breakable</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>htmlTag</devtools-td><devtools-td>"TEST-CONTAINER"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>mayContainContainers</devtools-td><devtools-td>true</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>parentVNode</devtools-td><devtools-td>ZoneNode: main</devtools-td></devtools-tr>' +
-                '<devtools-tr><devtools-td>tangible</devtools-td><devtools-td>true</devtools-td></devtools-tr>' +
                 '</devtools-tbody>' +
                 '</devtools-table>' +
                 '<devtools-infotitle>👪 My Family</devtools-infotitle>' +
                 '<devtools-table>' +
                 '<devtools-tbody>' +
-                '<devtools-tr><devtools-td>parent</devtools-td><devtools-td>ZoneNode: main</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>parent</devtools-td><devtools-td>TagNode</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>children</devtools-td><devtools-td><devtools-list><devtools-listitem>' +
                 root.children()[0].name +
                 '</devtools-listitem><devtools-listitem>' +
@@ -306,6 +308,7 @@ describe('Plugin: DevTools', () => {
                 '"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>length</devtools-td><devtools-td>3</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>atomic</devtools-td><devtools-td>false</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>tangible</devtools-td><devtools-td>true</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>modifiers</devtools-td><devtools-td>[]</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>total length</devtools-td><devtools-td>3</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>text content</devtools-td><devtools-td>' +
@@ -545,6 +548,7 @@ describe('Plugin: DevTools', () => {
                 '"</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>length</devtools-td><devtools-td>1</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>atomic</devtools-td><devtools-td>true</devtools-td></devtools-tr>' +
+                '<devtools-tr><devtools-td>tangible</devtools-td><devtools-td>true</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>modifiers</devtools-td><devtools-td>[ b ]</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>total length</devtools-td><devtools-td>1</devtools-td></devtools-tr>' +
                 '<devtools-tr><devtools-td>text content</devtools-td><devtools-td>' +
@@ -575,8 +579,8 @@ describe('Plugin: DevTools', () => {
 
             const path = wrapper.querySelector('jw-devtools').querySelector('devtools-path');
             expect([].map.call(path.childNodes, (n: Node) => n.textContent)).to.deep.equal(
-                vNodeChar
-                    .ancestors()
+                withIntangibles
+                    .ancestors(vNodeChar)
                     .map(n => n.name)
                     .reverse()
                     .concat([vNodeChar.name + '.' + vNodeChar.name]),

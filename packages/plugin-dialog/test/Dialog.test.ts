@@ -228,9 +228,9 @@ describe('Dialog', async () => {
             // the node are not removed, only hide
             // TO CHECK DMO: params for 'add' method: callback for onShow and onHide ?
             const div = editor.plugins.get(Layout).engines.dom.components.aaa[0];
-            expect(div.parent).to.instanceOf(DialogZoneNode);
+            expect(div.parentVNode).to.instanceOf(DialogZoneNode);
             const section = editor.plugins.get(Layout).engines.dom.components.bbb[0];
-            expect(section.parent).to.instanceOf(DialogZoneNode);
+            expect(section.parentVNode).to.instanceOf(DialogZoneNode);
         });
         it('should close 2 dialogs it with the backdrop', async () => {
             await editor.execCommand(() => {
@@ -274,9 +274,9 @@ describe('Dialog', async () => {
 
             // the node are not removed, only hide
             const div = editor.plugins.get(Layout).engines.dom.components.aaa[0];
-            expect(div.parent).to.instanceOf(DialogZoneNode);
+            expect(div.parentVNode).to.instanceOf(DialogZoneNode);
             const section = editor.plugins.get(Layout).engines.dom.components.bbb[0];
-            expect(section.parent).to.instanceOf(DialogZoneNode);
+            expect(section.parentVNode).to.instanceOf(DialogZoneNode);
         });
         it('should close a dialog and re-open a dialog', async () => {
             await editor.execCommand(() => {
@@ -370,7 +370,7 @@ describe('Dialog', async () => {
             );
 
             const section = editor.plugins.get(Layout).engines.dom.components.bbb[0];
-            expect(section.parent).to.instanceOf(DialogZoneNode);
+            expect(section.parentVNode).to.instanceOf(DialogZoneNode);
         });
     });
     describe('add automatically component in a dialog', async () => {
@@ -445,7 +445,7 @@ describe('Dialog', async () => {
                 ['<jw-editor>', '<main></main>', '</jw-editor>'].join(''),
             );
 
-            expect(vNode.parent).to.instanceOf(DialogZoneNode);
+            expect(vNode.parentVNode).to.instanceOf(DialogZoneNode);
         });
         it('should hide the dialog when click on the backdrop (without remove the vNode)', async () => {
             const domLayoutEngine = editor.plugins.get(Layout).engines.dom as DomLayoutEngine;
@@ -458,7 +458,7 @@ describe('Dialog', async () => {
             );
 
             // the node are not removed, only hide
-            expect(vNode.parent).to.instanceOf(DialogZoneNode);
+            expect(vNode.parentVNode).to.instanceOf(DialogZoneNode);
         });
     });
 });

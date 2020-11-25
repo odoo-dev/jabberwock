@@ -12,7 +12,9 @@ export class DefaultXmlDomParser extends AbstractParser<Node> {
         // If the node could not be parsed, create a generic element node with
         // the HTML tag of the DOM Node. This way we may not support the node
         // but we don't break it either.
-        const element = new TagNode({ htmlTag: nodeName(item) });
+        const htmlTag = nodeName(item);
+        const element = new TagNode({ htmlTag: htmlTag });
+
         if (item instanceof Element) {
             const attributes = this.engine.parseAttributes(item);
             if (attributes.length) {

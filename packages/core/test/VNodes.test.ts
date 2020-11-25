@@ -23,6 +23,7 @@ import { parseEditable } from '../../utils/src/configuration';
 import { Html } from '../../plugin-html/src/Html';
 import { DividerNode } from '../../plugin-divider/src/DividerNode';
 import { ParagraphNode } from '../../plugin-paragraph/src/ParagraphNode';
+import { withIntangibles } from '../src/Walker';
 
 describe('core', () => {
     describe('src', () => {
@@ -1267,6 +1268,23 @@ describe('core', () => {
                                     'ParagraphNode',
                                     'DividerNode',
                                     'TagNode',
+                                    'TagNode',
+                                    'TagNode',
+                                    'LayoutContainer',
+                                ]);
+                            },
+                        });
+                        await testEditor(BasicEditor, {
+                            contentBefore: '<div><p>a</p></div><h2>b</h2>',
+                            stepFunction: (editor: JWEditor) => {
+                                const domEngine = editor.plugins.get(Layout).engines.dom;
+                                const editable = domEngine.components.editable[0];
+                                const a = editable.firstLeaf();
+                                const ancestors = withIntangibles.ancestors(a);
+                                expect(ancestors.map(ancestor => ancestor.name)).to.deep.equal([
+                                    'ParagraphNode',
+                                    'DividerNode',
+                                    'TagNode',
                                     'ZoneNode: main',
                                     'TagNode',
                                     'TagNode',
@@ -1284,6 +1302,24 @@ describe('core', () => {
                                 const editable = domEngine.components.editable[0];
                                 const a = editable.firstLeaf();
                                 const ancestors = a.ancestors(ancestor => {
+                                    return !(ancestor instanceof DividerNode);
+                                });
+                                expect(ancestors.map(ancestor => ancestor.name)).to.deep.equal([
+                                    'ParagraphNode',
+                                    'TagNode',
+                                    'TagNode',
+                                    'TagNode',
+                                    'LayoutContainer',
+                                ]);
+                            },
+                        });
+                        await testEditor(BasicEditor, {
+                            contentBefore: '<div><p>a</p></div><h2>b</h2>',
+                            stepFunction: (editor: JWEditor) => {
+                                const domEngine = editor.plugins.get(Layout).engines.dom;
+                                const editable = domEngine.components.editable[0];
+                                const a = editable.firstLeaf();
+                                const ancestors = withIntangibles.ancestors(a, ancestor => {
                                     return !(ancestor instanceof DividerNode);
                                 });
                                 expect(ancestors.map(ancestor => ancestor.name)).to.deep.equal([

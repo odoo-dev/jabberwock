@@ -57,6 +57,7 @@ import { VersionableArray } from '../../core/src/Memory/VersionableArray';
 import { FontAwesome } from '../../plugin-fontawesome/src/FontAwesome';
 import { Divider } from '../../plugin-divider/src/Divider';
 import { Heading } from '../../plugin-heading/src/Heading';
+import { withIntangibles } from '../../core/src/Walker';
 
 const container = document.createElement('div');
 container.classList.add('container');
@@ -1799,12 +1800,12 @@ describe('DomLayout', () => {
 
                     const renderer = editor.plugins.get(Renderer);
                     const rendered = await renderer.render<DomObject>('object/html', editable);
-                    const textNodes = editable.children();
 
                     expect(rendered && 'children' in rendered && rendered.children).to.deep.equal(
-                        textNodes,
+                        editable.childVNodes,
                     );
 
+                    const textNodes = editable.children();
                     const renderedText = await renderer.render<DomObject>(
                         'object/html',
                         textNodes[1],
@@ -1829,7 +1830,7 @@ describe('DomLayout', () => {
                         rendered &&
                             'children' in rendered &&
                             rendered.children.map(n => 'id' in n && n.id),
-                    ).to.deep.equal(textNodes.map(n => n.id));
+                    ).to.deep.equal(editable.childVNodes.map(n => n.id));
 
                     const renderedText0 = await renderer.render('object/html', textNodes[0]);
                     expect(renderedText0).to.deep.equal({ text: 'a' });
@@ -2637,7 +2638,7 @@ describe('DomLayout', () => {
 
                         expect(
                             rendered && 'children' in rendered && rendered.children,
-                        ).to.deep.equal(textNodes);
+                        ).to.deep.equal(editable.childVNodes);
 
                         expect(mutationNumber).to.equal(5, 'add <b>, move <i>, 3 toolbar update');
 
@@ -6202,13 +6203,15 @@ describe('DomLayout', () => {
         it('should remove a component without memory leak', async () => {
             const layout = editor.plugins.get(Layout);
             const root = layout.engines.dom.root;
-            const zoneMain = root.descendants(ZoneNode).find(n => n.managedZones.includes('main'));
+            const zoneMain = withIntangibles
+                .descendants(root, ZoneNode)
+                .find(n => n.managedZones.includes('main'));
             await editor.execCommand(() => {
                 return layout.append('aaa', 'main');
             });
-            const node = zoneMain.children().slice(-1)[0];
+            const node = withIntangibles.children(zoneMain).slice(-1)[0];
             await editor.execCommand(() => {
-                zoneMain.children().pop();
+                withIntangibles.children(zoneMain).pop();
             });
             expect(!!zoneMain.hidden?.[node.id]).to.equal(false, 'Component is visible');
             await editor.execCommand('hide', { componentId: 'aaa' });

@@ -2,6 +2,7 @@ import { ContainerNode } from '../../core/src/VNodes/ContainerNode';
 import { VNode } from '../../core/src/VNodes/VNode';
 import { AbstractNodeParams } from '../../core/src/VNodes/AbstractNode';
 import { makeVersionable } from '../../core/src/Memory/Versionable';
+import { withIntangibles } from '../../core/src/Walker';
 
 export type ZoneIdentifier = string;
 export interface ZoneNodeParams extends AbstractNodeParams {
@@ -12,6 +13,7 @@ export class ZoneNode extends ContainerNode {
     hidden: Record<number, boolean>;
     editable = false;
     breakable = false;
+    tangible = false;
     allowEmpty = true;
     managedZones: ZoneIdentifier[];
 
@@ -36,7 +38,7 @@ export class ZoneNode extends ContainerNode {
         if (this.hidden?.[id]) {
             this.hidden[id] = false;
         }
-        const parentZone: ZoneNode = this.ancestor(ZoneNode);
+        const parentZone: ZoneNode = withIntangibles.ancestor(this, ZoneNode);
         if (parentZone) {
             parentZone.show(this);
         }

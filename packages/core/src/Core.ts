@@ -107,14 +107,14 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 range.mode.is(range.startContainer, RuleProperty.EDITABLE)
             ) {
                 // Otherwise set range start at previous valid leaf.
-                let ancestor: VNode = range.start.parent;
+                let ancestor: VNode = range.start.parentVNode;
                 while (
                     ancestor &&
                     range.mode.is(ancestor, RuleProperty.BREAKABLE) &&
                     range.mode.is(ancestor, RuleProperty.EDITABLE) &&
                     !ancestor.previousSibling()
                 ) {
-                    ancestor = ancestor.parent;
+                    ancestor = ancestor.parentVNode;
                 }
                 if (
                     ancestor &&
@@ -123,7 +123,7 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 ) {
                     const previousSibling = ancestor.previousSibling();
                     if (previousSibling instanceof AtomicNode) {
-                        ancestor.mergeWith(previousSibling.parent);
+                        ancestor.mergeWith(previousSibling.parentVNode);
                     } else {
                         const previousLeaf = previousSibling.lastLeaf();
                         if (previousSibling && !previousSibling.hasChildren()) {
@@ -168,14 +168,14 @@ export class Core<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T>
                 range.mode.is(range.endContainer, RuleProperty.EDITABLE)
             ) {
                 // Otherwise set range end at next valid leaf.
-                let ancestor: VNode = range.end.parent;
+                let ancestor: VNode = range.end.parentVNode;
                 while (
                     ancestor &&
                     range.mode.is(ancestor, RuleProperty.BREAKABLE) &&
                     range.mode.is(ancestor, RuleProperty.EDITABLE) &&
                     !ancestor.nextSibling()
                 ) {
-                    ancestor = ancestor.parent;
+                    ancestor = ancestor.parentVNode;
                 }
                 if (
                     ancestor &&

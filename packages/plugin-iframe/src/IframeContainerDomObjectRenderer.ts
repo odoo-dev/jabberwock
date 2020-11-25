@@ -95,19 +95,13 @@ export class IframeContainerDomObjectRenderer extends NodeRenderer<DomObject> {
 
     async render(iframeNode: IframeContainerNode): Promise<DomObject> {
         let onload: () => void;
-        const children: VNode[] = [];
-        iframeNode.childVNodes.forEach(child => {
-            if (child.tangible || child instanceof MetadataNode) {
-                children.push(child);
-            }
-        });
         let wrap: HTMLElement;
         const domObject: DomObject = {
             children: [
                 {
                     tag: 'JW-IFRAME',
                     shadowRoot: true,
-                    children: children,
+                    children: [...iframeNode.childVNodes],
                 },
                 {
                     tag: 'IFRAME',
