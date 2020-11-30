@@ -513,6 +513,7 @@ export class EventNormalizer {
         this._normalizedRoot.clear();
         this._unbindEvents();
         this._triggerEventBatch = null;
+        this._triggerEventBatchOutside = null;
         this._isInEditable = null;
     }
     /**
