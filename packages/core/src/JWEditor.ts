@@ -463,24 +463,26 @@ export class JWEditor {
      * Stop this editor instance.
      */
     async stop(): Promise<void> {
-        if (this.memory) {
-            this.memory.create('stop');
-            this.memory.switchTo('stop'); // Unfreeze the memory.
-        }
-        for (const plugin of this.plugins.values()) {
-            await plugin.stop();
-        }
-        if (this.memory) {
-            this.memory.create('stopped'); // Freeze the memory.
-            this.memory = null;
-        }
-        this.plugins.clear();
-        this.dispatcher = new Dispatcher(this);
-        this.selection = new VSelection(this);
-        this.contextManager = new ContextManager(this, this._execSubCommand);
-        // Clear loaders.
-        this.loaders = {};
-        this._stage = EditorStage.CONFIGURATION;
+        this.nextEventMutex(async execCommand => {
+            if (this.memory) {
+                this.memory.create('stop');
+                this.memory.switchTo('stop'); // Unfreeze the memory.
+            }
+            for (const plugin of this.plugins.values()) {
+                await plugin.stop();
+            }
+            if (this.memory) {
+                this.memory.create('stopped'); // Freeze the memory.
+                this.memory = null;
+            }
+            this.plugins.clear();
+            this.dispatcher = new Dispatcher(this);
+            this.selection = new VSelection(this);
+            this.contextManager = new ContextManager(this, this._execSubCommand);
+            // Clear loaders.
+            this.loaders = {};
+            this._stage = EditorStage.CONFIGURATION;
+        });
     }
 
     private async _withOpenMemory<P extends JWPlugin, C extends Commands<P> = Commands<P>>(
