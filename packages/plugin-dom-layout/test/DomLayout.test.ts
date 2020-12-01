@@ -122,7 +122,12 @@ describe('DomLayout', () => {
                 hasError = true;
                 expect(error.message).to.include('default');
             });
-            await editor.stop();
+            expect(hasError).to.equal(true);
+            hasError = false;
+            await editor.stop().catch(error => {
+                hasError = true;
+                expect(error.message).to.include('default');
+            });
             expect(hasError).to.equal(true);
         });
     });
@@ -149,7 +154,12 @@ describe('DomLayout', () => {
                 hasError = true;
                 expect(error.message).to.include('default');
             });
-            await editor.stop();
+            expect(hasError).to.equal(true);
+            hasError = false;
+            await editor.stop().catch(error => {
+                hasError = true;
+                expect(error.message).to.include('default');
+            });
             expect(hasError).to.equal(true);
         });
         it('should replace the target by the template (template as string)', async () => {

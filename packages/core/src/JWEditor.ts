@@ -463,7 +463,7 @@ export class JWEditor {
      * Stop this editor instance.
      */
     async stop(): Promise<void> {
-        this.nextEventMutex(async execCommand => {
+        await this.nextEventMutex(async execCommand => {
             if (this.memory) {
                 this.memory.create('stop');
                 this.memory.switchTo('stop'); // Unfreeze the memory.
