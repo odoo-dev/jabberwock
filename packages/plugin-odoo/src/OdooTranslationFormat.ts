@@ -2,7 +2,16 @@ import { Format } from '../../core/src/Format';
 import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class OdooTranslationFormat extends Format {
+    static initialValues = {};
     breakable = false;
+    static hasInitialValue(item: Element): boolean {
+        const translationId = item.getAttribute('data-oe-translation-id');
+        return OdooTranslationFormat.initialValues[translationId] === item.textContent;
+    }
+    static addInitialValue(item: Element): void {
+        const translationId = item.getAttribute('data-oe-translation-id');
+        OdooTranslationFormat.initialValues[translationId] = item.textContent;
+    }
     constructor(htmlTag: string, translationId: string) {
         super(htmlTag);
         this.translationId = translationId;

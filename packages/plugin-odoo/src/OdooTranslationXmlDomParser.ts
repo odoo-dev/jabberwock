@@ -29,6 +29,7 @@ export class OdooTranslationXmlDomParser extends FormatXmlDomParser {
      * @param item
      */
     async parse(item: Element): Promise<VNode[]> {
+        OdooTranslationFormat.addInitialValue(item);
         const odooTranslation = new OdooTranslationFormat(
             nodeName(item),
             item.getAttribute('data-oe-translation-id'),
