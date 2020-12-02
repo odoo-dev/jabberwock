@@ -394,8 +394,10 @@ export class JWEditor {
         commandName: C | ((context: Context) => Promise<void> | void),
         params?: CommandParamsType<P, C>,
     ): Promise<ExecCommandResult> {
+        console.warn('execCommand');
         return this.nextEventMutex(async () => {
-            return this._withOpenMemory(commandName, params);
+            await this._withOpenMemory(commandName, params);
+            console.warn('execCommandEnd');
         });
     }
 
@@ -489,6 +491,7 @@ export class JWEditor {
         commandName: C | ((context: Context) => Promise<void> | void),
         params?: CommandParamsType<P, C>,
     ): Promise<ExecCommandResult> {
+        console.warn('memory open');
         if (!this.memory.isFrozen()) {
             console.error(
                 'You are trying to call the external editor' +
@@ -589,6 +592,7 @@ export class JWEditor {
                 console.error(revertError);
             }
 
+            console.warn('memory close');
             return {
                 error: {
                     name: error.name,
@@ -596,6 +600,7 @@ export class JWEditor {
                 },
             };
         }
+        console.warn('memory close');
     }
     /**
      * Execute the command or arbitrary code in `callback` in memory.
