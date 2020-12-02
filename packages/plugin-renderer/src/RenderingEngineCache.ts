@@ -51,6 +51,8 @@ export class RenderingEngineCache<T> {
 
     // VNodes locations in a rendering (by default the rendering is equal to the location).
     locations = new Map<T, VNode[]>();
+    // Locate modifiers created with type `T`.
+    modifierLocations = new Map<T, Modifier[]>();
     // List of VNode and Modifiers linked to a rendering.
     // When the rendering is invalidated every VNode or Modifier will be invalidated.
     renderingDependent = new Map<T, Set<VNode | Modifier>>();

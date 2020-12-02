@@ -114,6 +114,13 @@ export class DomLayoutEngine extends LayoutEngine {
     getNodes(domNode: Node): VNode[] {
         return this._domReconciliationEngine.fromDom(domNode);
     }
+    getNodes2(domNode: Node): VNode[] {
+        return this._domReconciliationEngine.fromDom2(domNode);
+    }
+
+    getModifier(domNode: Node): Modifier[] | undefined {
+        return this._domReconciliationEngine.modifierFromDom(domNode, this._rendererCache);
+    }
     /**
      * Return the DOM Node(s) corresponding to the given VNode.
      *

@@ -8,6 +8,7 @@ import {
     DomObjectAttributes,
 } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { Modifier } from '../../core/src/Modifier';
+import { RenderingEngineCache } from '../../plugin-renderer/src/RenderingEngineCache';
 
 //--------------------------------------------------------------------------
 // Internal objects
@@ -463,10 +464,61 @@ export class DomReconciliationEngine {
                     domNode = domNode.defaultView.frameElement;
                 } else {
                     domNode = domNode.parentNode;
+                    // domNode = null;
                 }
             }
         }
         return [...new Set(nodes)];
+    }
+
+    fromDom2(domNode: Node): VNode[] {
+        let object: DomObjectMapping;
+        const nodes: VNode[] = [];
+        while (!object && domNode) {
+            object = this._objects[this._fromDom.get(domNode)];
+            let items: Array<VNode | Modifier> = [];
+            while (object && items && !items.length) {
+                items = this._locations.get(object.object);
+                if (!items?.length) {
+                    items = this._items.get(object.object);
+                }
+                object = null;
+                domNode = null;
+            }
+            if (items?.length) {
+                for (const item of items) {
+                    if (item instanceof AbstractNode) {
+                        nodes.push(item);
+                    }
+                }
+            } else {
+                if (isInstanceOf(domNode, ShadowRoot)) {
+                    domNode = domNode.host;
+                } else if (isInstanceOf(domNode, Document)) {
+                    domNode = domNode.defaultView.frameElement;
+                } else {
+                    domNode = null;
+                }
+            }
+        }
+        return [...new Set(nodes)];
+    }
+
+    /**
+     * Return the VNode(s) corresponding to the given DOM Node.
+     *
+     * @param domNode
+     */
+    modifierFromDom(domNode: Node, cache: RenderingEngineCache<DomObject>): Modifier[] | undefined {
+        let object: DomObjectMapping;
+        object = this._objects[this._fromDom.get(domNode)];
+        while (object) {
+            const modifiers = cache.modifierLocations.get(object.object as DomObject);
+            if (modifiers) {
+                return modifiers;
+            }
+            object = this._objects[object.parent];
+        }
     }
 
     /**

@@ -14,6 +14,9 @@ import { Context } from '../../core/src/ContextManager';
 import { AbstractParser } from '../../plugin-parser/src/AbstractParser';
 import { Constructor } from '../../utils/src/utils';
 import { HtmlDomParsingEngine } from '../../plugin-html/src/HtmlDomParsingEngine';
+import { Modifier } from '../../core/src/Modifier';
+import { Loadables } from '../../core/src/JWEditor';
+import { DomMutationParsingEngine } from './MutationParsingEngine';
 import {
     TableRowXmlDomParser,
     TableSectionAttributes,
@@ -25,6 +28,9 @@ import {
 
 export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlugin<T> {
     static dependencies = [Parser];
+    loadables: Loadables<Parser> = {
+        parsingEngines: [DomMutationParsingEngine],
+    };
     private _specializedAttributes: Map<AbstractParser<Node>, Constructor<Attributes>> = new Map();
 
     async start(): Promise<void> {
@@ -463,6 +469,11 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
             nodes = domEngine.getNodes(domNode);
         }
         return nodes;
+    }
+    getModifiers(domNode: Node): Modifier[] {
+        const layout = this.editor.plugins.get(Layout);
+        const domEngine = layout.engines.dom as DomLayoutEngine;
+        return domEngine.getModifier(domNode);
     }
     /**
      * Return the DOM Node(s) matching a VNode or a list of VNodes.
