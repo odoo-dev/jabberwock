@@ -26,6 +26,7 @@ import { Format } from '../core/src/Format';
 import { OdooVideoNode } from '../plugin-odoo-video/src/OdooVideoNode';
 import { ReactiveEditorInfo } from '../plugin-reactive-info/src/ReactiveEditorInfo';
 import { Resizer } from '../plugin-resizer/src/Resizer';
+import { withDomMutations } from '../plugin-dom-helpers/src/withDomMutations';
 
 export {
     OdooWebsiteEditor,
@@ -56,4 +57,5 @@ export {
     Format,
     ReactiveEditorInfo,
     Resizer,
+    withDomMutations,
 };
