@@ -110,9 +110,23 @@ export class DomLayoutEngine extends LayoutEngine {
      * Return the VNode(s) corresponding to the given DOM Node.
      *
      * @param Node
+     * @param loose When a VNode corresponding to the domNode is not found,
+     * loosely use the closest VNode instead.
      */
-    getNodes(domNode: Node): VNode[] {
-        return this._domReconciliationEngine.fromDom(domNode);
+    getNodes(domNode: Node, loose?: boolean): VNode[] {
+        return this._domReconciliationEngine.fromDom(domNode, loose);
+    }
+
+    /**
+     * Return all the modifiers that represent the domNode.
+     *
+     * @param domNode
+     */
+    getModifiers(domNode: Node): Modifier[] | undefined {
+        return this._domReconciliationEngine.modifierFromDom(
+            domNode,
+            this._rendererCache.modifierLocations,
+        );
     }
     /**
      * Return the DOM Node(s) corresponding to the given VNode.
@@ -183,7 +197,7 @@ export class DomLayoutEngine extends LayoutEngine {
             direction: direction,
         };
     }
-    markForRedraw(domNodes: Set<Node>): void {
+    markForRedraw(domNodes: Iterable<Node>): void {
         for (const domNode of domNodes) {
             this._markedForRedraw.add(domNode);
         }
