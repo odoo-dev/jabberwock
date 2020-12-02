@@ -436,8 +436,10 @@ export class DomReconciliationEngine {
      * Return the VNode(s) corresponding to the given DOM Node.
      *
      * @param domNode
+     * @param loose When a DomObject corresponding to the domNode is not found,
+     * loosely use the closest DomObject instead.
      */
-    fromDom(domNode: Node): VNode[] {
+    fromDom(domNode: Node, loose = true): VNode[] {
         let object: DomObjectMapping;
         const nodes: VNode[] = [];
         while (!object && domNode) {
@@ -448,7 +450,12 @@ export class DomReconciliationEngine {
                 if (!items?.length) {
                     items = this._items.get(object.object);
                 }
-                object = this._objects[object.parent];
+                if (loose) {
+                    object = this._objects[object.parent];
+                } else {
+                    object = null;
+                    domNode = null;
+                }
             }
             if (items?.length) {
                 for (const item of items) {
@@ -462,11 +469,33 @@ export class DomReconciliationEngine {
                 } else if (isInstanceOf(domNode, Document)) {
                     domNode = domNode.defaultView.frameElement;
                 } else {
-                    domNode = domNode.parentNode;
+                    domNode = loose ? domNode.parentNode : null;
                 }
             }
         }
         return [...new Set(nodes)];
+    }
+
+    /**
+     * Return the Modifier(s) corresponding to the given DOM Node relative to
+     * the cache of modifiers locations.
+     *
+     * @param domNode
+     * @param modifierLocations The cache of the modifiers locations
+     */
+    modifierFromDom(
+        domNode: Node,
+        modifierLocations: Map<DomObject, Modifier[]>,
+    ): Modifier[] | undefined {
+        let object: DomObjectMapping;
+        object = this._objects[this._fromDom.get(domNode)];
+        while (object) {
+            const modifiers = modifierLocations.get(object.object as DomObject);
+            if (modifiers) {
+                return modifiers;
+            }
+            object = this._objects[object.parent];
+        }
     }
 
     /**

@@ -355,12 +355,14 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
                 let lastUnit: RenderingBatchUnit = [unit[0], unit[1].slice(1), unit[2]];
                 const newRenderingUnits: RenderingBatchUnit[] = [lastUnit];
                 let nextUnit: RenderingBatchUnit;
+                const mods = [modifier];
                 while (
                     (nextUnit = renderingUnits[nextUnitIndex + 1]) &&
                     lastUnit[0].parent === nextUnit[0].parent &&
                     nextUnit[1].length &&
                     this._modifierIsSameAs(cache, modifier, nextUnit[1]?.[0])
                 ) {
+                    mods.push(nextUnit[1][0]);
                     nextUnitIndex++;
                     lastUnit = renderingUnits[nextUnitIndex];
                     newRenderingUnits.push([lastUnit[0], lastUnit[1].slice(1), lastUnit[2]]);
@@ -403,8 +405,11 @@ export class DomObjectRenderingEngine extends RenderingEngine<DomObject> {
                                 }
                             }
                         }
-                        this.depends(cache, modifier, wrap);
-                        this.depends(cache, wrap, modifier);
+                        cache.modifierLocations.set(wrap, mods);
+                        for (const mod of mods) {
+                            this.depends(cache, mod, wrap);
+                            this.depends(cache, wrap, mod);
+                        }
                     }
 
                     // Update the renderings promise.
