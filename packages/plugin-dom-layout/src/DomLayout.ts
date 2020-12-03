@@ -264,7 +264,7 @@ export class DomLayout<T extends DomLayoutConfig = DomLayoutConfig> extends JWPl
             root = ev.target.shadowRoot;
         }
 
-        if (iframe) {
+        if (iframe?.contentDocument) {
             const iframeDoc = iframe.contentDocument;
             const domSelection = iframeDoc.getSelection();
             if (isInstanceOf(domSelection.anchorNode, HTMLBodyElement)) {
