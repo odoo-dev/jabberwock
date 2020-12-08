@@ -4,7 +4,7 @@ import { EventMixin } from '../../utils/src/EventMixin';
 import { VersionableArray } from './Memory/VersionableArray';
 import { makeVersionable } from './Memory/Versionable';
 
-export class Modifiers extends EventMixin {
+export class Modifiers extends EventMixin implements Iterable<Modifier> {
     private _contents: Modifier[];
     constructor(...modifiers: Array<Modifier | Constructor<Modifier>>) {
         super();
@@ -330,6 +330,20 @@ export class Modifiers extends EventMixin {
      */
     map<T>(callbackfn: (value: Modifier, index: number, array: Modifier[]) => T): T[] {
         return this._contents?.map(callbackfn) || [];
+    }
+    /**
+     * Iterate through all modifiers.
+     */
+    [Symbol.iterator](): Iterator<Modifier> {
+        let index = -1;
+        const data = this._contents || [];
+
+        return {
+            next: (): IteratorResult<Modifier> => ({
+                value: data[++index],
+                done: !(index in data),
+            }),
+        };
     }
     /**
      * @override
