@@ -115,7 +115,7 @@ export async function withDomMutations<T>(
                 if (mutation.type === 'attributes') {
                     const formats = getFormats(domEngine, mutation.target);
                     let vnodesOrFormats =
-                        (formats?.length && formats) || domEngine.getNodes(mutation.target);
+                        (formats?.length && formats) || domEngine.getNodes(mutation.target, false);
 
                     const value = (mutation.target as HTMLElement).getAttribute(
                         mutation.attributeName,
