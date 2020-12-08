@@ -167,6 +167,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 [Iframe],
                 [Button],
                 [ReactiveEditorInfo],
+                [Theme],
                 ...(options.plugins || []),
             ],
         });
