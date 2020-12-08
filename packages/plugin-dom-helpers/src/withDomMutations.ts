@@ -196,7 +196,7 @@ export async function withDomMutations<T>(
         for (const [observerNode, activeObservation] of activeObservers.entries()) {
             // The observation might have been already removed by another call
             // so we only delete and disconnect when it's still active.
-            if (activeObservation === activeObservation) {
+            if (activeObservation === observer) {
                 activeObservers.delete(observerNode);
                 observer.disconnect();
                 break;
