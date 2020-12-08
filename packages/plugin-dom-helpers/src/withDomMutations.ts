@@ -239,6 +239,8 @@ function getParentModifiers(
         ancestorsFormats.push(format);
     }
 
+    if (!ancestorsFormats.length) return [];
+
     const greatestAncestorVNode = getVNodes(ancestors[0]);
     const allParentFormat = greatestAncestorVNode[0].modifiers.filter(m => m instanceof Format);
 
