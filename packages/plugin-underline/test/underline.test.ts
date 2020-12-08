@@ -1,14 +1,13 @@
 import { describePlugin } from '../../utils/src/testUtils';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import JWEditor from '../../core/src/JWEditor';
-import { Constructor } from '../../utils/src/utils';
 import { Format } from '../../core/src/Format';
 import { UnderlineFormat } from '../src/UnderlineFormat';
 import { SpanFormat } from '../../plugin-span/src/SpanFormat';
 import { Underline } from '../src/Underline';
 import { Inline } from '../../plugin-inline/src/Inline';
 
-const toggleFormat = async (editor: JWEditor, FormatClass: Constructor<Format>): Promise<void> => {
+const toggleFormat = async (editor: JWEditor, FormatClass: typeof Format): Promise<void> => {
     await editor.execCommand<Inline>('toggleFormat', {
         FormatClass: FormatClass,
     });

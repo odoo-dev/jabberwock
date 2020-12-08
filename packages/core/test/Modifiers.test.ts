@@ -1,5 +1,5 @@
 import { Modifiers } from '../src/Modifiers';
-import { CascadingMixin, Modifier } from '../src/Modifier';
+import { Modifier } from '../src/Modifier';
 import { expect } from 'chai';
 
 function id<T>(x: T): T {
