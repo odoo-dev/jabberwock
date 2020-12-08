@@ -5,6 +5,7 @@ import { Predicate } from '../../core/src/VNodes/VNode';
 import { DomObjectRenderingEngine } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { DomObject } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
 import { DomObjectElement } from '../../plugin-renderer-dom-object/src/DomObjectRenderingEngine';
+import { Attributes } from '../../plugin-xml/src/Attributes';
 
 export class OdooFieldDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -51,7 +52,12 @@ export class OdooFieldDomObjectRenderer extends NodeRenderer<DomObject> {
             classList.add('jw-odoo-field-invalid');
         }
 
-        if (!node.descendants(AtomicNode).length) {
+        if (
+            !node.descendants(AtomicNode).length &&
+            // A placeholder is visible, we don't want to collapse the field if
+            // it gives the impression of having content.
+            !node.modifiers.find(Attributes).has('placeholder')
+        ) {
             classList.add('jw-odoo-field-empty');
         }
 
