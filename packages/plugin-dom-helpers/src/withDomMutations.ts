@@ -385,7 +385,7 @@ function removeNodes(
 ): void {
     for (const removedDomNode of removedDomNodes) {
         const removedVNodes = getVNode(removedDomNode);
-        if (removedVNodes) {
+        if (removedVNodes?.length) {
             const firstVNode = removedVNodes[0];
             // If we remove a text node that has a format, as no textnode will
             // represent the format after removing it, we need to insert an
