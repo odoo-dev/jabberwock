@@ -11,8 +11,14 @@ export class OdooStructureXmlDomParser extends AbstractParser {
     predicate = (item: Node): boolean => {
         return (
             item instanceof Element &&
-            item.classList.contains('oe_structure') &&
             item.attributes &&
+            (
+                item.classList.contains('oe_structure') ||
+                (
+                    item.attributes['data-oe-model']?.value === 'ir.ui.view' &&
+                    item.attributes['data-oe-field']?.value === 'arch'
+                )
+            ) &&
             item.attributes['data-oe-xpath'] &&
             item.attributes['data-oe-id']
         );
