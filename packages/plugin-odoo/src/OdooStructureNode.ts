@@ -9,6 +9,7 @@ export class OdooStructureNode extends TagNode {
     viewId: string;
     breakable = false;
     dirty = false;
+    allowEmpty = true;
 
     constructor(params: OdooStructureNodeParams) {
         super(params);
