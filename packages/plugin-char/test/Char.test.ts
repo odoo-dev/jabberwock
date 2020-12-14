@@ -176,6 +176,42 @@ describePlugin(Char, testEditor => {
                     });
                 });
             });
+            describe('space', () => {
+                it('should insert nbsp on press spacebar at start of paragraph', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p>[]abc</p>',
+                        stepFunction: async editor => insertText(editor, ' '),
+                        contentAfter: '<p>&nbsp;[]abc</p>',
+                    });
+                });
+                it('should insert space on press spacebar within paragraph', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p>a[]bc</p>',
+                        stepFunction: async editor => insertText(editor, ' '),
+                        contentAfter: '<p>a []bc</p>',
+                    });
+                });
+                it('should insert nbsp on press spacebar at end of paragraph', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<p>abc[]</p>',
+                        stepFunction: async editor => insertText(editor, ' '),
+                        contentAfter: '<p>abc&nbsp;[]</p>',
+                    });
+                });
+                it('should insert nbsp on press spacebar at start of div with adjacent block in div', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<div>[]abc<p>def</p></div>',
+                        stepFunction: async editor => insertText(editor, ' '),
+                        contentAfter: '<div>&nbsp;[]abc<p>def</p></div>',
+                    });
+                });
+                it('should not transform space between inline nodes into nbsp', async () => {
+                    await testEditor(BasicEditor, {
+                        contentBefore: '<div> <a>a</a> <b>b</b> </div>',
+                        contentAfter: '<div><a>a</a> <b>b</b></div>',
+                    });
+                });
+            });
             describe('bold', () => {
                 describe('Selection collapsed', () => {
                     it('should insert char not bold when selection in between two paragraphs', async () => {

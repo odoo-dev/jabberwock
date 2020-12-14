@@ -290,6 +290,12 @@ describe('removeFormattingSpace() util function', () => {
         const nodes = htmlToElements('<textarea> a </textarea>');
         expect(removeFormattingSpace(nodes[0].firstChild)).to.equal(' a ');
     });
+    it('should remove space between blocks', async () => {
+        const nodes = htmlToElements('<div> <input/> <small>abc</small> </div>');
+        expect(removeFormattingSpace(nodes[0].firstChild)).to.equal('');
+        expect(removeFormattingSpace(nodes[0].childNodes[2])).to.equal(' ');
+        expect(removeFormattingSpace(nodes[0].childNodes[4])).to.equal('');
+    });
     describe('nested nodes', () => {
         it('Should return trimmed text when no space around text', async () => {
             const nodes = htmlToElements('<p><span><span><a>abc</a></span></span></p>');
