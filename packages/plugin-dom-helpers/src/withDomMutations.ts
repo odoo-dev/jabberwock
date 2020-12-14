@@ -91,8 +91,8 @@ export async function withDomMutations<T>(
         const replacementMap = new Map<VNode, VNode>();
         const charDataChanged = new Set<Node>();
 
-        const getFirstFormat: GetFormatFn = (domNode: Node): Format | undefined => {
-            return getFormats(domEngine, domNode)?.[0];
+        const getFirstFormat: GetFormatFn = (domNode: Node, loose = true): Format | undefined => {
+            return getFormats(domEngine, domNode, loose)?.[0];
         };
         const getVNodes: GetNodesFn = (domNode: Node): VNode[] | undefined => {
             const vnodes = domEngine.getNodes(domNode, false);
@@ -113,7 +113,7 @@ export async function withDomMutations<T>(
         const observer = new MutationObserver(async (mutations: MutationRecord[]) => {
             for (const mutation of mutations) {
                 if (mutation.type === 'attributes') {
-                    const formats = getFormats(domEngine, mutation.target);
+                    const formats = getFormats(domEngine, mutation.target, false);
                     let vnodesOrFormats =
                         (formats?.length && formats) || domEngine.getNodes(mutation.target, false);
 
@@ -281,8 +281,8 @@ function getAncestors(node: Node): HTMLElement[] {
 /**
  * Get all the formats for a node.
  */
-function getFormats(domEngine: DomLayoutEngine, domNode: Node): Format[] {
-    const modifiers: Modifier[] = domEngine.getModifiers(domNode);
+function getFormats(domEngine: DomLayoutEngine, domNode: Node, loose = true): Format[] {
+    const modifiers: Modifier[] = domEngine.getModifiers(domNode, loose);
     return modifiers?.filter(x => x instanceof Format) as Format[];
 }
 

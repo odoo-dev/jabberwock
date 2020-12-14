@@ -486,12 +486,13 @@ export class DomReconciliationEngine {
     modifierFromDom(
         domNode: Node,
         modifierLocations: Map<DomObject, Modifier[]>,
+        loose = true,
     ): Modifier[] | undefined {
         let object: DomObjectMapping;
         object = this._objects[this._fromDom.get(domNode)];
         while (object) {
             const modifiers = modifierLocations.get(object.object as DomObject);
-            if (modifiers) {
+            if (modifiers || !loose) {
                 return modifiers;
             }
             object = this._objects[object.parent];

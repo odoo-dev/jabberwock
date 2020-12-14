@@ -122,10 +122,11 @@ export class DomLayoutEngine extends LayoutEngine {
      *
      * @param domNode
      */
-    getModifiers(domNode: Node): Modifier[] | undefined {
+    getModifiers(domNode: Node, loose = true): Modifier[] | undefined {
         return this._domReconciliationEngine.modifierFromDom(
             domNode,
             this._rendererCache.modifierLocations,
+            loose
         );
     }
     /**
