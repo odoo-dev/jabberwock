@@ -68,6 +68,7 @@ import { Attributes } from '../plugin-xml/src/Attributes';
 import { Strikethrough } from '../plugin-strikethrough/src/Strikethrough';
 import { ReactiveEditorInfo } from '../plugin-reactive-info/src/ReactiveEditorInfo';
 import { Quote } from '../plugin-quote/src/Quote';
+import { Small } from '../plugin-small/src/Small';
 
 interface OdooWebsiteEditorOptions {
     source: HTMLElement;
@@ -145,6 +146,7 @@ export class OdooWebsiteEditor extends JWEditor {
                 [Quote],
                 [Underline],
                 [Strikethrough],
+                [Small],
                 [Input],
                 [FontSize],
                 [Link],
