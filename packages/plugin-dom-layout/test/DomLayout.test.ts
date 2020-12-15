@@ -2715,7 +2715,7 @@ describe('DomLayout', () => {
                     contentAfter: '<p>a[bc]d</p>',
                 });
             });
-            it('should remove some attributes on everything', async () => {
+            it('should remove some attributes on the selected text', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore:
                         '<p style="background-color: red;">[a<span style="background-color: white;">b</span>c<span style="color: green; background-color: yellow;">d</span>e]</p>',
@@ -2724,14 +2724,15 @@ describe('DomLayout', () => {
                         mutationNumber = 0;
                         await editor.execCommand('uncolorBackground');
                         expect(document.querySelector('jw-test').innerHTML).to.equal(
-                            '<p>a<span>b</span>c<span style="color: green;">d</span>e</p>',
+                            '<p style="background-color: red;">a<span>b</span>c<span style="color: green;">d</span>e</p>',
                         );
                         expect(mutationNumber).to.equal(
-                            7,
-                            'remove 3 formats + remove 2 empty styles, update toolbar',
+                            5,
+                            'remove 2 formats + remove 1 empty styles, update toolbar',
                         );
                     },
-                    contentAfter: '<p>[a<span>b</span>c<span style="color: green;">d</span>e]</p>',
+                    contentAfter:
+                        '<p style="background-color: red;">[a<span>b</span>c<span style="color: green;">d</span>e]</p>',
                 });
             });
             it('should render linebreak with format', async () => {

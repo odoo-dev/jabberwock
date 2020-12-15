@@ -62,41 +62,43 @@ describePlugin(BackgroundColor, testEditor => {
                         '<p style="background-color: yellow;">a[<span style="background-color: red;">bc]</span>d</p>',
                 });
             });
-            it('should set the background color of a paragraph to red', async () => {
+            it('should set the background color of the selected text only to red', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>[abc]</p><p>def</p>',
                     stepFunction: async editor => {
                         await colorBackground(editor, 'red');
                     },
-                    contentAfter: '<p style="background-color: red;">[abc]</p><p>def</p>',
+                    contentAfter:
+                        '<p><span style="background-color: red;">[abc]</span></p><p>def</p>',
                 });
             });
-            it('should set the background color of everything to red', async () => {
+            it('should not set the background color of the parent to red', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p>[abc]</p>',
                     stepFunction: async editor => {
                         await colorBackground(editor, 'red');
                     },
-                    contentAfter: '<p style="background-color: red;">[abc]</p>',
+                    contentAfter: '<p><span style="background-color: red;">[abc]</span></p>',
                 });
             });
-            it('should not set the background color of characters that already have that background color through an ancestor', async () => {
+            it('should set the background color of characters that already have that background color through an ancestor', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p style="background-color: yellow;">a[bc]d</p>',
                     stepFunction: async editor => {
                         await colorBackground(editor, 'yellow');
                     },
-                    contentAfter: '<p style="background-color: yellow;">a[bc]d</p>',
+                    contentAfter:
+                        '<p style="background-color: yellow;">a[<span style="background-color: yellow;">bc]</span>d</p>',
                 });
             });
-            it("should only set the background color of characters that don't already have that background color through an ancestor", async () => {
+            it("should set the background color of both characters that have and don't already have that background color through an ancestor", async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p style="background-color: yellow;">a[bc</p><p>de]f</p>',
                     stepFunction: async editor => {
                         await colorBackground(editor, 'yellow');
                     },
                     contentAfter:
-                        '<p style="background-color: yellow;">a[bc</p><p><span style="background-color: yellow;">de]</span>f</p>',
+                        '<p style="background-color: yellow;">a[<span style="background-color: yellow;">bc</span></p><p><span style="background-color: yellow;">de]</span>f</p>',
                 });
             });
             it('should not set the background color of characters that already have that background color through a format', async () => {
@@ -105,7 +107,8 @@ describePlugin(BackgroundColor, testEditor => {
                     stepFunction: async editor => {
                         await colorBackground(editor, 'yellow');
                     },
-                    contentAfter: '<p>a<i style="background-color: yellow;">b[cd]e</i>f</p>',
+                    contentAfter:
+                        '<p>a<i style="background-color: yellow;">b[<span style="background-color: yellow;">cd]</span>e</i>f</p>',
                 });
             });
             it("should only set the background color of characters that don't already have that background color through a format", async () => {
@@ -115,7 +118,7 @@ describePlugin(BackgroundColor, testEditor => {
                         await colorBackground(editor, 'yellow');
                     },
                     contentAfter:
-                        '<p>a<i style="background-color: yellow;">b[cd</i><span style="background-color: yellow;">e]</span>f</p>',
+                        '<p>a<i style="background-color: yellow;">b[<span style="background-color: yellow;">cd</span></i><span style="background-color: yellow;">e]</span>f</p>',
                 });
             });
         });
@@ -166,14 +169,13 @@ describePlugin(BackgroundColor, testEditor => {
                     contentAfter: '<p>a[bc]d</p>',
                 });
             });
-            it('should set the background color of two characters to white, within a paragraph with yellow background', async () => {
+            it('should not change the background color of two characters within a paragraph with yellow background', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p style="background-color: yellow;">a[bc]d</p>',
                     stepFunction: async editor => {
                         await uncolorBackground(editor);
                     },
-                    contentAfter:
-                        '<p style="background-color: yellow;">a[<span style="background-color: white;">bc]</span>d</p>',
+                    contentAfter: '<p style="background-color: yellow;">a[bc]d</p>',
                 });
             });
             it('should set the background color of two characters to red, then unset it, within a paragraph with yellow background', async () => {
@@ -183,36 +185,47 @@ describePlugin(BackgroundColor, testEditor => {
                         await colorBackground(editor, 'red');
                         await uncolorBackground(editor);
                     },
-                    contentAfter:
-                        '<p style="background-color: yellow;">a[<span style="background-color: white;">bc]</span>d</p>',
+                    contentAfter: '<p style="background-color: yellow;">a[bc]d</p>',
                 });
             });
-            it('should unset the background color of a paragraph', async () => {
+            it('should not unset the background color of a paragraph', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p style="background-color: red;">[abc]</p><p>def</p>',
                     stepFunction: async editor => {
                         await uncolorBackground(editor);
                     },
-                    contentAfter: '<p>[abc]</p><p>def</p>',
+                    contentAfter: '<p style="background-color: red;">[abc]</p><p>def</p>',
                 });
             });
-            it('should unset the background color of everything', async () => {
+            it('should not unset the background color of everything', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore: '<p style="background-color: red;">[abc]</p>',
                     stepFunction: async editor => {
                         await uncolorBackground(editor);
                     },
-                    contentAfter: '<p>[abc]</p>',
+                    contentAfter: '<p style="background-color: red;">[abc]</p>',
                 });
             });
-            it('should unset the background color of everything, including a few spans', async () => {
+            it('should unset the background color of all the text, but not the container', async () => {
                 await testEditor(BasicEditor, {
                     contentBefore:
                         '<p style="background-color: red;">[a<span style="background-color: white;">b</span>c<span style="background-color: yellow;">d</span>e]</p>',
                     stepFunction: async editor => {
                         await uncolorBackground(editor);
                     },
-                    contentAfter: '<p>[a<span>b</span>c<span>d</span>e]</p>',
+                    contentAfter:
+                        '<p style="background-color: red;">[a<span>b</span>c<span>d</span>e]</p>',
+                });
+            });
+            it('should not unset the background color of a container partially selected', async () => {
+                await testEditor(BasicEditor, {
+                    contentBefore:
+                        '<p style="background-color: red;">a[b<span style="background-color:red">c</span></p><p style="background-color: red;"><span style="background-color: red">d</span>e]f</p>',
+                    stepFunction: async editor => {
+                        await uncolorBackground(editor);
+                    },
+                    contentAfter:
+                        '<p style="background-color: red;">a[b<span>c</span></p><p style="background-color: red;"><span>d</span>e]f</p>',
                 });
             });
         });
