@@ -8,6 +8,7 @@ import { Layout } from '../../plugin-layout/src/Layout';
 import { DomLayoutEngine } from '../../plugin-dom-layout/src/DomLayoutEngine';
 import { ZoneNode } from '../../plugin-layout/src/ZoneNode';
 import { isInstanceOf } from '../../utils/src/utils';
+import { withIntangibles } from '../../core/src/Walker';
 
 export class ResizerDomObjectRenderer extends NodeRenderer<DomObject> {
     static id = DomObjectRenderingEngine.id;
@@ -94,7 +95,8 @@ export class ResizerDomObjectRenderer extends NodeRenderer<DomObject> {
         // Problem: We don't yet have a way to do this properly.
         if (this.targetToResize) return;
 
-        const mainZone = this.domEngine.root.descendants(
+        const mainZone = withIntangibles.descendants(
+            this.domEngine.root,
             node => node instanceof ZoneNode && node.managedZones.includes('main'),
         )[0];
         const domMain = this.domEngine.getDomNodes(mainZone)[0] as HTMLElement;

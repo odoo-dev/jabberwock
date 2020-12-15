@@ -69,6 +69,7 @@ import { Strikethrough } from '../plugin-strikethrough/src/Strikethrough';
 import { ReactiveEditorInfo } from '../plugin-reactive-info/src/ReactiveEditorInfo';
 import { Quote } from '../plugin-quote/src/Quote';
 import { Small } from '../plugin-small/src/Small';
+import { withIntangibles } from '../core/src/Walker';
 
 interface OdooWebsiteEditorOptions {
     source: HTMLElement;
@@ -345,7 +346,8 @@ export class OdooWebsiteEditor extends JWEditor {
             const renderer = this.plugins.get(Renderer);
             const layout = this.plugins.get(Layout);
             const domLayout = layout.engines.dom;
-            const editable = domLayout.root.firstDescendant(
+            const editable = withIntangibles.firstDescendant(
+                domLayout.root,
                 node => node instanceof ZoneNode && node.managedZones.includes('editable'),
             );
             const promise = renderer.render<T>(format, editable);
