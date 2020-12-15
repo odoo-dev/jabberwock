@@ -240,7 +240,12 @@ export class DomLayoutEngine extends LayoutEngine {
             const nodes = this.components[componentId];
             const needInsert = nodes.find(node => {
                 const domNodes = this._domReconciliationEngine.toDom(node);
-                return !domNodes.length || domNodes.some(node => !node.parentNode);
+                return !domNodes.length || domNodes.some(node => {
+                    return (
+                        !node.parentNode ||
+                        node.parentNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE
+                    );
+                });
             });
             if (needInsert) {
                 this._appendComponentInDom(componentId);
