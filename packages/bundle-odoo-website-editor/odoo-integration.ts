@@ -27,6 +27,7 @@ import { OdooVideoNode } from '../plugin-odoo-video/src/OdooVideoNode';
 import { ReactiveEditorInfo } from '../plugin-reactive-info/src/ReactiveEditorInfo';
 import { Resizer } from '../plugin-resizer/src/Resizer';
 import { withDomMutations } from '../plugin-dom-helpers/src/withDomMutations';
+import { withIntangibles } from '../core/src/Walker';
 
 export {
     OdooWebsiteEditor,
@@ -58,4 +59,5 @@ export {
     ReactiveEditorInfo,
     Resizer,
     withDomMutations,
+    withIntangibles,
 };
