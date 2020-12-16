@@ -13,6 +13,7 @@ import { VNode } from '../../core/src/VNodes/VNode';
 import { parseEditable, createEditable } from '../../utils/src/configuration';
 import { Html } from '../../plugin-html/src/Html';
 import { CharNode } from '../../plugin-char/src/CharNode';
+import { Paragraph } from '../../plugin-paragraph/src/Paragraph';
 import { TagNode } from '../../core/src/VNodes/TagNode';
 import { BasicEditor } from '../../bundle-basic-editor/BasicEditor';
 import { Layout } from '../../plugin-layout/src/Layout';
@@ -61,6 +62,7 @@ describe('DomEditable', () => {
         document.body.appendChild(container);
         section = document.createElement('section');
         container.appendChild(section);
+        document.getSelection().removeAllRanges();
     });
     afterEach(() => {
         document.body.removeChild(container);
@@ -1138,6 +1140,493 @@ describe('DomEditable', () => {
                     sectionNode.children()[1].firstChild().id,
                 );
             });
+        });
+    });
+    describe('twice editor', () => {
+        let editor: JWEditor;
+        let container2: HTMLElement;
+        let section2: HTMLElement;
+        let editor2: JWEditor;
+        beforeEach(async () => {
+            container.style.height = '100px';
+            section.innerHTML = '<p>abc</p>';
+
+            container2 = document.createElement('div');
+            document.body.appendChild(container2);
+            section2 = document.createElement('section');
+            section2.innerHTML = '<p>def</p>';
+            container2.appendChild(section2);
+
+            editor = new JWEditor();
+            editor.load(Html);
+            editor.load(Paragraph);
+            editor.load(Char);
+            editor.load(DomEditable);
+            editor.configure(DomLayout, {
+                location: [section, 'replace'],
+                components: [
+                    {
+                        id: 'editable',
+                        render: async (editor: JWEditor): Promise<VNode[]> =>
+                            parseEditable(editor, section),
+                    },
+                ],
+                componentZones: [['editable', ['main']]],
+            });
+
+            await editor.start();
+
+            editor2 = new JWEditor();
+            editor2.load(Html);
+            editor2.load(Paragraph);
+            editor2.load(Char);
+            editor2.load(DomEditable);
+            editor2.configure(DomLayout, {
+                location: [section2, 'replace'],
+                components: [
+                    {
+                        id: 'editable',
+                        render: async (editor2: JWEditor): Promise<VNode[]> =>
+                            parseEditable(editor2, section2),
+                    },
+                ],
+                componentZones: [['editable', ['main']]],
+            });
+
+            await editor2.start();
+        });
+        afterEach(async () => {
+            await editor?.stop();
+            await editor2?.stop();
+            document.body.removeChild(container2);
+        });
+        it('should set the selection', async () => {
+            expect(!!document.getSelection().anchorNode).to.equal(
+                false,
+                'Should not have DOM selection',
+            );
+            expect(!!editor.selection.anchor.parentVNode).to.equal(
+                false,
+                'Should not have selection in first editor',
+            );
+            expect(!!editor2.selection.anchor.parentVNode).to.equal(
+                false,
+                'Should not have selection in second editor',
+            );
+
+            const p = container.querySelector('p');
+            triggerEvent(p, 'mousedown', {
+                button: 2,
+                detail: 1,
+                clientX: 15,
+                clientY: 30,
+            });
+            await Promise.resolve();
+            setDomSelection(p.firstChild, 1, p.firstChild, 1);
+            triggerEvent(p, 'click', {
+                button: 2,
+                detail: 0,
+                clientX: 15,
+                clientY: 30,
+            });
+            triggerEvent(p, 'mouseup', {
+                button: 2,
+                detail: 0,
+                clientX: 15,
+                clientY: 30,
+            });
+            await nextTick();
+            await nextTick();
+
+            expect(document.getSelection().anchorNode === p.firstChild).to.equal(
+                true,
+                'Should have DOM selection',
+            );
+            expect(!!editor.selection.anchor.parentVNode).to.equal(
+                true,
+                'Should have selection in first editor',
+            );
+            expect(!!editor.plugins.get(DomLayout).focusedNode).to.equal(
+                true,
+                'Should focus the first editor',
+            );
+            expect(!!editor2.selection.anchor.parentVNode).to.equal(
+                false,
+                'Should not have selection in second editor after select the first editor',
+            );
+            expect(!!editor2.plugins.get(DomLayout).focusedNode).to.equal(
+                false,
+                'Should not focused the second editor',
+            );
+        });
+        it('should set the selection not collasped', async () => {
+            expect(!!document.getSelection().anchorNode).to.equal(
+                false,
+                'Should not have DOM selection',
+            );
+            expect(!!editor.selection.anchor.parentVNode).to.equal(
+                false,
+                'Should not have selection in first editor',
+            );
+            expect(!!editor2.selection.anchor.parentVNode).to.equal(
+                false,
+                'Should not have selection in second editor',
+            );
+
+            const p = container.querySelector('p');
+            triggerEvent(p, 'mousedown', {
+                button: 2,
+                detail: 1,
+                clientX: 15,
+                clientY: 30,
+            });
+            await Promise.resolve();
+            setDomSelection(p.firstChild, 1, p.firstChild, 1);
+            await nextTick();
+            setDomSelection(p.firstChild, 1, p.firstChild, 2);
+            triggerEvent(p, 'click', {
+                button: 2,
+                detail: 0,
+                clientX: 23,
+                clientY: 30,
+            });
+            triggerEvent(p, 'mouseup', {
+                button: 2,
+                detail: 0,
+                clientX: 23,
+                clientY: 30,
+            });
+            await nextTick();
+            await nextTick();
+
+            expect(document.getSelection().anchorNode === p.firstChild).to.equal(
+                true,
+                'Should have DOM selection',
+            );
+            expect(!!editor.selection.anchor.parentVNode).to.equal(
+                true,
+                'Should have selection in first editor',
+            );
+            expect(!!editor.plugins.get(DomLayout).focusedNode).to.equal(
+                true,
+                'Should focus the first editor',
+            );
+            expect(!!editor2.selection.anchor.parentVNode).to.equal(
+                false,
+                'Should not have selection in second editor after select the first editor',
+            );
+            expect(!!editor2.plugins.get(DomLayout).focusedNode).to.equal(
+                false,
+                'Should not focused the second editor',
+            );
+        });
+        it('should change the selection to the second editor', async () => {
+            const p = container.querySelector('p');
+            triggerEvent(p, 'mousedown', {
+                button: 2,
+                detail: 1,
+                clientX: 15,
+                clientY: 30,
+            });
+            await Promise.resolve();
+            setDomSelection(p.firstChild, 1, p.firstChild, 1);
+            triggerEvent(p, 'click', {
+                button: 2,
+                detail: 0,
+                clientX: 15,
+                clientY: 30,
+            });
+            triggerEvent(p, 'mouseup', {
+                button: 2,
+                detail: 0,
+                clientX: 15,
+                clientY: 30,
+            });
+            await nextTick();
+            await nextTick();
+
+            // Set selection into the second editor.
+
+            const p2 = container2.querySelector('p');
+            triggerEvent(p2, 'mousedown', {
+                button: 2,
+                detail: 1,
+                clientX: 15,
+                clientY: 130,
+            });
+            await Promise.resolve();
+            setDomSelection(p2.firstChild, 1, p2.firstChild, 1);
+            triggerEvent(p2, 'click', {
+                button: 2,
+                detail: 0,
+                clientX: 23,
+                clientY: 130,
+            });
+            triggerEvent(p2, 'mouseup', {
+                button: 2,
+                detail: 0,
+                clientX: 23,
+                clientY: 130,
+            });
+            await nextTick();
+            await nextTick();
+
+            expect(document.getSelection().anchorNode === p2.firstChild).to.equal(
+                true,
+                'Should have DOM selection',
+            );
+            expect(!!editor.selection.anchor.parentVNode).to.equal(
+                true,
+                'Should have selection in first editor',
+            );
+            expect(!!editor.plugins.get(DomLayout).focusedNode).to.equal(
+                false,
+                'Should blur the first editor',
+            );
+            expect(!!editor2.selection.anchor.parentVNode).to.equal(
+                true,
+                'Should have selection in second editor after select the first editor',
+            );
+            expect(!!editor2.plugins.get(DomLayout).focusedNode).to.equal(
+                true,
+                'Should not focused the second editor',
+            );
+        });
+        it('should change the selection not collasped to the second editor', async () => {
+            const p = container.querySelector('p');
+            triggerEvent(p, 'mousedown', {
+                button: 2,
+                detail: 1,
+                clientX: 15,
+                clientY: 30,
+            });
+            await Promise.resolve();
+            setDomSelection(p.firstChild, 1, p.firstChild, 1);
+            triggerEvent(p, 'click', {
+                button: 2,
+                detail: 0,
+                clientX: 15,
+                clientY: 30,
+            });
+            triggerEvent(p, 'mouseup', {
+                button: 2,
+                detail: 0,
+                clientX: 15,
+                clientY: 30,
+            });
+            await nextTick();
+            await nextTick();
+
+            // Set selection into the second editor.
+
+            const p2 = container2.querySelector('p');
+            triggerEvent(p2, 'mousedown', {
+                button: 2,
+                detail: 1,
+                clientX: 15,
+                clientY: 130,
+            });
+            await Promise.resolve();
+            setDomSelection(p2.firstChild, 1, p2.firstChild, 1);
+            await nextTick();
+            setDomSelection(p2.firstChild, 1, p2.firstChild, 2);
+            triggerEvent(p2, 'click', {
+                button: 2,
+                detail: 0,
+                clientX: 23,
+                clientY: 130,
+            });
+            triggerEvent(p2, 'mouseup', {
+                button: 2,
+                detail: 0,
+                clientX: 23,
+                clientY: 130,
+            });
+            await nextTick();
+            await nextTick();
+
+            expect(document.getSelection().anchorNode === p2.firstChild).to.equal(
+                true,
+                'Should have DOM selection',
+            );
+            expect(!!editor.selection.anchor.parentVNode).to.equal(
+                true,
+                'Should have selection in first editor',
+            );
+            expect(!!editor.plugins.get(DomLayout).focusedNode).to.equal(
+                false,
+                'Should blur the first editor',
+            );
+            expect(!!editor2.selection.anchor.parentVNode).to.equal(
+                true,
+                'Should have selection in second editor after select the first editor',
+            );
+            expect(!!editor2.plugins.get(DomLayout).focusedNode).to.equal(
+                true,
+                'Should focus the second editor',
+            );
+        });
+        it('should insert a char with selection', async () => {
+            // Set selection.
+
+            const p = container.querySelector('p');
+            triggerEvent(p, 'mousedown', {
+                button: 2,
+                detail: 1,
+                clientX: 15,
+                clientY: 30,
+            });
+            await Promise.resolve();
+            setDomSelection(p.firstChild, 1, p.firstChild, 1);
+            await nextTick();
+            setDomSelection(p.firstChild, 1, p.firstChild, 2);
+            triggerEvent(p, 'click', {
+                button: 2,
+                detail: 0,
+                clientX: 23,
+                clientY: 30,
+            });
+            triggerEvent(p, 'mouseup', {
+                button: 2,
+                detail: 0,
+                clientX: 23,
+                clientY: 30,
+            });
+            await nextTick();
+            await nextTick();
+
+            // insert char.
+
+            const editable = container.querySelector('section');
+            triggerEvent(editable, 'keydown', { key: 'o', code: 'KeyO' });
+            triggerEvent(editable, 'keypress', { key: 'o', code: 'KeyO' });
+            triggerEvent(editable, 'beforeinput', { data: 'o', inputType: 'insertText' });
+            p.firstChild.textContent = 'aoc';
+            triggerEvent(editable, 'input', { data: 'o', inputType: 'insertText' });
+            setDomSelection(p.firstChild, 2, p.firstChild, 2);
+            await nextTick();
+            await nextTick();
+
+            expect(document.getSelection().anchorNode === p.firstChild).to.equal(
+                true,
+                'Should have DOM selection',
+            );
+            expect(!!editor.selection.anchor.parentVNode).to.equal(
+                true,
+                'Should have selection in first editor',
+            );
+            expect(editor.selection.anchor.parentVNode.textContent).to.equal(
+                'aoc',
+                'Should insert the char',
+            );
+            expect(!!editor.plugins.get(DomLayout).focusedNode).to.equal(
+                true,
+                'Should focus the first editor',
+            );
+            expect(!!editor2.selection.anchor.parentVNode).to.equal(
+                false,
+                'Should not have selection in second editor after select the first editor',
+            );
+            expect(!!editor2.plugins.get(DomLayout).focusedNode).to.equal(
+                false,
+                'Should not focused the second editor',
+            );
+        });
+        it('should insert a char with selection after change the selection', async () => {
+            // Set selection.
+
+            const p = container.querySelector('p');
+            triggerEvent(p, 'mousedown', {
+                button: 2,
+                detail: 1,
+                clientX: 15,
+                clientY: 30,
+            });
+            await Promise.resolve();
+            setDomSelection(p.firstChild, 1, p.firstChild, 1);
+            triggerEvent(p, 'click', {
+                button: 2,
+                detail: 0,
+                clientX: 15,
+                clientY: 30,
+            });
+            triggerEvent(p, 'mouseup', {
+                button: 2,
+                detail: 0,
+                clientX: 15,
+                clientY: 30,
+            });
+            await nextTick();
+            await nextTick();
+
+            // Set selection into the second editor.
+
+            const p2 = container2.querySelector('p');
+            triggerEvent(p2, 'mousedown', {
+                button: 2,
+                detail: 1,
+                clientX: 15,
+                clientY: 130,
+            });
+            await Promise.resolve();
+            setDomSelection(p2.firstChild, 1, p2.firstChild, 1);
+            await nextTick();
+            setDomSelection(p2.firstChild, 1, p2.firstChild, 2);
+            triggerEvent(p2, 'click', {
+                button: 2,
+                detail: 0,
+                clientX: 23,
+                clientY: 130,
+            });
+            triggerEvent(p2, 'mouseup', {
+                button: 2,
+                detail: 0,
+                clientX: 23,
+                clientY: 130,
+            });
+            await nextTick();
+            await nextTick();
+
+            // insert char.
+
+            const editable2 = container2.querySelector('section');
+            triggerEvent(editable2, 'keydown', { key: 'o', code: 'KeyO' });
+            triggerEvent(editable2, 'keypress', { key: 'o', code: 'KeyO' });
+            triggerEvent(editable2, 'beforeinput', { data: 'o', inputType: 'insertText' });
+            p2.firstChild.textContent = 'aoc';
+            triggerEvent(editable2, 'input', { data: 'o', inputType: 'insertText' });
+            setDomSelection(p2.firstChild, 2, p2.firstChild, 2);
+            await nextTick();
+            await nextTick();
+
+            expect(document.getSelection().anchorNode === p2.firstChild).to.equal(
+                true,
+                'Should have DOM selection',
+            );
+            expect(!!editor.selection.anchor.parentVNode).to.equal(
+                true,
+                'Should have selection in first editor',
+            );
+            expect(editor.selection.anchor.parentVNode.textContent).to.equal(
+                'abc',
+                'Should insert the char',
+            );
+            expect(!!editor.plugins.get(DomLayout).focusedNode).to.equal(
+                false,
+                'Should blur the first editor',
+            );
+            expect(!!editor2.selection.anchor.parentVNode).to.equal(
+                true,
+                'Should not have selection in second editor after select the first editor',
+            );
+            expect(editor2.selection.anchor.parentVNode.textContent).to.equal(
+                'dof',
+                'Should insert the char',
+            );
+            expect(!!editor2.plugins.get(DomLayout).focusedNode).to.equal(
+                true,
+                'Should focus the second editor',
+            );
         });
     });
 });
