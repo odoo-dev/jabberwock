@@ -635,7 +635,7 @@ export class EventNormalizer {
                 }
                 if (eventTarget && this._isInEditable(eventTarget)) {
                     listener.call(this, ev);
-                } else {
+                } else if (!eventTarget || this._isInEditor(eventTarget)) {
                     this._mutationNormalizer.start();
                     this._triggerEventBatch(
                         new Timeout<EventBatch>(() => {
@@ -2210,7 +2210,11 @@ export class EventNormalizer {
                         selection.anchorNode === selection.focusNode &&
                         selection.anchorOffset === selection.focusOffset;
                     const target = this._getClosestElement(selection.focusNode);
-                    if (collapsed && !!target.closest('[contentEditable=true]')) {
+                    if (
+                        collapsed &&
+                        !!target.closest('[contentEditable=true]') &&
+                        this._isInEditor(target)
+                    ) {
                         document.getSelection().removeAllRanges();
                     }
                 }
