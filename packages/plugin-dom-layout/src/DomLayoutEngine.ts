@@ -128,7 +128,7 @@ export class DomLayoutEngine extends LayoutEngine {
         return this._domReconciliationEngine.modifierFromDom(
             domNode,
             this._rendererCache.modifierLocations,
-            loose
+            loose,
         );
     }
     /**
@@ -352,8 +352,12 @@ export class DomLayoutEngine extends LayoutEngine {
                 const object = up[0];
                 if (up[1] && object instanceof AbstractNode && !object.parentVNode) {
                     remove.add(object as VNode);
-                    for (const child of withIntangibles.descendants(object as VNode)) {
-                        remove.add(child);
+                    // Check if the node is not in an other memory slice.
+                    // TODO: this is not supposed to happen but it does.
+                    if (object.id) {
+                        for (const child of withIntangibles.descendants(object as VNode)) {
+                            remove.add(child);
+                        }
                     }
                 } else if (!remove.has(object as VNode)) {
                     paramsUpdate.push(up);
