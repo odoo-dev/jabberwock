@@ -99,7 +99,7 @@ export async function withDomMutations<T>(
             const currentNodes =
                 vnodes &&
                 vnodes
-                    // If a not has been remplated, take that one.
+                    // If a node has been replaced, take that one.
                     .map(vnode => (replacementMap.get(vnode) ? replacementMap.get(vnode) : vnode));
             const uniqueCurrentNodes = vnodes && [...new Set(currentNodes)];
             return uniqueCurrentNodes;
@@ -351,17 +351,17 @@ async function addVNodes(
                     }
                 }
             } else {
-                // As we havent found the previous sibling VNode, try to locate
+                // As we haven't found the previous sibling VNode, try to locate
                 // a next sibling VNode.
-                if (parentVNode instanceof InlineNode && parentVNode.length === 0) {
+                if (parentVNode instanceof InlineNode) {
                     for (const vnode of vnodesToInsert) {
                         for (const modifier of parentVNode.modifiers) {
                             vnode.modifiers.prepend(modifier);
                         }
                         parentVNode.before(vnode);
                     }
-                    // If there were node to insert, remove the inline
-                    // InlineNode that represented the empty Format.
+                    // If there were node to insert,
+                    // remove the InlineNode that represented the empty Format.
                     if (vnodesToInsert) parentVNode.remove();
                 } else {
                     for (const vnode of vnodesToInsert) {
