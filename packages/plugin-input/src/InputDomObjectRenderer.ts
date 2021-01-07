@@ -36,13 +36,8 @@ export class InputDomObjectRenderer extends NodeRenderer<DomObject> {
                     node.change(this.engine.editor);
                 });
             };
-            mousedown = (ev: MouseEvent): void => {
-                ev.stopImmediatePropagation();
-                ev.stopPropagation();
-            };
 
             el.addEventListener('change', changeHandler);
-            el.addEventListener('mousedown', mousedown);
             this.engine.editor.dispatcher.registerCommandHook('@commit', onCommit);
         };
 
