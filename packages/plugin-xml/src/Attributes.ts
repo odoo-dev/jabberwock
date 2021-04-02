@@ -28,6 +28,11 @@ export class Attributes extends Modifier {
                 this.set(key, attributes[key]);
             }
         }
+        if (attributes && (this.style.length || this.classList.length)) {
+            console.log('-------\nnew attributes');
+            if (this.style.length) console.log(this.style.keys(), this.style.values());
+            if (this.classList.length) console.log('class : ' + this.classList.className);
+        }
     }
 
     //--------------------------------------------------------------------------
