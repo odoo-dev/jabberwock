@@ -18,6 +18,11 @@ class ExtendedModifier extends Modifier {
         return otherModifier instanceof ExtendedModifier && this.value === otherModifier.value;
     }
 }
+class SameUndefinedModifier extends Modifier {
+    isSameAs(otherModifier: Modifier): boolean {
+        return otherModifier instanceof Modifier || typeof otherModifier === 'undefined';
+    }
+}
 describe('core', () => {
     describe('Modifiers', () => {
         describe('constructor()', () => {
@@ -540,6 +545,56 @@ describe('core', () => {
                 expect(modifiersMap[0] instanceof Modifier).to.be.true;
                 expect(modifiersMap[0] instanceof ExtendedModifier).to.be.false;
                 expect(modifiersMap[1] instanceof ExtendedModifier).to.be.true;
+            });
+        });
+        describe('contains()', () => {
+            it('should contain itself favorably', () => {
+                const m1 = new Modifier();
+                const m2 = new Modifier();
+                const modifiers1 = new Modifiers(m1, m2);
+                expect(modifiers1.contains(modifiers1)).to.be.true;
+            });
+            it('should contain a modifier that has the same favorably', () => {
+                const m1 = new ExtendedModifier(1);
+                const m2 = new ExtendedModifier(2);
+                const modifiers1 = new Modifiers(m1, m2);
+                const m1bis = new ExtendedModifier(1);
+                const m2bis = new ExtendedModifier(2);
+                const modifiers2 = new Modifiers(m1bis);
+                const modifiers3 = new Modifiers(m2bis);
+                const modifiers4 = new Modifiers(m1bis, m2bis);
+                expect(modifiers1.contains(modifiers2)).to.be.true;
+                expect(modifiers1.contains(modifiers3)).to.be.true;
+                expect(modifiers1.contains(modifiers4)).to.be.true;
+            });
+            it('should contain a modifier that has the same favorably even if their order is different', () => {
+                const m1 = new ExtendedModifier(1);
+                const m2 = new ExtendedModifier(2);
+                const modifiers1 = new Modifiers(m1, m2);
+                const modifiers2 = new Modifiers(m2, m1);
+                expect(modifiers1.contains(modifiers2)).to.be.true;
+            });
+            it('should contain a modifier that has the same favorably even if their order and instances are different', () => {
+                const m1 = new ExtendedModifier(1);
+                const m2 = new ExtendedModifier(2);
+                const modifiers1 = new Modifiers(m1, m2);
+                const m1bis = new ExtendedModifier(1);
+                const m2bis = new ExtendedModifier(2);
+                const modifiers2 = new Modifiers(m2bis, m1bis);
+                expect(modifiers1.contains(modifiers2)).to.be.true;
+            });
+            it('should match with modifiers that are the same with undefined', () => {
+                const m1 = new SameUndefinedModifier();
+                const modifiers1 = new Modifiers();
+                const modifiers2 = new Modifiers(m1);
+                expect(modifiers1.contains(modifiers2)).to.be.true;
+            });
+            it('should not contain the other modifiers', () => {
+                const m1 = new ExtendedModifier(1);
+                const modifiers1 = new Modifiers(m1);
+                const m2 = new ExtendedModifier(0);
+                const modifiers2 = new Modifiers(m2);
+                expect(modifiers1.contains(modifiers2)).to.be.false;
             });
         });
         describe('areSameAs()', () => {
