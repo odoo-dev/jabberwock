@@ -403,6 +403,32 @@ export class DomHelpers<T extends JWPluginConfig = JWPluginConfig> extends JWPlu
         return context.execCommand(domHelpersMoveAfter);
     }
     /**
+     * Prepend a DOM Node to another DOM Node's children.
+     *
+     * @param params
+     */
+    async prepend(container: Node, node: Node): Promise<void> {
+        const toNodes = this.getNodes(node);
+        const toNode = toNodes[toNodes.length - 1];
+        for (const vnode of this.getNodes(container).reverse()) {
+            vnode.prepend(toNode);
+        }
+        await this.editor.dispatcher.dispatchHooks('@redraw');
+    }
+    /**
+     * Append a DOM Node to another DOM Node's children.
+     *
+     * @param params
+     */
+    async append(container: Node, node: Node): Promise<void> {
+        const toNodes = this.getNodes(node);
+        const toNode = toNodes[toNodes.length - 1];
+        for (const vnode of this.getNodes(container)) {
+            vnode.append(toNode);
+        }
+        await this.editor.dispatcher.dispatchHooks('@redraw');
+    }
+    /**
      * Insert html content before, after or inside a DOM Node. If no DOM Node
      * was provided, empty the range and insert the html content before the it.
      *
